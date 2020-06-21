@@ -3,6 +3,8 @@
 
 #include <vector>
 #include <deque>
+#include <memory>
+
 
 #include "lex.h"
 
@@ -18,11 +20,11 @@ class ParserError
 
 class Context;
 
-class Element
+class Element : public std::enable_shared_from_this<Element>
 {
 public:
    virtual void show(int d) = 0;
-   virtual std::shared_ptr<Element> evaluate(std::weak_ptr<Context> cx) = 0;
+   virtual std::shared_ptr<Element> evaluate(std::shared_ptr<Context> cx) = 0;
    Element();
    virtual ~Element()
    {
@@ -38,7 +40,7 @@ public:
    explicit Number(number_t w);
    virtual ~Number();
    void show(int d) override; 
-   Element_p evaluate(std::weak_ptr<Context> cx) override;
+   Element_p evaluate(std::shared_ptr<Context> cx) override;
    number_t getNumber()
    {
       return number;
@@ -67,7 +69,7 @@ public:
    {
       elements.pop_front();
    }
-   Element_p evaluate(std::weak_ptr<Context> cx) override;
+   Element_p evaluate(std::shared_ptr<Context> cx) override;
    void show(int d) override;
 
 private:
@@ -89,7 +91,7 @@ public:
    {
       return elements;
    }
-   Element_p evaluate(std::weak_ptr<Context> cx) override;
+   Element_p evaluate(std::shared_ptr<Context> cx) override;
    void show(int d) override;
 
 private:
@@ -111,7 +113,7 @@ public:
    {
       return elements;
    }
-   Element_p evaluate(std::weak_ptr<Context> cx) override;
+   Element_p evaluate(std::shared_ptr<Context> cx) override;
    void show(int d) override;
 
 private:
@@ -143,7 +145,7 @@ public:
    }
    //virtual void druk(int d);
    void show(int d) override;
-   Element_p evaluate(std::weak_ptr<Context> cx) override;
+   Element_p evaluate(std::shared_ptr<Context> cx) override;
 };
 
 class Div : public Binary
@@ -153,7 +155,7 @@ public:
    {
    }
    void show(int d) override;
-   Element_p evaluate(std::weak_ptr<Context> cx) override;
+   Element_p evaluate(std::shared_ptr<Context> cx) override;
 };
 
 class Plus : public Binary
@@ -163,7 +165,7 @@ public:
    {
    }
    void show(int d) override;
-   Element_p evaluate(std::weak_ptr<Context> cx) override;
+   Element_p evaluate(std::shared_ptr<Context> cx) override;
 };
 
 class Min : public Binary
@@ -173,7 +175,7 @@ public:
    {
    }
    void show(int d) override;
-   Element_p evaluate(std::weak_ptr<Context> cx) override;
+   Element_p evaluate(std::shared_ptr<Context> cx) override;
 };
 
 class Equal : public Binary
@@ -183,7 +185,7 @@ public:
    {
    }
    void show(int d) override;
-   Element_p evaluate(std::weak_ptr<Context> cx) override;
+   Element_p evaluate(std::shared_ptr<Context> cx) override;
 };
 
 class Less : public Binary
@@ -193,7 +195,7 @@ public:
    {
    }
    void show(int d) override;
-   Element_p evaluate(std::weak_ptr<Context> cx) override;
+   Element_p evaluate(std::shared_ptr<Context> cx) override;
 };
 
 class Greater : public Binary
@@ -203,7 +205,7 @@ public:
    {
    }
    void show(int d) override;
-   Element_p evaluate(std::weak_ptr<Context> cx) override;
+   Element_p evaluate(std::shared_ptr<Context> cx) override;
 };
 
 class NotEqual : public Binary
@@ -213,7 +215,7 @@ public:
    {
    }
    void show(int d) override;
-   Element_p evaluate(std::weak_ptr<Context> cx) override;
+   Element_p evaluate(std::shared_ptr<Context> cx) override;
 };
 
 class GreaterEq : public Binary
@@ -223,7 +225,7 @@ public:
    {
    }
    void show(int d) override;
-   Element_p evaluate(std::weak_ptr<Context> cx) override;
+   Element_p evaluate(std::shared_ptr<Context> cx) override;
 };
 
 class LessEq : public Binary
@@ -233,7 +235,7 @@ public:
    {
    }
    void show(int d) override;
-   Element_p evaluate(std::weak_ptr<Context> cx) override;
+   Element_p evaluate(std::shared_ptr<Context> cx) override;
 };
 
 
@@ -244,7 +246,7 @@ public:
    If();
    ~If();
    void show(int d) override;
-   Element_p evaluate(std::weak_ptr<Context> cx) override;
+   Element_p evaluate(std::shared_ptr<Context> cx) override;
    void setCondition(Element_p cond)
    {
       condition = cond;
@@ -272,10 +274,18 @@ public:
    Fn();
    ~Fn();
    void show(int d) override;
-   Element_p evaluate(std::weak_ptr<Context> cx) override;
+   Element_p evaluate(std::shared_ptr<Context> cx) override;
    void addParam(std::string param)
    {
       params.push_back(param);
+   }
+   int getParamsSize()
+   {
+      return params.size();
+   }
+   std::string getParam(int i)
+   {
+      return params[i];
    }
    void setBody(Body_p bd)
    {
@@ -296,7 +306,7 @@ public:
    Defn();
    ~Defn();
    void show(int d) override;
-   Element_p evaluate(std::weak_ptr<Context> cx) override;
+   Element_p evaluate(std::shared_ptr<Context> cx) override;
    std::string getName()
    {
       return name;
@@ -324,7 +334,7 @@ public:
    explicit Symbol(const std::string &te);
    ~Symbol();
    void show(int d) override;
-   Element_p evaluate(std::weak_ptr<Context> cx) override;
+   Element_p evaluate(std::shared_ptr<Context> cx) override;
    std::string getText()
    {
       return text;
@@ -344,7 +354,7 @@ public:
    virtual ~Main();
    void add(Element_p el);
    void show(int d) override;
-   Element_p evaluate(std::weak_ptr<Context> cx) override;
+   Element_p evaluate(std::shared_ptr<Context> cx) override;
 
 private:
    std::vector<Element_p> elements;   
