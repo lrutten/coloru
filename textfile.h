@@ -4,8 +4,9 @@
 #include <string>
 #include <vector>
 #include <tuple>
+#include <memory>
 
-class Textfile
+class Textfile : public std::enable_shared_from_this<Textfile>
 {
 public:
    explicit Textfile(const std::string &fn);
@@ -17,15 +18,15 @@ public:
    class const_iterator
    {
    public:
-      using size_type = std::size_t;
-      using self_type = const_iterator;
-      using value_type = T;
-      using reference = T&;
-      using pointer = std::tuple<size_type, size_type>;
-      using difference_type = int;
+      using size_type         = std::size_t;
+      using self_type         = const_iterator;
+      using value_type        = T;
+      using reference         = T&;
+      using pointer           = std::tuple<size_type, size_type>;
+      using difference_type   = int;
       using iterator_category = std::forward_iterator_tag;
       
-      const_iterator(const Textfile *tf, pointer ptr) : tf_(tf), ptr_(ptr)
+      const_iterator(const std::shared_ptr<const Textfile> tf, pointer ptr) : tf_(tf), ptr_(ptr)
       {
       }
 
@@ -102,19 +103,19 @@ public:
       }
 
    private:
-      const Textfile *tf_;
-      pointer  ptr_;
+      const std::shared_ptr<const Textfile> tf_;
+      pointer                       ptr_;
    };
 
    
    const_iterator<char> begin() const
    {
-      return const_iterator<char>(this, const_iterator<char>::pointer{0, 0});
+      return const_iterator<char>(shared_from_this(), const_iterator<char>::pointer{0, 0});
    }
 
    const_iterator<char> end() const
    {
-      return const_iterator<char>(this, const_iterator<char>::pointer{lines.size(), 0});
+      return const_iterator<char>(shared_from_this(), const_iterator<char>::pointer{lines.size(), 0});
    }
 
    
@@ -122,6 +123,8 @@ private:
    std::string              filename;
    std::vector<std::string> lines;
 };
+
+using Textfile_p = std::shared_ptr<Textfile>;
 
 #endif
 

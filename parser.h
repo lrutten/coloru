@@ -22,12 +22,15 @@ class Element
 {
 public:
    virtual void show(int d) = 0;
-   virtual Element *evaluate(Context *cx) = 0;
+   virtual std::shared_ptr<Element> evaluate(std::weak_ptr<Context> cx) = 0;
    Element();
    virtual ~Element()
    {
    }
 };
+
+using Element_p = std::shared_ptr<Element>;
+
 
 class Number : public Element
 {
@@ -35,7 +38,7 @@ public:
    explicit Number(number_t w);
    virtual ~Number();
    void show(int d) override; 
-   Element *evaluate(Context *cx) override;
+   Element_p evaluate(std::weak_ptr<Context> cx) override;
    number_t getNumber()
    {
       return number;
@@ -45,15 +48,18 @@ private:
    number_t number;
 };
 
+using Number_p = std::shared_ptr<Number>;
+
+
 class List : public Element
 {
 public:
    List();
    ~List();
-   void add(Element *el);
+   void add(Element_p el);
    std::size_t size();
-   Element *get(int i);
-   std::deque<Element *> getElements()
+   Element_p get(int i);
+   std::deque<Element_p > getElements()
    {
       return elements;
    }
@@ -61,31 +67,36 @@ public:
    {
       elements.pop_front();
    }
-   Element *evaluate(Context *cx) override;
+   Element_p evaluate(std::weak_ptr<Context> cx) override;
    void show(int d) override;
 
 private:
-   std::deque<Element *> elements;   
+   std::deque<Element_p> elements;   
 };
+
+using List_p = std::shared_ptr<List>;
+
 
 class Vector : public Element
 {
 public:
    Vector();
    ~Vector();
-   void add(Element *el);
+   void add(Element_p el);
    std::size_t size();
-   Element *get(int i);
-   std::vector<Element *> getElements()
+   Element_p get(int i);
+   std::vector<Element_p > getElements()
    {
       return elements;
    }
-   Element *evaluate(Context *cx) override;
+   Element_p evaluate(std::weak_ptr<Context> cx) override;
    void show(int d) override;
 
 private:
-   std::vector<Element *> elements;   
+   std::vector<Element_p> elements;   
 };
+
+using Vector_p = std::shared_ptr<Vector>;
 
 
 class Body : public Element
@@ -93,19 +104,21 @@ class Body : public Element
 public:
    Body();
    ~Body();
-   void add(Element *el);
+   void add(Element_p el);
    std::size_t size();
-   Element *get(int i);
-   std::vector<Element *> getElements()
+   Element_p get(int i);
+   std::vector<Element_p > getElements()
    {
       return elements;
    }
-   Element *evaluate(Context *cx) override;
+   Element_p evaluate(std::weak_ptr<Context> cx) override;
    void show(int d) override;
 
 private:
-   std::vector<Element *> elements;   
+   std::vector<Element_p> elements;   
 };
+
+using Body_p = std::shared_ptr<Body>;
 
 
 class Binary : public Element
@@ -113,12 +126,14 @@ class Binary : public Element
 public:
    Binary();
    virtual ~Binary();
-   void add(Element *el);
+   void add(Element_p el);
    void show(int d) override;
 
 protected:
-   std::vector<Element *> elements;   
+   std::vector<Element_p > elements;   
 };
+
+using Binary_p = std::shared_ptr<Binary>;
 
 class Mul : public Binary
 {
@@ -128,7 +143,7 @@ public:
    }
    //virtual void druk(int d);
    void show(int d) override;
-   Element *evaluate(Context *cx) override;
+   Element_p evaluate(std::weak_ptr<Context> cx) override;
 };
 
 class Div : public Binary
@@ -138,7 +153,7 @@ public:
    {
    }
    void show(int d) override;
-   Element *evaluate(Context *cx) override;
+   Element_p evaluate(std::weak_ptr<Context> cx) override;
 };
 
 class Plus : public Binary
@@ -148,7 +163,7 @@ public:
    {
    }
    void show(int d) override;
-   Element *evaluate(Context *cx) override;
+   Element_p evaluate(std::weak_ptr<Context> cx) override;
 };
 
 class Min : public Binary
@@ -158,7 +173,7 @@ public:
    {
    }
    void show(int d) override;
-   Element *evaluate(Context *cx) override;
+   Element_p evaluate(std::weak_ptr<Context> cx) override;
 };
 
 class Equal : public Binary
@@ -168,7 +183,7 @@ public:
    {
    }
    void show(int d) override;
-   Element *evaluate(Context *cx) override;
+   Element_p evaluate(std::weak_ptr<Context> cx) override;
 };
 
 class Less : public Binary
@@ -178,7 +193,7 @@ public:
    {
    }
    void show(int d) override;
-   Element *evaluate(Context *cx) override;
+   Element_p evaluate(std::weak_ptr<Context> cx) override;
 };
 
 class Greater : public Binary
@@ -188,7 +203,7 @@ public:
    {
    }
    void show(int d) override;
-   Element *evaluate(Context *cx) override;
+   Element_p evaluate(std::weak_ptr<Context> cx) override;
 };
 
 class NotEqual : public Binary
@@ -198,7 +213,7 @@ public:
    {
    }
    void show(int d) override;
-   Element *evaluate(Context *cx) override;
+   Element_p evaluate(std::weak_ptr<Context> cx) override;
 };
 
 class GreaterEq : public Binary
@@ -208,7 +223,7 @@ public:
    {
    }
    void show(int d) override;
-   Element *evaluate(Context *cx) override;
+   Element_p evaluate(std::weak_ptr<Context> cx) override;
 };
 
 class LessEq : public Binary
@@ -218,7 +233,7 @@ public:
    {
    }
    void show(int d) override;
-   Element *evaluate(Context *cx) override;
+   Element_p evaluate(std::weak_ptr<Context> cx) override;
 };
 
 
@@ -229,24 +244,27 @@ public:
    If();
    ~If();
    void show(int d) override;
-   Element *evaluate(Context *cx) override;
-   void setCondition(Element *cond)
+   Element_p evaluate(std::weak_ptr<Context> cx) override;
+   void setCondition(Element_p cond)
    {
       condition = cond;
    }
-   void setYes(Element *ys)
+   void setYes(Element_p ys)
    {
       yes = ys;
    }
-   void setNo(Element *n)
+   void setNo(Element_p n)
    {
       no = n;
    }
 private:
-   Element *condition;
-   Element *yes;
-   Element *no;
+   Element_p condition;
+   Element_p yes;
+   Element_p no;
 };
+
+using If_p = std::shared_ptr<If>;
+
 
 class Fn : public Element
 {
@@ -254,20 +272,23 @@ public:
    Fn();
    ~Fn();
    void show(int d) override;
-   Element *evaluate(Context *cx) override;
+   Element_p evaluate(std::weak_ptr<Context> cx) override;
    void addParam(std::string param)
    {
       params.push_back(param);
    }
-   void setBody(Body *bd)
+   void setBody(Body_p bd)
    {
       body = bd;
    }
    
 private:
    std::vector<std::string> params;
-   Body                    *body;
+   Body_p                   body;
 };
+
+using Fn_p = std::shared_ptr<Fn>;
+
 
 class Defn : public Element
 {
@@ -275,7 +296,7 @@ public:
    Defn();
    ~Defn();
    void show(int d) override;
-   Element *evaluate(Context *cx) override;
+   Element_p evaluate(std::weak_ptr<Context> cx) override;
    std::string getName()
    {
       return name;
@@ -284,15 +305,18 @@ public:
    {
       name = nm;
    }
-   void setFn(Fn *f)
+   void setFn(Fn_p f)
    {
       fn = f;
    }
 
 private:
    std::string  name;
-   Fn          *fn;
+   Fn_p         fn;
 };
+
+using Defn_p = std::shared_ptr<Defn>;
+
 
 class Symbol : public Element
 {
@@ -300,7 +324,7 @@ public:
    explicit Symbol(const std::string &te);
    ~Symbol();
    void show(int d) override;
-   Element *evaluate(Context *cx) override;
+   Element_p evaluate(std::weak_ptr<Context> cx) override;
    std::string getText()
    {
       return text;
@@ -310,34 +334,41 @@ private:
    std::string text;
 };
 
+using Symbol_p = std::shared_ptr<Symbol>;
+
+
 class Main : public Element
 {
 public:
    Main();
    virtual ~Main();
-   void add(Element *el);
+   void add(Element_p el);
    void show(int d) override;
-   Element *evaluate(Context *cx) override;
+   Element_p evaluate(std::weak_ptr<Context> cx) override;
 
 private:
-   std::vector<Element *> elements;   
+   std::vector<Element_p> elements;   
 };
+
+using Main_p = std::shared_ptr<Main>;
 
 
 class Parser
 {
 private:
-   Lex *lex;
+   Lex_p lex;
    
 public:
    Parser();
    ~Parser();
-   Element *parse(std::string fn);
-   Element *list(bool isliteral=false);
-   Element *vector();
-   Element *expression(bool isliteral=false);
-   Element *main();
+   Element_p parse(std::string fn);
+   Element_p list(bool isliteral=false);
+   Element_p vector();
+   Element_p expression(bool isliteral=false);
+   Element_p main();
 };
+
+using Parser_p = std::shared_ptr<Parser>;
 
 #endif
 

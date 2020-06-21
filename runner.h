@@ -19,15 +19,17 @@ class Context
 class Runner
 {
 public:
-   Runner(Element *rt);
+   explicit Runner(Element_p rt);
    virtual ~Runner()
    {
    }
-   Element *run();
+   Element_p run();
 
 private:
-   Element *root;
+   Element_p root;
 };
+
+using Runner_p = std::shared_ptr<Runner>;
 
 #endif
 

@@ -4,189 +4,179 @@
 
 // Number
 
-Element *Number::evaluate(Context *cx)
+Element_p Number::evaluate(std::weak_ptr<Context> cx)
 {
-   return new Number(number);
+   return std::make_shared<Number>(number);
 }
 
 // List
 
-Element *List::evaluate(Context *cx)
+Element_p List::evaluate(std::weak_ptr<Context> cx)
 {
-   return new Number(0);
+   return std::make_shared<Number>(0);
 }
 
 // Vector
 
-Element *Vector::evaluate(Context *cx)
+Element_p Vector::evaluate(std::weak_ptr<Context> cx)
 {
-   return new Number(0);
+   return std::make_shared<Number>(0);
 }
 
 // Body
 
-Element *Body::evaluate(Context *cx)
+Element_p Body::evaluate(std::weak_ptr<Context> cx)
 {
-   return new Number(0);
+   return std::make_shared<Number>(0);
 }
 
 // Mul
 
-Element *Mul::evaluate(Context *cx)
+Element_p Mul::evaluate(std::weak_ptr<Context> cx)
 {
    number_t value = 1;
-   for (Element *el: elements)
+   for (Element_p el: elements)
    {
-      Element *el2 = el->evaluate(cx);
-      Number *nu = dynamic_cast<Number *>(el2);
+      Element_p el2 = el->evaluate(cx);
+      Number_p nu = std::dynamic_pointer_cast<Number>(el2);
       if (nu == nullptr)
       {
          std::cout << "run error\n";
-         throw new RunError();
+         throw std::make_unique<RunError>();
       }
       value *= nu->getNumber();
-      delete nu;
    }
-   return new Number(value);
+   return std::make_shared<Number>(value);
 }
 
 
 // Div
 
-Element *Div::evaluate(Context *cx)
+Element_p Div::evaluate(std::weak_ptr<Context> cx)
 {
-   return new Number(0);
+   return std::make_shared<Number>(0);
 }
 
 // Plus
 
-Element *Plus::evaluate(Context *cx)
+Element_p Plus::evaluate(std::weak_ptr<Context> cx)
 {
    number_t value = 0;
-   for (Element *el: elements)
+   for (Element_p el: elements)
    {
-      Element *el2 = el->evaluate(cx);
-      Number *nu = dynamic_cast<Number *>(el2);
+      Element_p el2 = el->evaluate(cx);
+      Number_p nu = std::dynamic_pointer_cast<Number>(el2);
       if (nu == nullptr)
       {
          std::cout << "run error\n";
-         throw new RunError();
+         throw std::make_unique<RunError>();
       }
       value += nu->getNumber();
-      delete nu;
    }
-   return new Number(value);
+   return std::make_shared<Number>(value);
 }
 
 
 // Min
 
-Element *Min::evaluate(Context *cx)
+Element_p Min::evaluate(std::weak_ptr<Context> cx)
 {
-   return new Number(0);
+   return std::make_shared<Number>(0);
 }
 
 // Equal
 
-Element *Equal::evaluate(Context *cx)
+Element_p Equal::evaluate(std::weak_ptr<Context> cx)
 {
-   return new Number(0);
+   return std::make_shared<Number>(0);
 }
 
 // Less
 
-Element *Less::evaluate(Context *cx)
+Element_p Less::evaluate(std::weak_ptr<Context> cx)
 {
-   return new Number(0);
+   return std::make_shared<Number>(0);
 }
 
 // Greater
 
-Element *Greater::evaluate(Context *cx)
+Element_p Greater::evaluate(std::weak_ptr<Context> cx)
 {
-   return new Number(0);
+   return std::make_shared<Number>(0);
 }
 
 // NotEqual
 
-Element *NotEqual::evaluate(Context *cx)
+Element_p NotEqual::evaluate(std::weak_ptr<Context> cx)
 {
-   return new Number(0);
+   return std::make_shared<Number>(0);
 }
 
 // GreaterEq
 
-Element *GreaterEq::evaluate(Context *cx)
+Element_p GreaterEq::evaluate(std::weak_ptr<Context> cx)
 {
-   return new Number(0);
+   return std::make_shared<Number>(0);
 }
 
 // LessEq
 
-Element *LessEq::evaluate(Context *cx)
+Element_p LessEq::evaluate(std::weak_ptr<Context> cx)
 {
-   return new Number(0);
+   return std::make_shared<Number>(0);
 }
 
 // Defn
 
-Element *Defn::evaluate(Context *cx)
+Element_p Defn::evaluate(std::weak_ptr<Context> cx)
 {
-   return new Number(0);
+   return std::make_shared<Number>(0);
 }
 
 // Fn
 
-Element *Fn::evaluate(Context *cx)
+Element_p Fn::evaluate(std::weak_ptr<Context> cx)
 {
-   return new Number(0);
+   return std::make_shared<Number>(0);
 }
 
 // If
 
-Element *If::evaluate(Context *cx)
+Element_p If::evaluate(std::weak_ptr<Context> cx)
 {
-   return new Number(0);
+   return std::make_shared<Number>(0);
 }
 
 // Symbol
 
-Element *Symbol::evaluate(Context *cx)
+Element_p Symbol::evaluate(std::weak_ptr<Context> cx)
 {
-   return new Number(0);
+   return std::make_shared<Number>(0);
 }
 
 
 // Main
 
-Element *Main::evaluate(Context *cx)
+Element_p Main::evaluate(std::weak_ptr<Context> cx)
 {
-   Element *previous = nullptr;
-   Element *result;
-   for (Element *el: elements)
+   Element_p result;
+   for (Element_p el: elements)
    {
-      if (previous != nullptr)
-      {
-         delete previous;
-         previous = nullptr;
-      }
       result = el->evaluate(cx);
-      previous = result;
    }
    return result;
 }
 
 // Runner
 
-Runner::Runner(Element *rt) : root(rt)
+Runner::Runner(Element_p rt) : root(rt)
 {
 }
 
-Element *Runner::run()
+Element_p Runner::run()
 {
    std::cout << "start runner\n";
-   Context *cx = new Context();
-   Element *rs = root->evaluate(cx);
-   delete cx;
+   std::shared_ptr<Context> cx = std::make_shared<Context>();
+   Element_p rs = root->evaluate(cx);
    return rs;
 }

@@ -54,11 +54,14 @@ protected:
    bool     end();
    
 private:
-   Textfile    *file;
+   Textfile_p   file;
    iterator_t   it;
    token_t      tok;
    number_t     val;
    std::string  token_text;
 };
+
+using Lex_p = std::shared_ptr<Lex>;
+
 #endif
 

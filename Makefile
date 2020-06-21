@@ -26,6 +26,9 @@ run: clotool
 valgrind: clotool
 	valgrind --leak-check=full --show-leak-kinds=all ./clotool
 
+check:
+	cppcheck --enable=all .
+
 clean:
 	rm -vf *.o
 	rm -vf clotool

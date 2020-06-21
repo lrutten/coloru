@@ -34,21 +34,16 @@ int main()
    }
    delete lex;
     */
-   Parser *parser = new Parser();
-   Element *root = parser->parse("vb1.clj");
+   Parser_p parser = std::make_shared<Parser>();
+   Element_p root = parser->parse("vb1.clj");
    if (root != nullptr)
    {
       root->show(0);
       
-      Runner *ru = new Runner(root);
-      Element *res = ru->run();
+      Runner_p ru = std::make_shared<Runner>(root);
+      Element_p res = ru->run();
       std::cout << "----- result ------\n";
       res->show(0);
-      delete res;
-      delete ru;
-      
    }
-   delete root;
-   delete parser;
 }
 

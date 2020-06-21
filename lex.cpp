@@ -13,14 +13,14 @@ number_t Lex::value()
    return val;
 }
   
-Lex::Lex(const std::string &fn) : file(new Textfile(fn)), it(file->begin())
+Lex::Lex(const std::string &fn) : file(std::make_shared<Textfile>(fn)), it(file->begin())
 {
    next();
 }
 
 Lex::~Lex()
 {
-   delete file;
+   //delete file;
 }
 
 int Lex::charnr()
