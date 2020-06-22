@@ -179,6 +179,16 @@ void Lex::next()
                tok = tk_lesseq;
             }
             else
+            if (token_text == "true")
+            {
+               tok = tk_true;
+            }
+            else
+            if (token_text == "false")
+            {
+               tok = tk_false;
+            }
+            else
             {
                tok = tk_symbol;
                std::cout << "lex: tk_symbol " << sym << "\n";

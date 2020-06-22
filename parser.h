@@ -53,6 +53,25 @@ private:
 using Number_p = std::shared_ptr<Number>;
 
 
+class Boolean : public Element
+{
+public:
+   explicit Boolean(bool w);
+   virtual ~Boolean();
+   void show(int d) override; 
+   Element_p evaluate(std::shared_ptr<Context> cx) override;
+   number_t getValue()
+   {
+      return value;
+   }
+   
+private:
+   bool value;
+};
+
+using Boolean_p = std::shared_ptr<Boolean>;
+
+
 class List : public Element
 {
 public:

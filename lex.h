@@ -29,11 +29,13 @@ enum token_t
    tk_if,
    tk_println,
    tk_number,
+   tk_true,
+   tk_false,
    tk_eof
 };
 
 
-using number_t   = int;
+using number_t   = long long;
 using iterator_t = Textfile::const_iterator<char>;
 
 class Lex

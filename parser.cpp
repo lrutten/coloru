@@ -16,6 +16,7 @@ Element::Element()
 {
 }
 
+// Number
 
 Number::Number(number_t nu)
 {
@@ -32,6 +33,23 @@ void Number::show(int d)
 {
    indent(d);
    std::cout << "Number " << number << "\n";
+}
+
+// Boolean
+
+Boolean::Boolean(bool val) : value(val)
+{
+}
+
+Boolean::~Boolean()
+{
+   std::cout << "~Boolean " << value << "\n";
+}
+
+void Boolean::show(int d)
+{
+   indent(d);
+   std::cout << "Boolean " << value << "\n";
 }
 
 // List
@@ -623,6 +641,20 @@ Element_p Parser::expression(bool isliteral)
       lex->next();
       Number_p nu = std::make_shared<Number>(val);
       return nu;
+   }
+   else
+   if (token == tk_true)
+   {
+      lex->next();
+      Boolean_p bo = std::make_shared<Boolean>(true);
+      return bo;
+   }
+   else
+   if (token == tk_false)
+   {
+      lex->next();
+      Boolean_p bo = std::make_shared<Boolean>(false);
+      return bo;
    }
    else
    if (token == tk_plus)

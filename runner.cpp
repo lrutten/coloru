@@ -9,6 +9,14 @@ Element_p Number::evaluate(std::shared_ptr<Context> cx)
    return std::make_shared<Number>(number);
 }
 
+// Boolean
+
+Element_p Boolean::evaluate(std::shared_ptr<Context> cx)
+{
+   return shared_from_this();
+}
+
+
 // List
 
 Element_p List::evaluate(std::shared_ptr<Context> cx)
@@ -150,14 +158,52 @@ Element_p Plus::evaluate(std::shared_ptr<Context> cx)
 
 Element_p Min::evaluate(std::shared_ptr<Context> cx)
 {
-   return std::make_shared<Number>(0);
+   number_t value = 0;
+   int i = 0;
+   for (Element_p el: elements)
+   {
+      Element_p el2 = el->evaluate(cx);
+      Number_p nu = std::dynamic_pointer_cast<Number>(el2);
+      if (nu == nullptr)
+      {
+         std::cout << "run error\n";
+         throw std::make_unique<RunError>();
+      }
+      if (i == 0)
+      {
+         value += nu->getNumber();
+      }
+      else
+      {
+         value -= nu->getNumber();
+      }
+      i++;
+   }
+   return std::make_shared<Number>(value);
 }
 
 // Equal
 
 Element_p Equal::evaluate(std::shared_ptr<Context> cx)
 {
-   return std::make_shared<Number>(0);
+   bool bo = true;
+   Number_p last = nullptr;
+   for (Element_p el: elements)
+   {
+      Element_p el2 = el->evaluate(cx);
+      Number_p nu = std::dynamic_pointer_cast<Number>(el2);
+      if (nu == nullptr)
+      {
+         std::cout << "only numbers can be compared\n";
+         throw std::make_unique<RunError>();
+      }
+      if (last != nullptr && last->getNumber() != nu->getNumber())
+      {
+         return std::make_shared<Boolean>(false);
+      }
+      last = nu;
+   }
+   return std::make_shared<Boolean>(true);
 }
 
 // Less
@@ -217,7 +263,31 @@ Element_p Fn::evaluate(std::shared_ptr<Context> cx)
 
 Element_p If::evaluate(std::shared_ptr<Context> cx)
 {
-   return std::make_shared<Number>(0);
+   std::cout << "If evaluate\n";
+   Element_p el = condition->evaluate(cx);
+   Boolean_p bo = std::dynamic_pointer_cast<Boolean>(el);
+   if (bo == nullptr)
+   {
+      std::cout << "no boolean expression\n";
+      throw std::make_unique<RunError>();
+   }
+   
+   if (bo->getValue())
+   {
+      std::cout << "If yes\n";
+      return yes->evaluate(cx);
+   }
+   else
+   if (no != nullptr)
+   {
+      std::cout << "If no\n";
+      return no->evaluate(cx);
+   }
+   else
+   {
+      // should be nil
+      return std::make_shared<Number>(0);
+   }
 }
 
 // Symbol
@@ -321,7 +391,16 @@ void Context::add_binding(std::string nm, Element_p el)
 Element_p Context::search(std::string nm)
 {
    std::cout << "Context search\n";
-   return frames.front()->search(nm);
+   for (Frame_p fra: frames)
+   {
+      Element_p el = fra->search(nm);
+      if (el != nullptr)
+      {
+         return el;
+      }
+   }
+   return nullptr;
+   //return frames.front()->search(nm);
 }
 
 // Runner
