@@ -12,19 +12,6 @@ class RunError
 {
 };
 
-class Binding
-{
-public:
-   Binding(const std::string &nm, Element_p val);
-   ~Binding();
-
-private:
-   std::string name;
-   Element_p   value;
-};
-
-using Binding_p = std::shared_ptr<Binding>;
-
 
 class Frame
 {

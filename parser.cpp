@@ -89,6 +89,32 @@ void List::show(int d)
    }
 }
 
+// Elements
+Elements::Elements()
+{
+}
+
+Elements::~Elements()
+{
+   std::cout << "~Elements\n";
+}
+
+void Elements::add(Element_p el)
+{
+   elements.push_back(el);
+}
+
+std::size_t Elements::size()
+{
+   return elements.size();
+}
+
+Element_p Elements::get(int i)
+{
+   return elements[i];
+}
+
+
 // Vector
 Vector::Vector()
 {
@@ -99,6 +125,7 @@ Vector::~Vector()
    std::cout << "~Vector\n";
 }
 
+/*
 void Vector::add(Element_p el)
 {
    elements.push_back(el);
@@ -113,6 +140,7 @@ Element_p Vector::get(int i)
 {
    return elements[i];
 }
+ */
 
 void Vector::show(int d)
 {
@@ -135,6 +163,7 @@ Body::~Body()
    std::cout << "~Body\n";
 }
 
+/*
 void Body::add(Element_p el)
 {
    elements.push_back(el);
@@ -149,6 +178,7 @@ Element_p Body::get(int i)
 {
    return elements[i];
 }
+ */
 
 void Body::show(int d)
 {
@@ -172,10 +202,12 @@ Binary::~Binary()
    std::cout << "~Binary\n";
 }
 
+/*
 void Binary::add(Element_p el)
 {
    elements.push_back(el);
 }
+ */
 
 void Binary::show(int d)
 {
@@ -299,8 +331,7 @@ void Defn::show(int d)
 }
 
 // Fn
-
-Fn::Fn() : body(nullptr)
+Fn::Fn() : body(nullptr), full(false)
 {
 }
 
@@ -315,6 +346,9 @@ void Fn::show(int d)
    std::cout << "Fn\n";
 
    indent(d + 1);
+   std::cout << "full " << full <<"\n";
+
+   indent(d + 1);
    std::cout << "params\n";
    for (std::string param: params)
    {
@@ -323,6 +357,26 @@ void Fn::show(int d)
    }
 
    body->show(d + 1);
+}
+
+
+// Bind
+
+Bind::Bind() : fn(nullptr)
+{
+}
+
+Bind::~Bind()
+{
+   std::cout << "~Bind\n";
+}
+
+void Bind::show(int d)
+{
+   indent(d);
+   std::cout << "Bind\n";
+
+   fn->show(d + 1);
 }
 
 
@@ -380,10 +434,12 @@ Main::~Main()
    std::cout << "~Main\n";
 }
 
+/*
 void Main::add(Element_p el)
 {
    elements.push_back(el);
 }
+ */
 
 void Main::show(int d)
 {
@@ -456,6 +512,8 @@ Element_p Parser::list(bool isliteral)
          if (defn != nullptr)
          {
             lst->pop_front();
+
+            std::cout << "parse defn\n";
             
             Symbol_p name = std::dynamic_pointer_cast<Symbol>(lst->get(0));
             if (name == nullptr)
@@ -503,16 +561,21 @@ Element_p Parser::list(bool isliteral)
          else
          {
             Fn_p fn = std::dynamic_pointer_cast<Fn>(el);
-            if (fn != nullptr)
+            if (fn != nullptr && !fn->isFull())
             {
                lst->pop_front();
    
+               std::cout << "parse fn\n";
+               lst->show(0);
+               lst->get(0)->show(0);
+
                Vector_p params = std::dynamic_pointer_cast<Vector>(lst->get(0));
                if (params == nullptr)
                {
                   std::cout << "error in fn: parameter vector missing\n";
                   throw std::make_unique<ParserError>();
                }
+               std::cout << "parse fn parameters ok\n";
    
                for (Element_p ell: params->getElements())
                {
@@ -533,8 +596,9 @@ Element_p Parser::list(bool isliteral)
                   lst->pop_front();
                   bd->add(e);
                }
-               fn->setBody(bd);            
-               
+               fn->setBody(bd);
+               fn->setFull(true);
+               fn->show(0);
                return fn;
             }
             else
@@ -544,6 +608,8 @@ Element_p Parser::list(bool isliteral)
                {
                   lst->pop_front();
       
+                  std::cout << "parse if\n";
+
                   int sz = lst->getElements().size();
                   if (sz != 3 && sz != 2)
                   {
@@ -617,13 +683,6 @@ Element_p Parser::vector()
 
 Element_p Parser::expression(bool isliteral)
 {
-   /*
-   if (lex->token() == tk_eof)
-   {
-      return nullptr;
-   }
-    */
-   
    char token = lex->token();
    if (token == tk_bropen)
    {
@@ -725,6 +784,8 @@ Element_p Parser::expression(bool isliteral)
    else
    if (token == tk_fn)
    {
+      std::cout << "parse expression tk_fn\n";
+      
       lex->next();
       return std::make_shared<Fn>();
    }

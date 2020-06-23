@@ -151,6 +151,7 @@ void Lex::next()
             else
             if (token_text == "fn")
             {
+               std::cout << "lex: tk_fn\n";
                tok = tk_fn;
             }
             else

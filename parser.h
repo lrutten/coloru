@@ -33,6 +33,19 @@ public:
 
 using Element_p = std::shared_ptr<Element>;
 
+class Callable : public Element
+{
+public:
+   Callable()
+   {
+   }
+   ~Callable()
+   {
+   }
+};
+
+using Callable_p = std::shared_ptr<Callable>;
+
 
 class Number : public Element
 {
@@ -98,11 +111,13 @@ private:
 using List_p = std::shared_ptr<List>;
 
 
-class Vector : public Element
+// Elements
+
+class Elements : public Element
 {
 public:
-   Vector();
-   ~Vector();
+   Elements();
+   ~Elements();
    void add(Element_p el);
    std::size_t size();
    Element_p get(int i);
@@ -110,48 +125,52 @@ public:
    {
       return elements;
    }
+
+protected:
+   std::vector<Element_p> elements;   
+};
+
+using Elements_p = std::shared_ptr<Elements>;
+
+
+// Vector
+
+class Vector : public Elements
+{
+public:
+   Vector();
+   ~Vector();
    Element_p evaluate(std::shared_ptr<Context> cx) override;
    void show(int d) override;
 
 private:
-   std::vector<Element_p> elements;   
 };
 
 using Vector_p = std::shared_ptr<Vector>;
 
 
-class Body : public Element
+class Body : public Elements
 {
 public:
    Body();
    ~Body();
-   void add(Element_p el);
-   std::size_t size();
-   Element_p get(int i);
-   std::vector<Element_p > getElements()
-   {
-      return elements;
-   }
    Element_p evaluate(std::shared_ptr<Context> cx) override;
    void show(int d) override;
 
 private:
-   std::vector<Element_p> elements;   
 };
 
 using Body_p = std::shared_ptr<Body>;
 
 
-class Binary : public Element
+class Binary : public Elements
 {
 public:
    Binary();
    virtual ~Binary();
-   void add(Element_p el);
    void show(int d) override;
 
 protected:
-   std::vector<Element_p > elements;   
 };
 
 using Binary_p = std::shared_ptr<Binary>;
@@ -162,7 +181,6 @@ public:
    Mul()
    {
    }
-   //virtual void druk(int d);
    void show(int d) override;
    Element_p evaluate(std::shared_ptr<Context> cx) override;
 };
@@ -287,7 +305,7 @@ private:
 using If_p = std::shared_ptr<If>;
 
 
-class Fn : public Element
+class Fn : public Callable
 {
 public:
    Fn();
@@ -310,13 +328,45 @@ public:
    {
       body = bd;
    }
+   bool isFull()
+   {
+      return full;
+   }
+   void setFull(bool fu)
+   {
+      full = fu;
+   }
    
 private:
+   bool                     full;
    std::vector<std::string> params;
    Body_p                   body;
 };
 
 using Fn_p = std::shared_ptr<Fn>;
+
+
+class Bind : public Callable
+{
+public:
+   Bind();
+   ~Bind();
+   void show(int d) override;
+   Element_p evaluate(std::shared_ptr<Context> cx) override;
+   Fn_p getFn()
+   {
+      return fn;
+   }
+   void setFn(Fn_p f)
+   {
+      fn = f;
+   }
+   
+private:
+   Fn_p fn;
+};
+
+using Bind_p = std::shared_ptr<Bind>;
 
 
 class Defn : public Element
@@ -347,7 +397,7 @@ private:
 using Defn_p = std::shared_ptr<Defn>;
 
 
-class Symbol : public Element
+class Symbol : public Callable
 {
 public:
    explicit Symbol(const std::string &te);
@@ -366,17 +416,15 @@ private:
 using Symbol_p = std::shared_ptr<Symbol>;
 
 
-class Main : public Element
+class Main : public Elements
 {
 public:
    Main();
    virtual ~Main();
-   void add(Element_p el);
    void show(int d) override;
    Element_p evaluate(std::shared_ptr<Context> cx) override;
 
 private:
-   std::vector<Element_p> elements;   
 };
 
 using Main_p = std::shared_ptr<Main>;

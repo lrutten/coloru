@@ -22,71 +22,78 @@ Element_p Boolean::evaluate(std::shared_ptr<Context> cx)
 Element_p List::evaluate(std::shared_ptr<Context> cx)
 {
    std::cout << "List evaluate()\n";
-   Element_p el = get(0);
-   Symbol_p sy = std::dynamic_pointer_cast<Symbol>(el);
-   if (sy != nullptr)
+   Element_p  el = get(0);
+   Callable_p ca = std::dynamic_pointer_cast<Callable>(el);
+   if (ca != nullptr)
    {
-      Element_p fu = cx->search(sy->getText());
-      if (fu == nullptr)
+      Bind_p   bi  = std::dynamic_pointer_cast<Bind>(ca);
+      Fn_p     fuu = std::dynamic_pointer_cast<Fn>(ca);
+      Symbol_p sy  = std::dynamic_pointer_cast<Symbol>(ca);
+      if (sy != nullptr)
       {
-         std::cout << "function not found\n";
-         throw std::make_shared<RunError>();
+         Element_p fu = cx->search(sy->getText());
+         if (fu == nullptr)
+         {
+            std::cout << "function not found\n";
+            throw std::make_shared<RunError>();
+         }
+         std::cout << "name found\n";
+         fuu = std::dynamic_pointer_cast<Fn>(fu);
+         if (fuu == nullptr)
+         {
+            std::cout << "name found but is not a function\n";
+            throw std::make_shared<RunError>();
+         }
+      }
+      else
+      if (bi != nullptr)
+      {
+         fuu = bi->getFn();
+      }
+
+      // handle the parameters
+      int fparsize = fuu->getParamsSize();
+      int aparsize = size() - 1;
+      std::cout << "fparsize " << fparsize << " aparsize " << fparsize << "\n";
+      
+      if (aparsize == fparsize)
+      {
+         Frame_p fr = std::make_shared<Frame>();
+         
+         for (int i=0; i<fparsize; i++)
+         {
+            Element_p apar = get(i + 1);
+            std::string fparname = fuu->getParam(i);
+            Element_p aparres = apar->evaluate(cx);
+            std::cout << "==== aparam result===\n";
+            aparres->show(0);
+            std::cout << "=====\n";
+            fr->add_binding(fparname, aparres);
+         }
+         cx->push(fr);
+         Element_p rs = fuu->evaluate(cx);
+         cx->pop();
+         
+         std::cout << "++++ fn result+++\n";
+         rs->show(0);
+         std::cout << "+++++++++\n";
+         return rs;
       }
       else
       {
-         Fn_p fuu = std::dynamic_pointer_cast<Fn>(fu);
-         if (fuu != nullptr)
-         {
-            std::cout << "name found\n";
-            
-            int fparsize = fuu->getParamsSize();
-            int aparsize = size() - 1;
-            std::cout << "fparsize " << fparsize << " aparsize " << fparsize << "\n";
-            
-            if (aparsize == fparsize)
-            {
-               Frame_p fr = std::make_shared<Frame>();
-               
-               for (int i=0; i<fparsize; i++)
-               {
-                  Element_p apar = get(i + 1);
-                  std::string fparname = fuu->getParam(i);
-                  Element_p aparres = apar->evaluate(cx);
-                  std::cout << "==== aparam result===\n";
-                  aparres->show(0);
-                  std::cout << "=====\n";
-                  fr->add_binding(fparname, aparres);
-               }
-               cx->push(fr);
-               Element_p rs = fuu->evaluate(cx);
-               cx->pop();
-               
-               std::cout << "++++ fn result+++\n";
-               rs->show(0);
-               std::cout << "+++++++++\n";
-               return rs;
-            }
-            else
-            {
-               std::cout << "number of actual and formal parameters is different\n";
-               throw std::make_shared<RunError>();
-            }
-         }
-         else
-         {
-            std::cout << "name found but is no function\n";
-            throw std::make_shared<RunError>();
-         }
+         std::cout << "number of actual and formal parameters is different\n";
+         throw std::make_shared<RunError>();
       }
    }
    else
    {
-      std::cout << "the first element of a list must be a symbol\n";
+      std::cout << "the first element of a list must be a symbol or a function\n";
       throw std::make_shared<RunError>();
    }
    return std::make_shared<Number>(0);
 }
-
+ 
+ 
 // Vector
 
 Element_p Vector::evaluate(std::shared_ptr<Context> cx)
@@ -259,6 +266,14 @@ Element_p Fn::evaluate(std::shared_ptr<Context> cx)
    return body->evaluate(cx);
 }
 
+// Bind
+
+Element_p Bind::evaluate(std::shared_ptr<Context> cx)
+{
+   std::cout << "Bind evaluate\n";
+   return fn->evaluate(cx);
+}
+
 // If
 
 Element_p If::evaluate(std::shared_ptr<Context> cx)
@@ -319,15 +334,6 @@ Element_p Main::evaluate(std::shared_ptr<Context> cx)
    return result;
 }
 
-// Binding
-
-Binding::Binding(const std::string &nm, Element_p val) : name(nm), value(val)
-{
-}
-
-Binding::~Binding()
-{
-}
 
 // Frame
 
