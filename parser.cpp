@@ -153,6 +153,12 @@ void Vector::show(int d)
    }
 }
 
+Elements_p Vector::make_copy()
+{
+   return std::make_shared<Vector>();
+}
+
+
 // Body
 Body::Body()
 {
@@ -163,22 +169,10 @@ Body::~Body()
    std::cout << "~Body\n";
 }
 
-/*
-void Body::add(Element_p el)
+Elements_p Body::make_copy()
 {
-   elements.push_back(el);
+   return std::make_shared<Body>();
 }
-
-std::size_t Body::size()
-{
-   return elements.size();
-}
-
-Element_p Body::get(int i)
-{
-   return elements[i];
-}
- */
 
 void Body::show(int d)
 {
@@ -203,9 +197,9 @@ Binary::~Binary()
 }
 
 /*
-void Binary::add(Element_p el)
+std::shared_ptr<Elements> Binary::make_copy()
 {
-   elements.push_back(el);
+   return std::make_shared<Binary>();
 }
  */
 

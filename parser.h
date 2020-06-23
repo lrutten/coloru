@@ -18,6 +18,7 @@ class ParserError
 {
 };
 
+class Frame;
 class Context;
 
 class Element : public std::enable_shared_from_this<Element>
@@ -29,6 +30,10 @@ public:
    }
    virtual void show(int d) = 0;
    virtual std::shared_ptr<Element> evaluate(std::shared_ptr<Context> cx) = 0;
+   virtual std::shared_ptr<Element> capture(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr)
+   {
+      return shared_from_this();
+   }
 };
 
 using Element_p = std::shared_ptr<Element>;
@@ -102,6 +107,7 @@ public:
       elements.pop_front();
    }
    Element_p evaluate(std::shared_ptr<Context> cx) override;
+   Element_p capture(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr) override;
    void show(int d) override;
 
 private:
@@ -125,6 +131,8 @@ public:
    {
       return elements;
    }
+   Element_p capture(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr) override;
+   virtual std::shared_ptr<Elements> make_copy() = 0;
 
 protected:
    std::vector<Element_p> elements;   
@@ -142,6 +150,7 @@ public:
    ~Vector();
    Element_p evaluate(std::shared_ptr<Context> cx) override;
    void show(int d) override;
+   Elements_p make_copy() override;
 
 private:
 };
@@ -156,6 +165,7 @@ public:
    ~Body();
    Element_p evaluate(std::shared_ptr<Context> cx) override;
    void show(int d) override;
+   Elements_p make_copy() override;
 
 private:
 };
@@ -169,6 +179,11 @@ public:
    Binary();
    virtual ~Binary();
    void show(int d) override;
+   Element_p evaluate(std::shared_ptr<Context> cx) override;
+   Elements_p make_copy() override
+   {
+      return nullptr;
+   }
 
 protected:
 };
@@ -183,6 +198,10 @@ public:
    }
    void show(int d) override;
    Element_p evaluate(std::shared_ptr<Context> cx) override;
+   Elements_p make_copy() override
+   {
+      return std::make_shared<Mul>();
+   }
 };
 
 class Div : public Binary
@@ -193,6 +212,10 @@ public:
    }
    void show(int d) override;
    Element_p evaluate(std::shared_ptr<Context> cx) override;
+   Elements_p make_copy() override
+   {
+      return std::make_shared<Div>();
+   }
 };
 
 class Plus : public Binary
@@ -203,6 +226,10 @@ public:
    }
    void show(int d) override;
    Element_p evaluate(std::shared_ptr<Context> cx) override;
+   Elements_p make_copy() override
+   {
+      return std::make_shared<Plus>();
+   }
 };
 
 class Min : public Binary
@@ -213,6 +240,10 @@ public:
    }
    void show(int d) override;
    Element_p evaluate(std::shared_ptr<Context> cx) override;
+   Elements_p make_copy() override
+   {
+      return std::make_shared<Min>();
+   }
 };
 
 class Equal : public Binary
@@ -223,6 +254,10 @@ public:
    }
    void show(int d) override;
    Element_p evaluate(std::shared_ptr<Context> cx) override;
+   Elements_p make_copy() override
+   {
+      return std::make_shared<Equal>();
+   }
 };
 
 class Less : public Binary
@@ -233,6 +268,10 @@ public:
    }
    void show(int d) override;
    Element_p evaluate(std::shared_ptr<Context> cx) override;
+   Elements_p make_copy() override
+   {
+      return std::make_shared<Less>();
+   }
 };
 
 class Greater : public Binary
@@ -243,6 +282,10 @@ public:
    }
    void show(int d) override;
    Element_p evaluate(std::shared_ptr<Context> cx) override;
+   Elements_p make_copy() override
+   {
+      return std::make_shared<Greater>();
+   }
 };
 
 class NotEqual : public Binary
@@ -253,6 +296,10 @@ public:
    }
    void show(int d) override;
    Element_p evaluate(std::shared_ptr<Context> cx) override;
+   Elements_p make_copy() override
+   {
+      return std::make_shared<NotEqual>();
+   }
 };
 
 class GreaterEq : public Binary
@@ -263,6 +310,10 @@ public:
    }
    void show(int d) override;
    Element_p evaluate(std::shared_ptr<Context> cx) override;
+   Elements_p make_copy() override
+   {
+      return std::make_shared<GreaterEq>();
+   }
 };
 
 class LessEq : public Binary
@@ -273,6 +324,10 @@ public:
    }
    void show(int d) override;
    Element_p evaluate(std::shared_ptr<Context> cx) override;
+   Elements_p make_copy() override
+   {
+      return std::make_shared<LessEq>();
+   }
 };
 
 
@@ -284,6 +339,7 @@ public:
    ~If();
    void show(int d) override;
    Element_p evaluate(std::shared_ptr<Context> cx) override;
+   Element_p capture(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr) override;
    void setCondition(Element_p cond)
    {
       condition = cond;
@@ -312,6 +368,7 @@ public:
    ~Fn();
    void show(int d) override;
    Element_p evaluate(std::shared_ptr<Context> cx) override;
+   Element_p capture(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr) override;
    void addParam(std::string param)
    {
       params.push_back(param);
@@ -376,6 +433,7 @@ public:
    ~Defn();
    void show(int d) override;
    Element_p evaluate(std::shared_ptr<Context> cx) override;
+   Element_p capture(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr) override;
    std::string getName()
    {
       return name;
@@ -423,6 +481,10 @@ public:
    virtual ~Main();
    void show(int d) override;
    Element_p evaluate(std::shared_ptr<Context> cx) override;
+   std::shared_ptr<Elements> make_copy() override
+   {
+      return std::make_shared<Binary>();
+   }
 
 private:
 };

@@ -2,6 +2,8 @@
 
 #include "runner.h"
 
+// --------------- evaluate() ------------------
+
 // Number
 
 Element_p Number::evaluate(std::shared_ptr<Context> cx)
@@ -113,6 +115,15 @@ Element_p Body::evaluate(std::shared_ptr<Context> cx)
    }
    return result;
 }
+
+// Binary
+
+Element_p Binary::evaluate(std::shared_ptr<Context> cx)
+{
+   return std::make_shared<Number>(0);
+}
+
+
 
 // Mul
 
@@ -332,6 +343,70 @@ Element_p Main::evaluate(std::shared_ptr<Context> cx)
       result = el->evaluate(cx);
    }
    return result;
+}
+
+
+
+// --------------- capture() ------------------
+
+Element_p List::capture(Context_p cx, Frame_p fr)
+{
+   List_p lst = std::make_shared<List>();
+   for (Element_p el: elements)
+   {
+      Element_p el2 = el->capture(cx, fr);
+      lst->add(el2);
+      
+   }
+   return lst;
+}
+
+Element_p Elements::capture(Context_p cx, Frame_p fr)
+{
+   Elements_p els = make_copy();
+   for (Element_p el: elements)
+   {
+      Element_p el2 = el->capture(cx, fr);
+      els->add(el2);
+   }
+   return els;
+}
+
+Element_p If::capture(Context_p cx, Frame_p fr)
+{
+   If_p fi = std::make_shared<If>();
+   
+   Element_p cond = condition->capture(cx, fr);
+   fi->setCondition(cond);
+   Element_p ye   = yes->capture(cx, fr);
+   fi->setYes(ye);
+   if (no != nullptr)
+   {
+      Element_p n = no->capture(cx, fr);
+      setNo(n);
+   }
+   return fi;
+}
+
+Element_p Fn::capture(Context_p cx, Frame_p fr)
+{
+   Fn_p fn = std::make_shared<Fn>();
+   fn->full = full;
+   fn->params = params;
+   body = std::dynamic_pointer_cast<Body>(body->capture(cx, fr));
+
+   return fn;
+}
+
+Element_p Defn::capture(Context_p cx, Frame_p fr)
+{
+   Defn_p dfn = std::make_shared<Defn>();
+   dfn->name = name;
+   
+   Element_p f = fn->capture(cx, fr);
+   dfn->fn = std::dynamic_pointer_cast<Fn>(f);
+   
+   return dfn;
 }
 
 
