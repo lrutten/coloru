@@ -23,12 +23,12 @@ class Context;
 class Element : public std::enable_shared_from_this<Element>
 {
 public:
-   virtual void show(int d) = 0;
-   virtual std::shared_ptr<Element> evaluate(std::shared_ptr<Context> cx) = 0;
    Element();
    virtual ~Element()
    {
    }
+   virtual void show(int d) = 0;
+   virtual std::shared_ptr<Element> evaluate(std::shared_ptr<Context> cx) = 0;
 };
 
 using Element_p = std::shared_ptr<Element>;
