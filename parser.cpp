@@ -125,23 +125,6 @@ Vector::~Vector()
    std::cout << "~Vector\n";
 }
 
-/*
-void Vector::add(Element_p el)
-{
-   elements.push_back(el);
-}
-
-std::size_t Vector::size()
-{
-   return elements.size();
-}
-
-Element_p Vector::get(int i)
-{
-   return elements[i];
-}
- */
-
 void Vector::show(int d)
 {
    indent(d);
@@ -324,7 +307,27 @@ void Defn::show(int d)
    fn->show(d + 1);
 }
 
+// Lambda
+
+Lambda::Lambda() : fn(nullptr)
+{
+}
+
+Lambda::~Lambda()
+{
+   std::cout << "~Lambda\n";
+}
+
+void Lambda::show(int d)
+{
+   indent(d);
+   std::cout << "Lambda\n";
+   fn->show(d + 1);
+}
+
+
 // Fn
+
 Fn::Fn() : body(nullptr), full(false)
 {
 }
@@ -356,7 +359,7 @@ void Fn::show(int d)
 
 // Bind
 
-Bind::Bind() : fn(nullptr)
+Bind::Bind() : lambda(nullptr)
 {
 }
 
@@ -370,7 +373,7 @@ void Bind::show(int d)
    indent(d);
    std::cout << "Bind\n";
 
-   fn->show(d + 1);
+   lambda->show(d + 1);
 }
 
 
@@ -593,7 +596,11 @@ Element_p Parser::list(bool isliteral)
                fn->setBody(bd);
                fn->setFull(true);
                fn->show(0);
-               return fn;
+               
+               Lambda_p la = std::make_shared<Lambda>();
+               la->setFn(fn);
+               
+               return la;
             }
             else
             {

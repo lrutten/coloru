@@ -361,7 +361,7 @@ private:
 using If_p = std::shared_ptr<If>;
 
 
-class Fn : public Callable
+class Fn : public Element
 {
 public:
    Fn();
@@ -403,29 +403,6 @@ private:
 using Fn_p = std::shared_ptr<Fn>;
 
 
-class Bind : public Callable
-{
-public:
-   Bind();
-   ~Bind();
-   void show(int d) override;
-   Element_p evaluate(std::shared_ptr<Context> cx) override;
-   Fn_p getFn()
-   {
-      return fn;
-   }
-   void setFn(Fn_p f)
-   {
-      fn = f;
-   }
-   
-private:
-   Fn_p fn;
-};
-
-using Bind_p = std::shared_ptr<Bind>;
-
-
 class Defn : public Element
 {
 public:
@@ -442,6 +419,10 @@ public:
    {
       name = nm;
    }
+   Fn_p getFn()
+   {
+      return fn;
+   }
    void setFn(Fn_p f)
    {
       fn = f;
@@ -453,6 +434,53 @@ private:
 };
 
 using Defn_p = std::shared_ptr<Defn>;
+
+
+class Lambda : public Callable
+{
+public:
+   Lambda();
+   ~Lambda();
+   void show(int d) override;
+   Element_p evaluate(std::shared_ptr<Context> cx) override;
+   Element_p capture(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr) override;
+   Fn_p getFn()
+   {
+      return fn;
+   }
+   void setFn(Fn_p f)
+   {
+      fn = f;
+   }
+
+private:
+   Fn_p         fn;
+};
+
+using Lambda_p = std::shared_ptr<Lambda>;
+
+
+class Bind : public Callable
+{
+public:
+   Bind();
+   ~Bind();
+   void show(int d) override;
+   Element_p evaluate(std::shared_ptr<Context> cx) override;
+   Lambda_p getLambda()
+   {
+      return lambda;
+   }
+   void setLambda(Lambda_p la)
+   {
+      lambda = la;
+   }
+   
+private:
+   Lambda_p lambda;
+};
+
+using Bind_p = std::shared_ptr<Bind>;
 
 
 class Symbol : public Callable

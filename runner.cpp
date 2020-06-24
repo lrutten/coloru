@@ -29,28 +29,59 @@ Element_p List::evaluate(std::shared_ptr<Context> cx)
    if (ca != nullptr)
    {
       Bind_p   bi  = std::dynamic_pointer_cast<Bind>(ca);
-      Fn_p     fuu = std::dynamic_pointer_cast<Fn>(ca);
+      Lambda_p la  = std::dynamic_pointer_cast<Lambda>(ca);
       Symbol_p sy  = std::dynamic_pointer_cast<Symbol>(ca);
+      Defn_p   df  = nullptr;
+      Fn_p     fuu = nullptr;
       if (sy != nullptr)
       {
-         Element_p fu = cx->search(sy->getText());
-         if (fu == nullptr)
+         Element_p fun = cx->search(sy->getText());
+         if (fun == nullptr)
          {
             std::cout << "function not found\n";
             throw std::make_shared<RunError>();
          }
          std::cout << "name found\n";
-         fuu = std::dynamic_pointer_cast<Fn>(fu);
-         if (fuu == nullptr)
+         
+         
+         bi = std::dynamic_pointer_cast<Bind>(fun);
+         if (bi != nullptr)
          {
-            std::cout << "name found but is not a function\n";
-            throw std::make_shared<RunError>();
+            fuu = bi->getLambda()->getFn();
+         }
+         else
+         {
+            la = std::dynamic_pointer_cast<Lambda>(fun);
+            if (la != nullptr)
+            {
+               fuu = la->getFn();
+            }
+            else
+            {
+               df = std::dynamic_pointer_cast<Defn>(fun);
+               if (df != nullptr)
+               {
+                  fuu = df->getFn();
+               }
+               else
+               {
+                  std::cout << "name found but is not a function\n";
+                  throw std::make_shared<RunError>();
+               }
+            }
          }
       }
       else
       if (bi != nullptr)
       {
-         fuu = bi->getFn();
+         fuu = bi->getLambda()->getFn();
+      }
+      else
+      {
+         if (la != nullptr)
+         {
+            fuu = la->getFn();
+         }
       }
 
       // handle the parameters
@@ -263,9 +294,15 @@ Element_p LessEq::evaluate(std::shared_ptr<Context> cx)
 
 Element_p Defn::evaluate(std::shared_ptr<Context> cx)
 {
-   cx->add_binding(name, fn);
+   cx->add_binding(name, shared_from_this());
    
-   // return waarde nog niet ok
+   return shared_from_this();
+}
+
+// Lambda
+
+Element_p Lambda::evaluate(std::shared_ptr<Context> cx)
+{   
    return shared_from_this();
 }
 
@@ -282,7 +319,7 @@ Element_p Fn::evaluate(std::shared_ptr<Context> cx)
 Element_p Bind::evaluate(std::shared_ptr<Context> cx)
 {
    std::cout << "Bind evaluate\n";
-   return fn->evaluate(cx);
+   return lambda->evaluate(cx);
 }
 
 // If
@@ -407,6 +444,16 @@ Element_p Defn::capture(Context_p cx, Frame_p fr)
    dfn->fn = std::dynamic_pointer_cast<Fn>(f);
    
    return dfn;
+}
+
+Element_p Lambda::capture(Context_p cx, Frame_p fr)
+{
+   Lambda_p la = std::make_shared<Lambda>();
+   
+   Element_p f = fn->capture(cx, fr);
+   la->fn = std::dynamic_pointer_cast<Fn>(f);
+   
+   return la;
 }
 
 
