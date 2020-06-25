@@ -23,6 +23,9 @@ runner.o: runner.cpp lex.h textfile.h parser.h runner.h
 run: clotool
 	./clotool
 
+install: clotool
+	cp -v clotool ~/bin
+
 valgrind: clotool
 	valgrind --leak-check=full --show-leak-kinds=all ./clotool
 

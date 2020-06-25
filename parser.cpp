@@ -26,7 +26,7 @@ Number::Number(number_t nu)
 
 Number::~Number()
 {
-   std::cout << "~Number " << number << "\n";
+   //std::cout << "~Number " << number << "\n";
 }
 
 void Number::show(int d)
@@ -43,7 +43,7 @@ Boolean::Boolean(bool val) : value(val)
 
 Boolean::~Boolean()
 {
-   std::cout << "~Boolean " << value << "\n";
+   //std::cout << "~Boolean " << value << "\n";
 }
 
 void Boolean::show(int d)
@@ -60,7 +60,7 @@ List::List()
 
 List::~List()
 {
-   std::cout << "~List\n";
+   //std::cout << "~List\n";
 }
 
 void List::add(Element_p el)
@@ -96,7 +96,7 @@ Elements::Elements()
 
 Elements::~Elements()
 {
-   std::cout << "~Elements\n";
+   //std::cout << "~Elements\n";
 }
 
 void Elements::add(Element_p el)
@@ -122,7 +122,7 @@ Vector::Vector()
 
 Vector::~Vector()
 {
-   std::cout << "~Vector\n";
+   //std::cout << "~Vector\n";
 }
 
 void Vector::show(int d)
@@ -149,7 +149,7 @@ Body::Body()
 
 Body::~Body()
 {
-   std::cout << "~Body\n";
+   //std::cout << "~Body\n";
 }
 
 Elements_p Body::make_copy()
@@ -176,7 +176,7 @@ Binary::Binary()
 
 Binary::~Binary()
 {
-   std::cout << "~Binary\n";
+   //std::cout << "~Binary\n";
 }
 
 /*
@@ -297,7 +297,7 @@ Defn::Defn() : fn(nullptr)
 
 Defn::~Defn()
 {
-   std::cout << "~Defn\n";
+   //std::cout << "~Defn\n";
 }
 
 void Defn::show(int d)
@@ -315,7 +315,7 @@ Lambda::Lambda() : fn(nullptr)
 
 Lambda::~Lambda()
 {
-   std::cout << "~Lambda\n";
+   //std::cout << "~Lambda\n";
 }
 
 void Lambda::show(int d)
@@ -334,7 +334,7 @@ Fn::Fn() : body(nullptr), full(false)
 
 Fn::~Fn()
 {
-   std::cout << "~Fn\n";
+   //std::cout << "~Fn\n";
 }
 
 void Fn::show(int d)
@@ -353,6 +353,12 @@ void Fn::show(int d)
       std::cout << param << "\n";
    }
 
+   if (body == nullptr)
+   {
+      std::cout << "fn show body nullptr\n";
+      throw std::make_unique<ParserError>();
+   }
+
    body->show(d + 1);
 }
 
@@ -365,15 +371,7 @@ Bind::Bind() : lambda(nullptr)
 
 Bind::~Bind()
 {
-   std::cout << "~Bind\n";
-}
-
-void Bind::show(int d)
-{
-   indent(d);
-   std::cout << "Bind\n";
-
-   lambda->show(d + 1);
+   //std::cout << "~Bind\n";
 }
 
 
@@ -385,7 +383,7 @@ If::If() : condition(nullptr), yes(nullptr), no(nullptr)
 
 If::~If()
 {
-   std::cout << "~If\n";
+   //std::cout << "~If\n";
 }
 
 void If::show(int d)
@@ -410,7 +408,7 @@ Symbol::Symbol(const std::string &te) : text(te)
 
 Symbol::~Symbol()
 {
-   std::cout << "~Symbol " << text << "\n";
+   //std::cout << "~Symbol " << text << "\n";
 }
 
 void Symbol::show(int d)
@@ -428,7 +426,7 @@ Main::Main()
 
 Main::~Main()
 {
-   std::cout << "~Main\n";
+   //std::cout << "~Main\n";
 }
 
 /*
@@ -456,7 +454,7 @@ void Main::show(int d)
 
 Element_p Parser::list(bool isliteral)
 {
-   std::cout << "parse list\n";
+   if (debug) std::cout << "parse list\n";
 
    List_p lst = std::make_shared<List>();
    
@@ -474,7 +472,7 @@ Element_p Parser::list(bool isliteral)
          }
          if (lex->token() == tk_brclose)
          {
-            std::cout << "parse list close ok\n";
+            if (debug) std::cout << "parse list close ok\n";
             lex->next();
          }
       }
@@ -510,7 +508,7 @@ Element_p Parser::list(bool isliteral)
          {
             lst->pop_front();
 
-            std::cout << "parse defn\n";
+            if (debug) std::cout << "parse defn\n";
             
             Symbol_p name = std::dynamic_pointer_cast<Symbol>(lst->get(0));
             if (name == nullptr)
@@ -518,7 +516,7 @@ Element_p Parser::list(bool isliteral)
                std::cout << "error in defn: name missing\n";
                throw std::make_unique<ParserError>();
             }
-            std::cout << "name " << name->getText();
+            if (debug) std::cout << "name " << name->getText();
             defn->setName(name->getText());
             lst->pop_front();
 
@@ -562,9 +560,9 @@ Element_p Parser::list(bool isliteral)
             {
                lst->pop_front();
    
-               std::cout << "parse fn\n";
-               lst->show(0);
-               lst->get(0)->show(0);
+               if (debug) std::cout << "parse fn\n";
+               if (debug) lst->show(0);
+               if (debug) lst->get(0)->show(0);
 
                Vector_p params = std::dynamic_pointer_cast<Vector>(lst->get(0));
                if (params == nullptr)
@@ -572,7 +570,7 @@ Element_p Parser::list(bool isliteral)
                   std::cout << "error in fn: parameter vector missing\n";
                   throw std::make_unique<ParserError>();
                }
-               std::cout << "parse fn parameters ok\n";
+               if (debug) std::cout << "parse fn parameters ok\n";
    
                for (Element_p ell: params->getElements())
                {
@@ -595,7 +593,7 @@ Element_p Parser::list(bool isliteral)
                }
                fn->setBody(bd);
                fn->setFull(true);
-               fn->show(0);
+               if (debug) fn->show(0);
                
                Lambda_p la = std::make_shared<Lambda>();
                la->setFn(fn);
@@ -609,7 +607,7 @@ Element_p Parser::list(bool isliteral)
                {
                   lst->pop_front();
       
-                  std::cout << "parse if\n";
+                  if (debug) std::cout << "parse if\n";
 
                   int sz = lst->getElements().size();
                   if (sz != 3 && sz != 2)
@@ -651,7 +649,7 @@ Element_p Parser::list(bool isliteral)
 
 Element_p Parser::vector()
 {
-   std::cout << "parse vector\n";
+   if (debug) std::cout << "parse vector\n";
    
    char token = lex->token();
    if (token != tk_eof)
@@ -668,7 +666,7 @@ Element_p Parser::vector()
          }
          if (lex->token() == tk_rbclose)
          {
-            std::cout << "parse vector close ok\n";
+            if (debug) std::cout << "parse vector close ok\n";
             lex->next();
          }
          
@@ -785,7 +783,7 @@ Element_p Parser::expression(bool isliteral)
    else
    if (token == tk_fn)
    {
-      std::cout << "parse expression tk_fn\n";
+      if (debug) std::cout << "parse expression tk_fn\n";
       
       lex->next();
       return std::make_shared<Fn>();
@@ -805,7 +803,7 @@ Element_p Parser::expression(bool isliteral)
    }
    else
    {
-      std::cout << "unexpected token in expression\n";
+      if (debug) std::cout << "unexpected token in expression\n";
       throw std::make_unique<ParserError>();
    }
 }
@@ -817,7 +815,7 @@ Element_p Parser::main()
    int i = 0;
    while (lex->token() != tk_eof)
    {
-      std::cout << "main " << i << "\n";
+      if (debug) std::cout << "main " << i << "\n";
       
       Element_p el = expression();
       if (el == nullptr)
@@ -842,9 +840,9 @@ Parser::~Parser()
 
 Element_p Parser::parse(std::string fn)
 {
-   printf("start parser\n");
+   if (debug) printf("start parser\n");
    lex = std::make_shared<Lex>(fn);
    
-   printf("lex_init ok\n");
+   if (debug) printf("lex_init ok\n");
    return main();
 }

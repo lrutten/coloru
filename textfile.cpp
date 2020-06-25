@@ -5,6 +5,8 @@
 
 #include "textfile.h"
 
+extern bool debug;
+
 Textfile::Textfile(const std::string &fn) : filename(fn)
 {
    readfile();
@@ -20,10 +22,10 @@ void Textfile::readfile()
    std::string   line;
    std::ifstream fin;
 
-   std::cout << "readfile " << filename << "\n";
+   if (debug) std::cout << "readfile " << filename << "\n";
 
    fin.open(filename);
-   std::cout << "na open\n";
+   if (debug) std::cout << "na open\n";
    
    if(!fin.is_open())
    {
@@ -32,12 +34,12 @@ void Textfile::readfile()
    }
    else
    {
-      std::cout << "open ok\n";
+      if (debug) std::cout << "open ok\n";
    
       getline(fin, line);
       while(!fin.eof())
       {
-         std::cout << "line read " << line << "\n";
+         if (debug) std::cout << "line read " << line << "\n";
          lines.push_back(line + "\n");
    
          getline(fin, line);

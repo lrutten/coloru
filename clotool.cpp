@@ -3,9 +3,11 @@
 #include "parser.h"
 #include "runner.h"
 
-int main()
+bool debug = false;
+
+int main(int argc, char **argv)
 {
-   std::cout << "start\n";
+   if (debug) std::cout << "start\n";
    
    /*
    Textfile *fi = new Textfile("vb1.clj");
@@ -35,15 +37,15 @@ int main()
    delete lex;
     */
    Parser_p parser = std::make_shared<Parser>();
-   Element_p root = parser->parse("vb1.clj");
+   Element_p root = parser->parse(argv[1]);
    if (root != nullptr)
    {
-      root->show(0);
+      if (debug) root->show(0);
       
       Runner_p ru = std::make_shared<Runner>(root);
       Element_p res = ru->run();
-      std::cout << "----- result ------\n";
-      res->show(0);
+      std::cout << "Result:\n";
+      res->show(1);
    }
 }
 

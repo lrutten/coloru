@@ -20,6 +20,8 @@ public:
    ~Frame();
    void add_binding(std::string nm, Element_p el);
    Element_p search(std::string nm);
+   bool exists(std::string nm);
+   void show(int d);
    
 private:
    std::map<std::string, Element_p> bindings;
@@ -37,6 +39,8 @@ public:
    void pop();
    void add_binding(std::string nm, Element_p);
    Element_p search(std::string nm);
+   bool exists(std::string nm);
+   void show(int d);
    
 private:
    std::deque<Frame_p> frames;

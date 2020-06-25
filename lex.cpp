@@ -3,6 +3,8 @@
 #include <string.h>
 #include "lex.h"
 
+extern bool debug;
+
 token_t Lex::token()
 {
    return tok;
@@ -55,7 +57,7 @@ void Lex::next()
       tok = tk_eof;
       return;
    }
-   std::cout << "teken " << *it << "\n";
+   if (debug) std::cout << "teken " << *it << "\n";
 
    switch ( *it )
    {
@@ -124,7 +126,7 @@ void Lex::next()
             tok = tk_number;
             std::stringstream ss(nus);
             ss >> val;
-            std::cout << "lex: tk_number " << nus << " " << val << "\n";
+            if (debug) std::cout << "lex: tk_number " << nus << " " << val << "\n";
          }
          else
          if (isletter(*it))
@@ -151,7 +153,7 @@ void Lex::next()
             else
             if (token_text == "fn")
             {
-               std::cout << "lex: tk_fn\n";
+               if (debug) std::cout << "lex: tk_fn\n";
                tok = tk_fn;
             }
             else
@@ -192,7 +194,7 @@ void Lex::next()
             else
             {
                tok = tk_symbol;
-               std::cout << "lex: tk_symbol " << sym << "\n";
+               if (debug) std::cout << "lex: tk_symbol " << sym << "\n";
             }
          }
          else
