@@ -399,6 +399,57 @@ void If::show(int d)
    }
 }
 
+// Println
+
+Println::Println()
+{
+}
+
+Println::~Println()
+{
+}
+
+void Println::show(int d)
+{
+   indent(d);
+   std::cout << "Println " << full << "\n";
+   
+   if (body != nullptr)
+   {
+      body->show(d + 1);
+   }
+}
+
+// Let
+
+Let::Let()
+{
+}
+
+Let::~Let()
+{
+}
+
+void Let::show(int d)
+{
+   indent(d);
+   std::cout << "Let " << full << "\n";
+   
+   for (const auto &pr: variables)
+   {
+      indent(d + 1);
+      std::cout << pr.first << "\n";
+      
+      pr.second->show(d + 2);
+   }
+
+   if (body != nullptr)
+   {
+      body->show(d + 1);
+   }
+}
+
+
 
 // Symbol
 
@@ -635,7 +686,81 @@ Element_p Parser::list(bool isliteral)
                }
                else
                {
-                  return lst;
+                  Println_p pri = std::dynamic_pointer_cast<Println>(el);
+                  if (pri != nullptr)
+                  {
+                     lst->pop_front();
+                     
+                     if (debug) std::cout << "parse println\n";
+                     if (debug) lst->show(0);
+                     
+                     Body_p bd = std::make_shared<Body>();
+                     while (!lst->getElements().empty())
+                     {
+                        Element_p e = lst->getElements().front();
+                        lst->pop_front();
+                        bd->add(e);
+                     }
+                     pri->setBody(bd);
+                     if (debug) pri->show(0);
+                     
+                     return pri;
+                  }
+                  else
+                  {
+                     Let_p lt = std::dynamic_pointer_cast<Let>(el);
+                     if (lt != nullptr)
+                     {
+                        lst->pop_front();
+                        
+                        if (debug) std::cout << "parse let\n";
+                        if (debug) lst->show(0);
+                        if (debug) lst->get(0)->show(0);
+
+                        Vector_p vals = std::dynamic_pointer_cast<Vector>(lst->get(0));
+                        if (vals == nullptr)
+                        {
+                           std::cout << "error in let: name,value vector missing\n";
+                           throw std::make_unique<ParserError>();
+                        }
+
+                        std::cout << "parse let vals size " << vals->size() << "\n";
+                        if ((vals->size() % 2) != 0)
+                        {
+                           std::cout << "error in let: name,value number not even\n";
+                           throw std::make_unique<ParserError>();
+                        }
+                        if (debug) std::cout << "parse let name,value ok\n";
+                        
+                        for (int i=0; i<vals->size()/2; i++)
+                        {
+                           Symbol_p name = std::dynamic_pointer_cast<Symbol>(vals->get(i));
+                           if (name == nullptr)
+                           {
+                              std::cout << "error in let: value name must be symbol\n";
+                              throw std::make_unique<ParserError>();
+                           }
+                           lt->addVariable(name->getText(), vals->get(i + 1));
+                        }
+                        lst->pop_front();
+                        
+                        Body_p bd = std::make_shared<Body>();
+                        while (!lst->getElements().empty())
+                        {
+                           Element_p e = lst->getElements().front();
+                           lst->pop_front();
+                           bd->add(e);
+                        }
+                        lt->setBody(bd);
+                        if (debug) fn->show(0);
+                        
+                        return lt;
+                     }
+                     else
+                     {
+                        return lst;
+                     }
+                  }
                }
             }
          }
@@ -793,6 +918,18 @@ Element_p Parser::expression(bool isliteral)
    {
       lex->next();
       return std::make_shared<If>();
+   }
+   else
+   if (token == tk_println)
+   {
+      lex->next();
+      return std::make_shared<Println>();
+   }
+   else
+   if (token == tk_let)
+   {
+      lex->next();
+      return std::make_shared<Let>();
    }
    else
    if (token == tk_symbol)

@@ -159,8 +159,69 @@ Element_p List::evaluate(std::shared_ptr<Context> cx, int d)
    }
    return std::make_shared<Number>(0);
 }
+
+// Let
+
+Element_p Let::evaluate(std::shared_ptr<Context> cx, int d)
+{
+   if (debug) indent(d);
+   if (debug) std::cout << "Let evaluate()\n";
+
+      
+   Frame_p fr = std::make_shared<Frame>();
+         
+   for (const auto &pr: variables)
+   {
+      Element_p   apar     = pr.second;
+      std::string fparname = pr.first;
+      if (debug) indent(d + 1);
+      if (debug) std::cout << "fparname " << fparname << "\n";
+
+      Element_p aparres = apar->evaluate(cx, d + 1);
+
+      if (debug) indent(d + 1);
+      if (debug) std::cout << "==== aparam result===\n";
+      if (debug) aparres->show(d + 2);
+      if (debug) indent(d + 1);
+      if (debug) std::cout << "=====\n";
+
+      fr->add_binding(fparname, aparres);
+   }
+   
+   cx->push(fr);
+   Element_p rs = body->evaluate(cx, d + 1);
+   cx->pop();
+
+   if (debug) indent(d + 1);
+   if (debug) std::cout << "++++ let result+++\n";
+   if (debug) rs->show(d + 2);
+   if (debug) indent(d + 1);
+   if (debug) std::cout << "+++++++++\n";
+   
+   return rs;
+}
+
+
+
+
+// Println
  
- 
+Element_p Println::evaluate(std::shared_ptr<Context> cx, int d)
+{
+   if (debug) indent(d);
+   if (debug) std::cout << "Println evaluate\n";
+
+   Element_p result;
+   for (Element_p el: body->getElements())
+   {
+      result = el->evaluate(cx, d + 1);
+      result->print();
+   }
+   std::cout << "\n";
+
+   return result;
+}
+
 // Vector
 
 Element_p Vector::evaluate(std::shared_ptr<Context> cx, int d)
@@ -489,6 +550,67 @@ Element_p If::capture(Context_p cx, Frame_p fr, int d)
       setNo(n);
    }
    return fi;
+}
+
+Element_p Println::capture(Context_p cx, Frame_p fr, int d)
+{
+   if (debug) indent(d);
+   if (debug) std::cout << "Writeln capture\n";
+
+   Println_p pri = std::make_shared<Println>();
+   
+   if (body != nullptr)
+   {
+      Element_p bo = body->capture(cx, fr, d + 1);
+      pri->body = std::dynamic_pointer_cast<Body>(body->capture(cx, fr, d + 1));
+      if (pri->body == nullptr)
+      {
+         std::cout << "Println capture body nullptr\n";
+         throw std::make_unique<RunError>();
+      }
+   }
+   
+   return pri;
+}
+
+Element_p Let::capture(Context_p cx, Frame_p fr, int d)
+{
+   if (debug) indent(d);
+   if (debug) std::cout << "Let capture\n";
+
+   Let_p lt      = std::make_shared<Let>();
+   lt->full      = full;
+   
+   Frame_p frr = std::make_shared<Frame>();
+   for (const auto &pr: variables)
+   {
+      if (debug) indent(d + 1);
+      if (debug) std::cout << "Let capture variable " << pr.first << "\n";
+
+      frr->add_binding(pr.first, nullptr);
+
+      Element_p val = pr.second->capture(cx, fr, d + 1);
+      if (val == nullptr)
+      {
+         std::cout << "Let capture val nullptr\n";
+         throw std::make_unique<RunError>();
+      }
+      lt->addVariable(pr.first, val);
+   }
+
+   cx->push(frr);
+   lt->body = std::dynamic_pointer_cast<Body>(body->capture(cx, fr, d + 1));
+   cx->pop();
+
+   if (lt->body == nullptr)
+   {
+      std::cout << "Let capture body nullptr\n";
+      throw std::make_unique<RunError>();
+   }
+
+   if (debug) lt->show(d + 1);
+
+   return lt;
 }
 
 Element_p Fn::capture(Context_p cx, Frame_p fr, int d)

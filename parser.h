@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <deque>
+#include <map>
 #include <memory>
 
 
@@ -41,6 +42,9 @@ public:
    {
       return "Element";
    }
+   virtual void print()
+   {
+   }
 };
 
 using Element_p = std::shared_ptr<Element>;
@@ -74,6 +78,10 @@ public:
    {
       return "Number";
    }
+   void print() override
+   {
+      std::cout << number;
+   }
    
 private:
    number_t number;
@@ -96,6 +104,17 @@ public:
    virtual std::string info() override
    {
       return "Boolean";
+   }
+   void print() override
+   {
+      if (value)
+      {
+         std::cout << true;
+      }
+      else
+      {
+         std::cout << false;
+      }
    }
    
 private:
@@ -433,6 +452,91 @@ private:
 using If_p = std::shared_ptr<If>;
 
 
+// 
+
+class Println : public Element
+{
+public:
+   Println();
+   ~Println();
+   void show(int d) override;
+   Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
+   Element_p capture(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, int d) override;
+   void setBody(Body_p bd)
+   {
+      body = bd;
+   }
+   bool isFull()
+   {
+      return full;
+   }
+   void setFull(bool fu)
+   {
+      full = fu;
+   }
+   virtual std::string info() override
+   {
+      return "Println";
+   }
+   
+private:
+   bool                     full;
+   Body_p                   body;
+};
+
+using Println_p = std::shared_ptr<Println>;
+
+
+// Let
+
+class Let : public Element
+{
+public:
+   Let();
+   ~Let();
+   void show(int d) override;
+   Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
+   Element_p capture(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, int d) override;
+   void addVariable(std::string nm, Element_p el)
+   {
+      variables.insert({nm, el});
+   }
+   int getVariablesSize()
+   {
+      return variables.size();
+   }
+   Element_p getVariable(std::string nm)
+   {
+      return variables[nm];
+   }
+   void setBody(Body_p bd)
+   {
+      body = bd;
+   }
+   bool isFull()
+   {
+      return full;
+   }
+   void setFull(bool fu)
+   {
+      full = fu;
+   }
+   virtual std::string info() override
+   {
+      return "Let";
+   }
+   
+private:
+   bool                             full;
+   std::map<std::string, Element_p> variables;
+   Body_p                           body;
+};
+
+using Let_p = std::shared_ptr<Let>;
+
+
+// Fn
+
 class Fn : public Element
 {
 public:
@@ -596,6 +700,10 @@ public:
    virtual std::string info() override
    {
       return "Symbol";
+   }
+   void print() override
+   {
+      std::cout << text;
    }
    
 private:
