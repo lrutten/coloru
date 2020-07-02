@@ -16,6 +16,19 @@ Textfile::~Textfile()
 {
 }
 
+std::string Textfile::remove_comment(std::string line)
+{
+   auto pos = line.find_first_of(';');
+   if (pos == std::string::npos)
+   {
+      return line;
+   }
+   else
+   {
+      // skip ; and the following characters
+      return line.substr(0, pos);
+   }
+}
 
 void Textfile::readfile()
 {
@@ -40,7 +53,7 @@ void Textfile::readfile()
       while(!fin.eof())
       {
          if (debug) std::cout << "line read " << line << "\n";
-         lines.push_back(line + "\n");
+         lines.push_back(remove_comment(line) + "\n");
    
          getline(fin, line);
       }

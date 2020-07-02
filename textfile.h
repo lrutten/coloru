@@ -13,6 +13,7 @@ public:
    ~Textfile();
    void readfile();
    void show();
+   std::string remove_comment(std::string line);
 
    template <typename T>
    class const_iterator

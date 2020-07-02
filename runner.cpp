@@ -45,7 +45,7 @@ Element_p List::evaluate(std::shared_ptr<Context> cx, int d)
          Element_p fun = cx->search(sy->getText());
          if (fun == nullptr)
          {
-            std::cout << "function not found\n";
+            std::cout << "function " << sy->getText() << " not found\n";
             throw std::make_shared<RunError>();
          }
 
@@ -216,6 +216,7 @@ Element_p Println::evaluate(std::shared_ptr<Context> cx, int d)
    {
       result = el->evaluate(cx, d + 1);
       result->print();
+      std::cout << " ";
    }
    std::cout << "\n";
 
@@ -337,6 +338,11 @@ Element_p Equal::evaluate(std::shared_ptr<Context> cx, int d)
    for (Element_p el: elements)
    {
       Element_p el2 = el->evaluate(cx, d + 1);
+
+      if (debug) indent(d + 1);
+      if (debug) std::cout << "Equal el2\n";
+      if (debug) el2->show(d + 2);
+
       Number_p nu = std::dynamic_pointer_cast<Number>(el2);
       if (nu == nullptr)
       {
@@ -484,6 +490,14 @@ Element_p Symbol::evaluate(std::shared_ptr<Context> cx, int d)
    {
       return val;
    }
+}
+
+
+// Text
+
+Element_p Text::evaluate(std::shared_ptr<Context> cx, int d)
+{
+   return shared_from_this();
 }
 
 
@@ -715,6 +729,14 @@ Element_p Symbol::capture(Context_p cx, Frame_p fr, int d)
       if (debug) indent(d + 1);
       if (debug) std::cout << "Symbol capture not found " << text << "\n";
    }
+   return shared_from_this();
+}
+
+Element_p Text::capture(Context_p cx, Frame_p fr, int d)
+{
+   if (debug) indent(d);
+   if (debug) std::cout << "Text capture " << text << "\n";
+
    return shared_from_this();
 }
 

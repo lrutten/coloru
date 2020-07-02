@@ -31,6 +31,7 @@ enum token_t
    tk_number,
    tk_true,
    tk_false,
+   tk_text,
    tk_eof
 };
 

@@ -40,6 +40,11 @@ int isletter(char t)
    return (t >= 'a' && t <= 'z' || t >= 'A' && t <= 'Z');
 }
 
+bool isextra(char t)
+{
+   return t == '*' || t == '+' || t == '-' || t == '!' || t == '?' || t == '_';
+}
+
 bool Lex::end()
 {
    return it == file->end();
@@ -134,7 +139,7 @@ void Lex::next()
             std::string sym = "";
             sym += *it;
             it++;
-            while (!end() && (isletter(*it) || isdigit(*it)))
+            while (!end() && (isletter(*it) || isdigit(*it) || isextra(*it)))
             {
                sym += *it;
                it++;
@@ -196,6 +201,23 @@ void Lex::next()
                tok = tk_symbol;
                if (debug) std::cout << "lex: tk_symbol " << sym << "\n";
             }
+         }
+         else
+         if (*it == '\"')
+         {
+            it++;  // skip "
+            
+            std::string tes = "";
+            while (!end() && *it != '\"')
+            {
+               tes += *it;
+               it++;
+            }
+            it++; // skip "
+            
+            tok        = tk_text;
+            token_text = tes;
+            if (debug) std::cout << "lex: tk_text " << tes << "\n";
          }
          else
          {

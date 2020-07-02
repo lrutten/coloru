@@ -179,13 +179,6 @@ Binary::~Binary()
    //std::cout << "~Binary\n";
 }
 
-/*
-std::shared_ptr<Elements> Binary::make_copy()
-{
-   return std::make_shared<Binary>();
-}
- */
-
 void Binary::show(int d)
 {
    indent(d);
@@ -469,6 +462,24 @@ void Symbol::show(int d)
 }
 
 
+// Text
+
+Text::Text(const std::string &te) : text(te)
+{
+}
+
+Text::~Text()
+{
+   //std::cout << "~Symbol " << text << "\n";
+}
+
+void Text::show(int d)
+{
+   indent(d);
+   std::cout << "Text " << text << "\n";
+}
+
+
 // Main
 
 Main::Main()
@@ -539,9 +550,11 @@ Element_p Parser::list(bool isliteral)
          int i = 0;
          while (!lst->getElements().empty())
          {
-            //std::cout << "pop " << lst->getElements().size() << "\n";
+            if (debug) std::cout << "parse Binary pop " << i << "\n";
             
             Element_p e = lst->getElements().front();
+            if (debug) e->show(0);
+
             lst->pop_front();
             if (i != 0)
             {
@@ -549,7 +562,13 @@ Element_p Parser::list(bool isliteral)
             }
             i++;
          }
+
+         if (debug) std::cout << "parse Binary " << bin->info() << "\n";
+         if (debug) bin->show(0);
          
+         // test only
+         //exit(1);
+
          return bin;
       }
       else
@@ -670,6 +689,8 @@ Element_p Parser::list(bool isliteral)
                   Element_p e1 = lst->getElements().front();
                   lst->pop_front();
                   fi->setCondition(e1);
+                  if (debug) std::cout << "parse if condtion\n";
+                  if (debug) e1->show(0);
 
                   Element_p e2 = lst->getElements().front();
                   lst->pop_front();
@@ -724,7 +745,7 @@ Element_p Parser::list(bool isliteral)
                            throw std::make_unique<ParserError>();
                         }
 
-                        std::cout << "parse let vals size " << vals->size() << "\n";
+                        if (debug) std::cout << "parse let vals size " << vals->size() << "\n";
                         if ((vals->size() % 2) != 0)
                         {
                            std::cout << "error in let: name,value number not even\n";
@@ -752,7 +773,7 @@ Element_p Parser::list(bool isliteral)
                            bd->add(e);
                         }
                         lt->setBody(bd);
-                        if (debug) fn->show(0);
+                        if (debug) lt->show(0);
                         
                         return lt;
                      }
@@ -939,8 +960,15 @@ Element_p Parser::expression(bool isliteral)
       return std::make_shared<Symbol>(sym);
    }
    else
+   if (token == tk_text)
    {
-      if (debug) std::cout << "unexpected token in expression\n";
+      std::string text = lex->text();
+      lex->next();
+      return std::make_shared<Text>(text);
+   }
+   else
+   {
+      std::cout << "unexpected token in expression\n";
       throw std::make_unique<ParserError>();
    }
 }

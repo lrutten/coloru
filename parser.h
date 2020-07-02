@@ -582,6 +582,7 @@ private:
 
 using Fn_p = std::shared_ptr<Fn>;
 
+// Defn
 
 class Defn : public Element
 {
@@ -619,6 +620,7 @@ private:
 
 using Defn_p = std::shared_ptr<Defn>;
 
+// Lambda
 
 class Lambda : public Callable
 {
@@ -646,6 +648,8 @@ private:
 };
 
 using Lambda_p = std::shared_ptr<Lambda>;
+
+// Bind
 
 class Frame;
 
@@ -684,6 +688,7 @@ private:
 
 using Bind_p = std::shared_ptr<Bind>;
 
+// Symbol
 
 class Symbol : public Callable
 {
@@ -711,6 +716,35 @@ private:
 };
 
 using Symbol_p = std::shared_ptr<Symbol>;
+
+// Text
+
+class Text : public Element
+{
+public:
+   explicit Text(const std::string &te);
+   ~Text();
+   void show(int d) override;
+   Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
+   Element_p capture(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, int d) override;
+   std::string getText()
+   {
+      return text;
+   }
+   virtual std::string info() override
+   {
+      return "Text";
+   }
+   void print() override
+   {
+      std::cout << text;
+   }
+   
+private:
+   std::string text;
+};
+
+using Text_p = std::shared_ptr<Text>;
 
 
 class Main : public Elements
