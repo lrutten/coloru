@@ -25,6 +25,9 @@ class ParserError
 class Frame;
 class Context;
 
+
+// Element
+
 class Element : public std::enable_shared_from_this<Element>
 {
 public:
@@ -49,6 +52,9 @@ public:
 
 using Element_p = std::shared_ptr<Element>;
 
+
+// Callable
+
 class Callable : public Element
 {
 public:
@@ -62,6 +68,7 @@ public:
 
 using Callable_p = std::shared_ptr<Callable>;
 
+// Number
 
 class Number : public Element
 {
@@ -89,6 +96,8 @@ private:
 
 using Number_p = std::shared_ptr<Number>;
 
+
+// Boolean
 
 class Boolean : public Element
 {
@@ -124,6 +133,8 @@ private:
 using Boolean_p = std::shared_ptr<Boolean>;
 
 
+// List
+
 class List : public Element
 {
 public:
@@ -153,6 +164,39 @@ private:
 };
 
 using List_p = std::shared_ptr<List>;
+
+
+// Call
+
+class Call : public Element
+{
+public:
+   Call();
+   ~Call();
+   void add(Element_p el);
+   std::size_t size();
+   Element_p get(int i);
+   std::deque<Element_p > getElements()
+   {
+      return elements;
+   }
+   void pop_front()
+   {
+      elements.pop_front();
+   }
+   Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
+   Element_p capture(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, int d) override;
+   void show(int d) override;
+   virtual std::string info() override
+   {
+      return "Call";
+   }
+
+private:
+   std::deque<Element_p> elements;   
+};
+
+using Call_p = std::shared_ptr<Call>;
 
 
 // Elements

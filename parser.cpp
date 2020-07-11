@@ -52,6 +52,7 @@ void Boolean::show(int d)
    std::cout << "Boolean " << value << "\n";
 }
 
+
 // List
 
 List::List()
@@ -89,7 +90,47 @@ void List::show(int d)
    }
 }
 
+
+// Call
+
+Call::Call()
+{
+}
+
+Call::~Call()
+{
+   //std::cout << "~List\n";
+}
+
+void Call::add(Element_p el)
+{
+   elements.push_back(el);
+}
+
+std::size_t Call::size()
+{
+   return elements.size();
+}
+
+Element_p Call::get(int i)
+{
+   return elements[i];
+}
+
+void Call::show(int d)
+{
+   indent(d);
+   std::cout << "Call\n";
+
+   for (Element_p el: elements)
+   {
+      el->show(d + 1);
+   }
+}
+
+
 // Elements
+
 Elements::Elements()
 {
 }
@@ -518,30 +559,36 @@ Element_p Parser::list(bool isliteral)
 {
    if (debug) std::cout << "parse list\n";
 
-   List_p lst = std::make_shared<List>();
-   
-   char token = lex->token();
-   if (token != tk_eof)
+   if (!isliteral)
    {
-      if (token == tk_bropen)
+      Call_p lst = std::make_shared<Call>();
+      
+      char token = lex->token();
+      if (token != tk_eof)
       {
-         lex->next();
-         
-         while (lex->token() != tk_eof && lex->token() != tk_brclose)
+         if (token == tk_bropen)
          {
-            Element_p e = expression();
-            lst->add(e);
-         }
-         if (lex->token() == tk_brclose)
-         {
-            if (debug) std::cout << "parse list close ok\n";
             lex->next();
+            
+            while (lex->token() != tk_eof && lex->token() != tk_brclose)
+            {
+               Element_p e = expression();
+               lst->add(e);
+            }
+            if (lex->token() == tk_brclose)
+            {
+               if (debug) std::cout << "parse list close ok\n";
+               lex->next();
+            }
          }
       }
-   }
 
-   if (!isliteral && lst->size() > 0)
-   {
+      if (lst->size() == 0)
+      {
+         std::cout << "an empty list is useless as call\n";
+         throw std::make_unique<ParserError>();
+      }
+      
       // rearrange the list
       Element_p el = lst->get(0);
       Binary_p bin = std::dynamic_pointer_cast<Binary>(el);
@@ -789,6 +836,28 @@ Element_p Parser::list(bool isliteral)
    }
    else
    {
+      List_p lst = std::make_shared<List>();
+      
+      char token = lex->token();
+      if (token != tk_eof)
+      {
+         if (token == tk_bropen)
+         {
+            lex->next();
+            
+            while (lex->token() != tk_eof && lex->token() != tk_brclose)
+            {
+               Element_p e = expression();
+               lst->add(e);
+            }
+            if (lex->token() == tk_brclose)
+            {
+               if (debug) std::cout << "parse literal list close ok\n";
+               lex->next();
+            }
+         }
+      }
+
       return lst;
    }
 }

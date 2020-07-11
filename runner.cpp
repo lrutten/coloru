@@ -11,6 +11,7 @@ Element_p Number::evaluate(std::shared_ptr<Context> cx, int d)
    return std::make_shared<Number>(number);
 }
 
+
 // Boolean
 
 Element_p Boolean::evaluate(std::shared_ptr<Context> cx, int d)
@@ -25,6 +26,17 @@ Element_p List::evaluate(std::shared_ptr<Context> cx, int d)
 {
    if (debug) indent(d);
    if (debug) std::cout << "List evaluate()\n";
+
+   return shared_from_this();
+}
+
+
+// Call
+
+Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
+{
+   if (debug) indent(d);
+   if (debug) std::cout << "Call evaluate()\n";
 
    Element_p  el = get(0);
    while (std::dynamic_pointer_cast<List>(el) != nullptr)
@@ -159,6 +171,7 @@ Element_p List::evaluate(std::shared_ptr<Context> cx, int d)
    }
    return std::make_shared<Number>(0);
 }
+
 
 // Let
 
@@ -530,6 +543,21 @@ Element_p List::capture(Context_p cx, Frame_p fr, int d)
       
    }
    return lst;
+}
+
+Element_p Call::capture(Context_p cx, Frame_p fr, int d)
+{
+   if (debug) indent(d);
+   if (debug) std::cout << "Call capture\n";
+
+   Call_p cal = std::make_shared<Call>();
+   for (Element_p el: elements)
+   {
+      Element_p el2 = el->capture(cx, fr, d + 1);
+      cal->add(el2);
+      
+   }
+   return cal;
 }
 
 Element_p Elements::capture(Context_p cx, Frame_p fr, int d)
