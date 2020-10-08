@@ -39,8 +39,9 @@ Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
    if (debug) std::cout << "Call evaluate()\n";
 
    Element_p  el = get(0);
-   while (std::dynamic_pointer_cast<List>(el) != nullptr)
+   while (std::dynamic_pointer_cast<Call>(el) != nullptr)
    {
+      // This is a nested call
       el = el->evaluate(cx, d + 1);
    }
    

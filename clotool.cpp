@@ -1,4 +1,5 @@
 #include <iostream>
+#include <getopt.h>
 
 #include "parser.h"
 #include "runner.h"
@@ -7,10 +8,28 @@ bool debug = false;
 
 int main(int argc, char **argv)
 {
+   char *fname;
+   int opt;
+   while ((opt = getopt(argc, argv, "df:")) != -1)
+   {
+      switch (opt)
+      {
+         case 'd':
+            debug = true;
+            break;
+
+         case 'f':
+            fname = optarg;
+            break;
+      }
+   }
+
    if (debug) std::cout << "start\n";
+
    
    Parser_p parser = std::make_shared<Parser>();
-   Element_p root = parser->parse(argv[1]);
+   Element_p root = parser->parse(fname);
+   //Element_p root = parser->parse(argv[1]);
    //Element_p root = parser->parse("vb3.clj");
    if (root != nullptr)
    {
