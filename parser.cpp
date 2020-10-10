@@ -719,6 +719,16 @@ Element_p Parser::list(bool isliteral)
             }
             else
             {
+               // only for test full
+               if (fn == nullptr)
+               {
+                  if (debug) std::cout << "parse fn null\n";
+               }
+               else
+               {
+                  if (debug) std::cout << "parse fn full\n";
+               }
+
                If_p fi = std::dynamic_pointer_cast<If>(el);
                if (fi != nullptr)
                {
@@ -900,7 +910,7 @@ Element_p Parser::expression(bool isliteral)
    char token = lex->token();
    if (token == tk_bropen)
    {
-      return list();
+      return list(isliteral);
    }
    else
    if (token == tk_rbopen)
@@ -1034,6 +1044,20 @@ Element_p Parser::expression(bool isliteral)
       std::string text = lex->text();
       lex->next();
       return std::make_shared<Text>(text);
+   }
+   else
+   if (token == tk_apostrophe)
+   {
+      lex->next();
+
+      Element_p el = expression(true);
+      if (el == nullptr)
+      {
+         std::cout << "null after quote\n";
+         throw std::make_unique<ParserError>();
+      }
+
+      return el;
    }
    else
    {
