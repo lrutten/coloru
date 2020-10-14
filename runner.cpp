@@ -20,6 +20,13 @@ Element_p Boolean::evaluate(std::shared_ptr<Context> cx, int d)
 }
 
 
+// Nil
+
+Element_p Nil::evaluate(std::shared_ptr<Context> cx, int d)
+{
+   return shared_from_this();
+}
+
 // List
 
 Element_p List::evaluate(std::shared_ptr<Context> cx, int d)
@@ -28,6 +35,198 @@ Element_p List::evaluate(std::shared_ptr<Context> cx, int d)
    if (debug) std::cout << "List evaluate()\n";
 
    return shared_from_this();
+}
+
+/*
+// Param
+
+bool Param::assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, List_p list, int i, int d)
+{
+   if (debug) indent(d);
+   if (debug) std::cout << "Param assignParameters()\n";
+
+   if (debug) indent(d + 1);
+   if (debug) std::cout << "i "  << i << " rest " << getRest() << "\n";
+   if (debug) indent(d + 1);
+   if (debug) std::cout << "name " << name << "\n";
+
+   std::string fparname = name;
+   //int sz = call->size() - 1;
+   
+   if (!rest)
+   {
+      // no rest
+      Element_p apar = list->get(i);
+      Element_p aparres = apar->evaluate(cx, d + 1);
+   
+      if (debug) indent(d + 1);
+      if (debug) std::cout << "==== aparam result===\n";
+   
+      if (debug) aparres->show(d + 2);
+   
+      if (debug) indent(d + 1);
+      if (debug) std::cout << "=====\n";
+   
+      fr->add_binding(fparname, aparres);
+   }
+   else
+   {
+      // rest
+      if (i >= list->size())
+      {
+         if (debug) indent(d + 1);
+         if (debug) std::cout << "add binding nil\n";
+
+         fr->add_binding(fparname, std::make_shared<Nil>());
+      }
+      else
+      {
+         if (debug) indent(d + 1);
+         if (debug) std::cout << "add binding list\n";
+
+         List_p list2 = std::make_shared<List>();
+         while (i < list->size())
+         {
+            Element_p apar = list->get(i);
+            Element_p aparres = apar->evaluate(cx, d + 1);
+
+            list2->add(aparres);
+            i++;
+         }
+
+         fr->add_binding(fparname, list2);
+      }
+   }
+   return true;
+}
+
+// ParamList
+
+bool ParamList::assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, List_p list, int i, int d)
+{
+   if (debug) indent(d);
+   if (debug) std::cout << "ParamList assignParameters()\n";
+   if (debug) indent(d);
+   if (debug) std::cout << "list size " << list->size() << "\n";
+
+   for (AParam_p par: params)
+   {
+      par->assignParameters(cx, fr, list, i, d + 2);
+      i++;
+   }
+   return true;
+}
+ */
+
+// Param
+
+bool Param::assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, List_p apars, int d, bool single)
+{
+   if (debug) indent(d);
+   if (debug) std::cout << "Param assignParameters()\n";
+
+   if (debug) indent(d + 1);
+   if (debug) std::cout << "rest " << getRest() << "\n";
+   if (debug) indent(d + 1);
+   if (debug) std::cout << "name " << name << "\n";
+
+   std::string fparname = name;
+
+   List_p list = apars;
+
+   if (!rest)
+   {
+      // no rest
+      if (list->size() > 0)
+      {
+         Element_p apar = list->get(0);
+         list->pop_front();
+   
+         Element_p aparres = apar->evaluate(cx, d + 1);
+      
+         if (debug) indent(d + 1);
+         if (debug) std::cout << "==== aparam result===\n";
+      
+         if (debug) aparres->show(d + 2);
+      
+         if (debug) indent(d + 1);
+         if (debug) std::cout << "=====\n";
+      
+         fr->add_binding(fparname, aparres);
+      }
+      else
+      {
+         std::cout << "not enough parameters passed to function\n";
+         throw std::make_shared<RunError>();
+      }
+   }
+   else
+   {
+      // rest
+      if (list->size() == 0)
+      {
+         if (debug) indent(d + 1);
+         if (debug) std::cout << "add binding nil\n";
+
+         fr->add_binding(fparname, std::make_shared<Nil>());
+      }
+      else
+      {
+         if (debug) indent(d + 1);
+         if (debug) std::cout << "add binding list\n";
+
+         List_p list2 = std::make_shared<List>();
+         for (Element_p apar: list->getElements())
+         {
+            Element_p aparres = apar->evaluate(cx, d + 1);
+
+            list2->add(aparres);
+         }
+
+         fr->add_binding(fparname, list2);
+      }
+   }
+   return true;
+}
+
+// ParamList
+
+bool ParamList::assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, List_p apar, int d, bool single)
+{
+   if (debug) indent(d);
+   if (debug) std::cout << "ParamList assignParameters()\n";
+   apar->show(d + 1);
+   
+   List_p list = apar;
+   if (single)
+   {
+      if (debug) indent(d + 1);
+      if (debug) std::cout << "single\n";
+      if (apar->size() == 0)
+      {
+         std::cout << "parameter for list missing\n";
+         throw std::make_shared<RunError>();
+      }
+      Element_p el = apar->get(0);
+      list = std::dynamic_pointer_cast<List>(el);
+      if (list== nullptr)
+      {
+         std::cout << "parameter must be list\n";
+         throw std::make_shared<RunError>();
+      }
+      apar->pop_front();
+      list->show(d + 1);
+   }
+
+   if (debug) indent(d + 1);
+   if (debug) std::cout << "list size " << list->size() << "\n";
+
+   for (AParam_p par: params)
+   {
+      par->assignParameters(cx, fr, list, d + 2);
+   }
+
+   return true;
 }
 
 
@@ -63,8 +262,7 @@ Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
          }
 
          if (debug) indent(d + 1);
-         if (debug) std::cout << "name found\n";
-         
+         if (debug) std::cout << "function with name " << sy->getText() << " found\n";
          
          bi = std::dynamic_pointer_cast<Bind>(fun);
          if (bi != nullptr)
@@ -114,11 +312,14 @@ Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
       
       if (debug) indent(d + 1);
       if (debug) std::cout << "fparsize " << fparsize << " aparsize " << fparsize << "\n";
-      
+
+      /*
       if (aparsize == fparsize)
       {
+       */
          Frame_p fr = std::make_shared<Frame>();
          
+         /*
          for (int i=0; i<fparsize; i++)
          {
             Element_p apar = get(i + 1);
@@ -136,6 +337,10 @@ Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
 
             fr->add_binding(fparname, aparres);
          }
+          */
+         
+         // assign all actual parameters to the formal parameters
+         fuu->assignParameters(cx, fr, shared_from_this(), d + 1);
          
          if (bi != nullptr)
          {
@@ -158,12 +363,14 @@ Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
          if (debug) std::cout << "+++++++++\n";
          
          return rs;
+      /*   
       }
       else
       {
          std::cout << "number of actual and formal parameters is different\n";
          throw std::make_shared<RunError>();
       }
+       */
    }
    else
    {
@@ -229,6 +436,7 @@ Element_p Println::evaluate(std::shared_ptr<Context> cx, int d)
    for (Element_p el: body->getElements())
    {
       result = el->evaluate(cx, d + 1);
+      //if (debug) result->show(d + 2);
       result->print();
       std::cout << " ";
    }
@@ -663,11 +871,16 @@ Element_p Fn::capture(Context_p cx, Frame_p fr, int d)
 
    Fn_p fn = std::make_shared<Fn>();
    fn->full = full;
-   fn->params = params;
+
+   //fn->params = params;
+   fn->paramlist = paramlist;
    
    Frame_p frr = std::make_shared<Frame>();
-   for (std::string param: params)
+   //for (std::string param: params)
+   for (int i = 0; i<paramlist->size(); i++)
    {
+      std::string param = paramlist->get(i);
+      
       if (debug) indent(d + 1);
       if (debug) std::cout << "Fn capture param " << param << "\n";
 

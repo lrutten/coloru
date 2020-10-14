@@ -12,7 +12,7 @@
 extern void indent(int d);
 extern bool debug;
 
-// exception klassen
+// exception classes
 
 class ZeroDivision
 {
@@ -133,6 +133,30 @@ private:
 using Boolean_p = std::shared_ptr<Boolean>;
 
 
+// Nil
+
+class Nil : public Element
+{
+public:
+   explicit Nil();
+   virtual ~Nil();
+   void show(int d) override; 
+   Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
+   virtual std::string info() override
+   {
+      return "Nil";
+   }
+   void print() override
+   {
+      std::cout << "nil";
+   }
+   
+private:
+};
+
+using Nil_p = std::shared_ptr<Nil>;
+
+
 // List
 
 class List : public Element
@@ -158,6 +182,7 @@ public:
    {
       return "List";
    }
+   void print() override;
 
 private:
    std::deque<Element_p> elements;   
@@ -496,7 +521,7 @@ private:
 using If_p = std::shared_ptr<If>;
 
 
-// 
+// Println
 
 class Println : public Element
 {
@@ -529,6 +554,30 @@ private:
 };
 
 using Println_p = std::shared_ptr<Println>;
+
+// Ampersand
+
+class Ampersand : public Element
+{
+public:
+   Ampersand();
+   ~Ampersand();
+   void show(int d) override;
+   Element_p evaluate(std::shared_ptr<Context> cx, int d)
+   {
+   }
+   Element_p capture(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, int d)
+   {
+   }
+   virtual std::string info() override
+   {
+      return "Ampersand";
+   }
+   
+private:
+};
+
+using Ampersand_p = std::shared_ptr<Ampersand>;
 
 
 // Let
@@ -578,6 +627,88 @@ private:
 
 using Let_p = std::shared_ptr<Let>;
 
+class AParam
+{
+public:
+   AParam();
+   virtual ~AParam();
+   virtual void show(int d) = 0;
+   
+   bool getRest()
+   {
+      return rest;
+   }
+   void setRest(bool rst)
+   {
+      rest = rst;
+   }
+   //virtual bool assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, List_p list, int i, int d) = 0;
+   virtual bool assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, List_p apars, int d, bool single=true) = 0;
+
+protected:
+   bool rest;    // preceding ampersand detected
+};
+
+using AParam_p = std::shared_ptr<AParam>;
+
+class Param : public AParam
+{
+public:
+   Param(std::string nm);
+   ~Param();
+   
+   std::string getName()
+   {
+      return name;
+   }
+   void show(int d) override;
+   //bool assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, List_p list, int i, int d) override;
+   bool assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, List_p apars, int d, bool single=true) override;
+
+private:
+   std::string name;
+};
+
+using Param_p = std::shared_ptr<Param>;
+
+class ParamList : public AParam
+{
+public:
+   ParamList();
+   ~ParamList();
+   void addParam(AParam_p pa)
+   {
+      params.push_back(pa);
+   }
+   
+   int size()
+   {
+      return params.size();
+   }
+   
+   std::string get(int i)
+   {
+      AParam_p apar = params[i];
+      Param_p par = std::dynamic_pointer_cast<Param>(apar);
+      if (par != nullptr)
+      {
+         return par->getName();
+      }
+      else
+      {
+         return "";
+      }
+   }
+
+   void show(int d) override;
+   // bool assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, List_p list, int i, int d) override;
+   bool assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, List_p apars, int d, bool single=true) override;
+   
+private:
+   std::vector<AParam_p> params;
+};
+
+using ParamList_p = std::shared_ptr<ParamList>;
 
 // Fn
 
@@ -589,18 +720,28 @@ public:
    void show(int d) override;
    Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
    Element_p capture(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, int d) override;
+   
+   /*
    void addParam(std::string param)
    {
       params.push_back(param);
    }
+    */
    int getParamsSize()
    {
-      return params.size();
+      return paramlist->size();
    }
+   
    std::string getParam(int i)
    {
-      return params[i];
+      return paramlist->get(i);
    }
+   
+   void setParamList(ParamList_p pl)
+   {
+      paramlist = pl;
+   }
+
    void setBody(Body_p bd)
    {
       body = bd;
@@ -618,9 +759,12 @@ public:
       return "Fn";
    }
    
+   bool assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, Element_p call, int d);
+
 private:
    bool                     full;
-   std::vector<std::string> params;
+   //std::vector<std::string> params;
+   ParamList_p              paramlist;
    Body_p                   body;
 };
 
@@ -822,6 +966,7 @@ public:
    Parser();
    ~Parser();
    Element_p parse(std::string fn);
+   ParamList_p parameters(Element_p els);
    Element_p list(bool isliteral=false);
    Element_p vector();
    Element_p expression(bool isliteral=false);

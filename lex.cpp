@@ -197,6 +197,11 @@ void Lex::next()
                tok = tk_false;
             }
             else
+            if (token_text == "nil")
+            {
+               tok = tk_nil;
+            }
+            else
             {
                tok = tk_symbol;
                if (debug) std::cout << "lex: tk_symbol " << sym << "\n";

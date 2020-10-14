@@ -53,6 +53,23 @@ void Boolean::show(int d)
 }
 
 
+// Nil
+
+Nil::Nil()
+{
+}
+
+Nil::~Nil()
+{
+}
+
+void Nil::show(int d)
+{
+   indent(d);
+   std::cout << "Nil\n";
+}
+
+
 // List
 
 List::List()
@@ -88,6 +105,17 @@ void List::show(int d)
    {
       el->show(d + 1);
    }
+}
+
+void List::print()
+{
+   std::cout << '(';
+   for (Element_p el: elements)
+   {
+      el->print();
+      std::cout << " ";
+   }
+   std::cout << ')';
 }
 
 
@@ -359,6 +387,53 @@ void Lambda::show(int d)
    fn->show(d + 1);
 }
 
+// AParam
+
+AParam::AParam() : rest(false)
+{
+}
+
+AParam::~AParam()
+{
+}
+
+
+// Param
+
+Param::Param(std::string nm) : name(nm)
+{
+}
+
+Param::~Param()
+{
+}
+
+void Param::show(int d)
+{
+   indent(d);
+   std::cout << "Param " << name << " " << rest << "\n";
+}
+
+// ParamList
+
+ParamList::ParamList()
+{
+}
+
+ParamList::~ParamList()
+{
+}
+
+void ParamList::show(int d)
+{
+   indent(d);
+   std::cout << "ParamList " << rest << "\n";
+   
+   for (AParam_p p: params)
+   {
+      p->show(d + 1);
+   }
+}
 
 // Fn
 
@@ -379,6 +454,7 @@ void Fn::show(int d)
    indent(d + 1);
    std::cout << "full " << full <<"\n";
 
+   /*
    indent(d + 1);
    std::cout << "params\n";
    for (std::string param: params)
@@ -386,6 +462,15 @@ void Fn::show(int d)
       indent(d + 2);
       std::cout << param << "\n";
    }
+    */
+
+   if (paramlist == nullptr)
+   {
+      std::cout << "fn show paramlist nullptr\n";
+      throw std::make_unique<ParserError>();
+   }
+
+   paramlist->show(d + 1);
 
    if (body == nullptr)
    {
@@ -396,6 +481,21 @@ void Fn::show(int d)
    body->show(d + 1);
 }
 
+bool Fn::assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, Element_p callel, int d)
+{
+   Call_p call = std::dynamic_pointer_cast<Call>(callel);
+   
+   // copy the call parameters to a list
+   List_p list = std::make_shared<List>();
+   for (int i = 1; i<call->getElements().size(); i++)
+   {
+      Element_p el = call->get(i);
+      list->add(el);
+   }
+
+   paramlist->assignParameters(cx, fr, list, d, false);
+   return true;
+}
 
 // Bind
 
@@ -452,6 +552,22 @@ void Println::show(int d)
    {
       body->show(d + 1);
    }
+}
+
+// Ampersand
+
+Ampersand::Ampersand()
+{
+}
+
+Ampersand::~Ampersand()
+{
+}
+
+void Ampersand::show(int d)
+{
+   indent(d);
+   std::cout << "Ampersand\n";
 }
 
 // Let
@@ -554,6 +670,88 @@ void Main::show(int d)
 
 // parserfuncties
 
+ParamList_p Parser::parameters(Element_p els)
+{
+   bool rest      = false;  // ampersand detected
+   bool restel    = false;  // element after ampersand detected
+   ParamList_p pl = std::make_shared<ParamList>();
+   
+   Vector_p params = std::dynamic_pointer_cast<Vector>(els);
+   if (params == nullptr)
+   {
+      std::cout << "error in defn/fn: parameter vector missing\n";
+      throw std::make_unique<ParserError>();
+   }
+
+   for (Element_p ell: params->getElements())
+   {
+      Symbol_p    param  = nullptr;
+      Ampersand_p param2 = nullptr;
+      Vector_p    param3 = nullptr;
+
+      param = std::dynamic_pointer_cast<Symbol>(ell);
+      if (param != nullptr)
+      {
+         if (restel)
+         {
+            std::cout << "error in defn/fn: only 1 parameter after & allowed\n";
+            throw std::make_unique<ParserError>();
+         }
+
+         Param_p par = std::make_shared<Param>(param->getText());
+         pl->addParam(par);
+
+         if (rest)
+         {
+            restel = true;
+            par->setRest(true);
+         }
+      }
+      else
+      {
+         param2 = std::dynamic_pointer_cast<Ampersand>(ell);
+         if (param2 != nullptr)
+         {
+            std::cout << "ampersand detected\n";
+            rest = true;
+         }
+         else
+         {
+            param3 = std::dynamic_pointer_cast<Vector>(ell);
+            if (param3 != nullptr)
+            {
+               std::cout << "vector parameter detected\n";
+      
+               if (restel)
+               {
+                  std::cout << "error in defn/fn: only 1 parameter after & allowed\n";
+                  throw std::make_unique<ParserError>();
+               }
+
+               AParam_p par = parameters(param3);
+               pl->addParam(par);
+               
+               if (rest)
+               {
+                  restel = true;
+                  par->setRest(true);
+               }
+            }
+            else
+            {
+               std::cout << "error in defn/fn: parameter name must be symbol\n";
+               throw std::make_unique<ParserError>();
+            }
+         }
+      }
+   }
+   if (rest && !restel)
+   {
+      std::cout << "error in defn/fn: parameter after & missing\n";
+      throw std::make_unique<ParserError>();
+   }
+   return pl;
+}
 
 Element_p Parser::list(bool isliteral)
 {
@@ -623,10 +821,12 @@ Element_p Parser::list(bool isliteral)
          Defn_p defn = std::dynamic_pointer_cast<Defn>(el);
          if (defn != nullptr)
          {
+            // skip defn
             lst->pop_front();
 
             if (debug) std::cout << "parse defn\n";
             
+            // take the name of the defined function
             Symbol_p name = std::dynamic_pointer_cast<Symbol>(lst->get(0));
             if (name == nullptr)
             {
@@ -637,6 +837,12 @@ Element_p Parser::list(bool isliteral)
             defn->setName(name->getText());
             lst->pop_front();
 
+            
+            Fn_p fn = std::make_shared<Fn>();
+            ParamList_p parlst = parameters(lst->get(0));
+            fn->setParamList(parlst);
+
+            /*
             Vector_p params = std::dynamic_pointer_cast<Vector>(lst->get(0));
             if (params == nullptr)
             {
@@ -657,7 +863,12 @@ Element_p Parser::list(bool isliteral)
                }
                fn->addParam(param->getText());
             }
+             */
+
+            // skip parameter vector 
             lst->pop_front();
+
+            defn->setFn(fn);
 
             Body_p bd = std::make_shared<Body>();
             while (!lst->getElements().empty())
@@ -681,6 +892,10 @@ Element_p Parser::list(bool isliteral)
                if (debug) lst->show(0);
                if (debug) lst->get(0)->show(0);
 
+               ParamList_p parlst = parameters(lst->get(0));
+               fn->setParamList(parlst);
+
+               /*
                Vector_p params = std::dynamic_pointer_cast<Vector>(lst->get(0));
                if (params == nullptr)
                {
@@ -699,6 +914,9 @@ Element_p Parser::list(bool isliteral)
                   }
                   fn->addParam(param->getText());
                }
+                */
+                
+               // skip parameter vector 
                lst->pop_front();
                
                Body_p bd = std::make_shared<Body>();
@@ -940,6 +1158,13 @@ Element_p Parser::expression(bool isliteral)
       return bo;
    }
    else
+   if (token == tk_nil)
+   {
+      lex->next();
+      Nil_p ni = std::make_shared<Nil>();
+      return ni;
+   }
+   else
    if (token == tk_plus)
    {
       lex->next();
@@ -1030,6 +1255,12 @@ Element_p Parser::expression(bool isliteral)
    {
       lex->next();
       return std::make_shared<Let>();
+   }
+   else
+   if (token == tk_ampersand)
+   {
+      lex->next();
+      return std::make_shared<Ampersand>();
    }
    else
    if (token == tk_symbol)
