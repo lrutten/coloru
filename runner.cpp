@@ -195,7 +195,7 @@ bool ParamList::assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Fr
 {
    if (debug) indent(d);
    if (debug) std::cout << "ParamList assignParameters()\n";
-   apar->show(d + 1);
+   if (debug) apar->show(d + 1);
    
    List_p list = apar;
    if (single)
@@ -215,7 +215,7 @@ bool ParamList::assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Fr
          throw std::make_shared<RunError>();
       }
       apar->pop_front();
-      list->show(d + 1);
+      if (debug) list->show(d + 1);
    }
 
    if (debug) indent(d + 1);

@@ -712,7 +712,7 @@ ParamList_p Parser::parameters(Element_p els)
          param2 = std::dynamic_pointer_cast<Ampersand>(ell);
          if (param2 != nullptr)
          {
-            std::cout << "ampersand detected\n";
+            if (debug) std::cout << "ampersand detected\n";
             rest = true;
          }
          else
@@ -720,7 +720,7 @@ ParamList_p Parser::parameters(Element_p els)
             param3 = std::dynamic_pointer_cast<Vector>(ell);
             if (param3 != nullptr)
             {
-               std::cout << "vector parameter detected\n";
+               if (debug) std::cout << "vector parameter detected\n";
       
                if (restel)
                {
