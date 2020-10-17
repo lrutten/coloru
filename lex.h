@@ -23,6 +23,7 @@ enum token_t
    tk_greatereq,
    tk_keyword,   // name with ':' prefix
    tk_symbol,    // name
+   tk_builtin,
    tk_defn,
    tk_let,
    tk_fn,

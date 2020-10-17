@@ -37,86 +37,6 @@ Element_p List::evaluate(std::shared_ptr<Context> cx, int d)
    return shared_from_this();
 }
 
-/*
-// Param
-
-bool Param::assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, List_p list, int i, int d)
-{
-   if (debug) indent(d);
-   if (debug) std::cout << "Param assignParameters()\n";
-
-   if (debug) indent(d + 1);
-   if (debug) std::cout << "i "  << i << " rest " << getRest() << "\n";
-   if (debug) indent(d + 1);
-   if (debug) std::cout << "name " << name << "\n";
-
-   std::string fparname = name;
-   //int sz = call->size() - 1;
-   
-   if (!rest)
-   {
-      // no rest
-      Element_p apar = list->get(i);
-      Element_p aparres = apar->evaluate(cx, d + 1);
-   
-      if (debug) indent(d + 1);
-      if (debug) std::cout << "==== aparam result===\n";
-   
-      if (debug) aparres->show(d + 2);
-   
-      if (debug) indent(d + 1);
-      if (debug) std::cout << "=====\n";
-   
-      fr->add_binding(fparname, aparres);
-   }
-   else
-   {
-      // rest
-      if (i >= list->size())
-      {
-         if (debug) indent(d + 1);
-         if (debug) std::cout << "add binding nil\n";
-
-         fr->add_binding(fparname, std::make_shared<Nil>());
-      }
-      else
-      {
-         if (debug) indent(d + 1);
-         if (debug) std::cout << "add binding list\n";
-
-         List_p list2 = std::make_shared<List>();
-         while (i < list->size())
-         {
-            Element_p apar = list->get(i);
-            Element_p aparres = apar->evaluate(cx, d + 1);
-
-            list2->add(aparres);
-            i++;
-         }
-
-         fr->add_binding(fparname, list2);
-      }
-   }
-   return true;
-}
-
-// ParamList
-
-bool ParamList::assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, List_p list, int i, int d)
-{
-   if (debug) indent(d);
-   if (debug) std::cout << "ParamList assignParameters()\n";
-   if (debug) indent(d);
-   if (debug) std::cout << "list size " << list->size() << "\n";
-
-   for (AParam_p par: params)
-   {
-      par->assignParameters(cx, fr, list, i, d + 2);
-      i++;
-   }
-   return true;
-}
- */
 
 // Param
 
@@ -247,97 +167,84 @@ Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
    Callable_p ca = std::dynamic_pointer_cast<Callable>(el);
    if (ca != nullptr)
    {
-      Bind_p   bi  = std::dynamic_pointer_cast<Bind>(ca);
-      Lambda_p la  = std::dynamic_pointer_cast<Lambda>(ca);
-      Symbol_p sy  = std::dynamic_pointer_cast<Symbol>(ca);
-      Defn_p   df  = nullptr;
-      Fn_p     fuu = nullptr;
-      if (sy != nullptr)
+      Builtin_p bin = std::dynamic_pointer_cast<Builtin>(el);
+      if (bin != nullptr)
       {
-         Element_p fun = cx->search(sy->getText());
-         if (fun == nullptr)
-         {
-            std::cout << "function " << sy->getText() << " not found\n";
-            throw std::make_shared<RunError>();
-         }
-
          if (debug) indent(d + 1);
-         if (debug) std::cout << "function with name " << sy->getText() << " found\n";
+         if (debug) std::cout << "callable is builtin\n";
          
-         bi = std::dynamic_pointer_cast<Bind>(fun);
+         Element_p rs = bin->evaluate2(cx, shared_from_this(), d + 1);
+         return rs;
+      }
+      else
+      {
+         Bind_p   bi  = std::dynamic_pointer_cast<Bind>(ca);
+         Lambda_p la  = std::dynamic_pointer_cast<Lambda>(ca);
+         Symbol_p sy  = std::dynamic_pointer_cast<Symbol>(ca);
+         Defn_p   df  = nullptr;
+         Fn_p     fuu = nullptr;
+         if (sy != nullptr)
+         {
+            Element_p fun = cx->search(sy->getText());
+            if (fun == nullptr)
+            {
+               std::cout << "function " << sy->getText() << " not found\n";
+               throw std::make_shared<RunError>();
+            }
+   
+            if (debug) indent(d + 1);
+            if (debug) std::cout << "function with name " << sy->getText() << " found\n";
+            
+            bi = std::dynamic_pointer_cast<Bind>(fun);
+            if (bi != nullptr)
+            {
+               fuu = bi->getLambda()->getFn();
+            }
+            else
+            {
+               la = std::dynamic_pointer_cast<Lambda>(fun);
+               if (la != nullptr)
+               {
+                  bi = std::dynamic_pointer_cast<Bind>(la->capture(cx, nullptr, d + 1));
+                  fuu = la->getFn();
+                  la = nullptr;
+               }
+               else
+               {
+                  df = std::dynamic_pointer_cast<Defn>(fun);
+                  if (df != nullptr)
+                  {
+                     fuu = df->getFn();
+                  }
+                  else
+                  {
+                     std::cout << "name found but is not a function\n";
+                     throw std::make_shared<RunError>();
+                  }
+               }
+            }
+         }
+         else
          if (bi != nullptr)
          {
             fuu = bi->getLambda()->getFn();
          }
          else
          {
-            la = std::dynamic_pointer_cast<Lambda>(fun);
             if (la != nullptr)
             {
-               bi = std::dynamic_pointer_cast<Bind>(la->capture(cx, nullptr, d + 1));
                fuu = la->getFn();
-               la = nullptr;
-            }
-            else
-            {
-               df = std::dynamic_pointer_cast<Defn>(fun);
-               if (df != nullptr)
-               {
-                  fuu = df->getFn();
-               }
-               else
-               {
-                  std::cout << "name found but is not a function\n";
-                  throw std::make_shared<RunError>();
-               }
             }
          }
-      }
-      else
-      if (bi != nullptr)
-      {
-         fuu = bi->getLambda()->getFn();
-      }
-      else
-      {
-         if (la != nullptr)
-         {
-            fuu = la->getFn();
-         }
-      }
-
-      // handle the parameters
-      int fparsize = fuu->getParamsSize();
-      int aparsize = size() - 1;
-      
-      if (debug) indent(d + 1);
-      if (debug) std::cout << "fparsize " << fparsize << " aparsize " << fparsize << "\n";
-
-      /*
-      if (aparsize == fparsize)
-      {
-       */
-         Frame_p fr = std::make_shared<Frame>();
+   
+         // handle the parameters
+         int fparsize = fuu->getParamsSize();
+         int aparsize = size() - 1;
          
-         /*
-         for (int i=0; i<fparsize; i++)
-         {
-            Element_p apar = get(i + 1);
-            std::string fparname = fuu->getParam(i);
-            if (debug) indent(d + 1);
-            if (debug) std::cout << "fparname " << fparname << "\n";
-
-            Element_p aparres = apar->evaluate(cx, d + 1);
-
-            if (debug) indent(d + 1);
-            if (debug) std::cout << "==== aparam result===\n";
-            if (debug) aparres->show(d + 2);
-            if (debug) indent(d + 1);
-            if (debug) std::cout << "=====\n";
-
-            fr->add_binding(fparname, aparres);
-         }
-          */
+         if (debug) indent(d + 1);
+         if (debug) std::cout << "fparsize " << fparsize << " aparsize " << fparsize << "\n";
+   
+         Frame_p fr = std::make_shared<Frame>();
          
          // assign all actual parameters to the formal parameters
          fuu->assignParameters(cx, fr, shared_from_this(), d + 1);
@@ -363,14 +270,7 @@ Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
          if (debug) std::cout << "+++++++++\n";
          
          return rs;
-      /*   
       }
-      else
-      {
-         std::cout << "number of actual and formal parameters is different\n";
-         throw std::make_shared<RunError>();
-      }
-       */
    }
    else
    {
@@ -715,6 +615,134 @@ Element_p Symbol::evaluate(std::shared_ptr<Context> cx, int d)
 }
 
 
+// Builtin
+
+Element_p Builtin::evaluate(std::shared_ptr<Context> cx, int d)
+{
+   return shared_from_this();
+}
+
+Element_p Builtin::evaluate2(std::shared_ptr<Context> cx, std::shared_ptr<Element> call, int d)
+{
+   if (debug) indent(d);
+   if (debug) std::cout << "Builtin evaluate2\n";
+
+   if (debug) call->show(d + 1);
+   
+   Call_p ca = std::dynamic_pointer_cast<Call>(call);
+   if (ca != nullptr)
+   {
+      int npar = 1; // number of parameters 1
+
+      Builtin_p bi = std::dynamic_pointer_cast<Builtin>(ca->get(0));
+      if (bi != nullptr)
+      {
+         std::string bitext = bi->getText();
+
+         if (debug) indent(d + 1);
+         if (debug) std::cout << "builtin " << bitext << "\n";
+         
+         // keep only the parameters
+         ca->pop_front();
+         
+         ca->show(d + 1);
+         
+         if (bitext == "nil?")
+         {
+            npar = 1;
+         }
+         else
+         if (bitext == "empty?")
+         {
+            npar = 1;
+         }
+         
+         if (ca->size() == npar)
+         {
+            if (debug) indent(d + 1);
+            if (debug) std::cout << "# params correct\n";
+            
+            List_p list2 = std::make_shared<List>();
+            for (Element_p apar: ca->getElements())
+            {
+               if (debug) indent(d + 2);
+               if (debug) std::cout << "par\n";
+
+               Element_p aparres = apar->evaluate(cx, d + 1);
+               list2->add(aparres);
+
+               if (debug) aparres->show(d + 3);
+            }
+            
+            if (bitext == "nil?")
+            {
+               if (debug) indent(d + 1);
+               if (debug) std::cout << "nil? executes\n";
+
+               Element_p el0 = list2->get(0);
+               Nil_p ni = std::dynamic_pointer_cast<Nil>(el0);
+               if (ni != nullptr)
+               {
+                  return std::make_shared<Boolean>(true);
+               }
+               else
+               {
+                  return std::make_shared<Boolean>(false);
+               }
+            }
+            else
+            if (bitext == "empty?")
+            {
+               if (debug) indent(d + 1);
+               if (debug) std::cout << "empty? executes\n";
+
+               Element_p el0 = list2->get(0);
+
+               if (debug) el0->show(d + 2);
+               
+               List_p li = std::dynamic_pointer_cast<List>(el0);
+               if (li != nullptr)
+               {
+                  if (li->size() == 0)
+                  {
+                     if (debug) indent(d + 2);
+                     if (debug) std::cout << "empty? true\n";
+                     return std::make_shared<Boolean>(true);
+                  }
+                  else
+                  {
+                     if (debug) indent(d + 2);
+                     if (debug) std::cout << "empty? false\n";
+                     return std::make_shared<Boolean>(false);
+                  }
+               }
+               else
+               {
+                  std::cout << "empty? builtin expects a list\n";
+                  throw std::make_shared<RunError>();
+               }
+            }
+         }
+         else
+         {
+            std::cout << "wrong number of parameters for builtin " << bitext << "\n";
+            throw std::make_shared<RunError>();
+         }
+      }
+      else
+      {
+         std::cout << "internal error, Builtin expected\n";
+         throw std::make_shared<RunError>();
+      }
+   }
+   else
+   {
+      std::cout << "internal error, Call expected\n";
+      throw std::make_shared<RunError>();
+   }
+}
+
+
 // Text
 
 Element_p Text::evaluate(std::shared_ptr<Context> cx, int d)
@@ -971,6 +999,11 @@ Element_p Symbol::capture(Context_p cx, Frame_p fr, int d)
       if (debug) indent(d + 1);
       if (debug) std::cout << "Symbol capture not found " << text << "\n";
    }
+   return shared_from_this();
+}
+
+Element_p Builtin::capture(Context_p cx, Frame_p fr, int d)
+{
    return shared_from_this();
 }
 

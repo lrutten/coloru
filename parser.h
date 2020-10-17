@@ -642,7 +642,6 @@ public:
    {
       rest = rst;
    }
-   //virtual bool assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, List_p list, int i, int d) = 0;
    virtual bool assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, List_p apars, int d, bool single=true) = 0;
 
 protected:
@@ -662,7 +661,6 @@ public:
       return name;
    }
    void show(int d) override;
-   //bool assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, List_p list, int i, int d) override;
    bool assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, List_p apars, int d, bool single=true) override;
 
 private:
@@ -701,7 +699,6 @@ public:
    }
 
    void show(int d) override;
-   // bool assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, List_p list, int i, int d) override;
    bool assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, List_p apars, int d, bool single=true) override;
    
 private:
@@ -721,12 +718,6 @@ public:
    Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
    Element_p capture(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, int d) override;
    
-   /*
-   void addParam(std::string param)
-   {
-      params.push_back(param);
-   }
-    */
    int getParamsSize()
    {
       return paramlist->size();
@@ -763,7 +754,6 @@ public:
 
 private:
    bool                     full;
-   //std::vector<std::string> params;
    ParamList_p              paramlist;
    Body_p                   body;
 };
@@ -904,6 +894,36 @@ private:
 };
 
 using Symbol_p = std::shared_ptr<Symbol>;
+
+// Builtin
+
+class Builtin : public Callable
+{
+public:
+   explicit Builtin(const std::string &te);
+   ~Builtin();
+   void show(int d) override;
+   Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
+   Element_p evaluate2(std::shared_ptr<Context> cx, std::shared_ptr<Element> call, int d);
+   Element_p capture(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, int d) override;
+   std::string getText()
+   {
+      return text;
+   }
+   virtual std::string info() override
+   {
+      return "Builtin";
+   }
+   void print() override
+   {
+      std::cout << text;
+   }
+   
+private:
+   std::string text;
+};
+
+using Builtin_p = std::shared_ptr<Builtin>;
 
 // Text
 

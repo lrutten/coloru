@@ -619,6 +619,24 @@ void Symbol::show(int d)
 }
 
 
+// Builtin
+
+Builtin::Builtin(const std::string &te) : text(te)
+{
+}
+
+Builtin::~Builtin()
+{
+   //std::cout << "~Builtin " << text << "\n";
+}
+
+void Builtin::show(int d)
+{
+   indent(d);
+   std::cout << "Builtin " << text << "\n";
+}
+
+
 // Text
 
 Text::Text(const std::string &te) : text(te)
@@ -1268,6 +1286,13 @@ Element_p Parser::expression(bool isliteral)
       std::string sym = lex->text();
       lex->next();
       return std::make_shared<Symbol>(sym);
+   }
+   else
+   if (token == tk_builtin)
+   {
+      std::string sym = lex->text();
+      lex->next();
+      return std::make_shared<Builtin>(sym);
    }
    else
    if (token == tk_text)
