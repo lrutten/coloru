@@ -147,7 +147,14 @@ bool ParamList::assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Fr
 
    for (AParam_p par: params)
    {
-      par->assignParameters(cx, fr, list, d + 2);
+      if (par->getRest())
+      {
+         par->assignParameters(cx, fr, list, d + 2, false);
+      }
+      else
+      {
+         par->assignParameters(cx, fr, list, d + 2);
+      }
    }
 
    return true;
