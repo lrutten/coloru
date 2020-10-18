@@ -49,7 +49,15 @@ Boolean::~Boolean()
 void Boolean::show(int d)
 {
    indent(d);
-   std::cout << "Boolean " << value << "\n";
+   std::cout << "Boolean ";
+   if (value != 0)
+   {
+      std::cout << "true\n";
+   }
+   else
+   {
+      std::cout << "false\n";
+   }
 }
 
 
@@ -144,6 +152,18 @@ Element_p Call::get(int i)
 {
    return elements[i];
 }
+
+List_p Call::copy()
+{
+   List_p li = std::make_shared<List>();
+   for (Element_p ell: getElements())
+   {
+      li->add(ell);
+   }
+   
+   return li;
+}
+
 
 void Call::show(int d)
 {

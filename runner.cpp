@@ -128,9 +128,13 @@ bool ParamList::assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Fr
          throw std::make_shared<RunError>();
       }
       Element_p el = apar->get(0);
-      list = std::dynamic_pointer_cast<List>(el);
+      
+      Element_p elres = el->evaluate(cx, d + 1);
+      
+      list = std::dynamic_pointer_cast<List>(elres);
       if (list== nullptr)
       {
+         if (debug) el->show(d + 1);
          std::cout << "parameter must be list\n";
          throw std::make_shared<RunError>();
       }
@@ -218,7 +222,8 @@ Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
                   }
                   else
                   {
-                     std::cout << "name found but is not a function\n";
+                     if (debug) fun->show(d + 1);
+                     std::cout << "name found but is not a function " << sy->getText() << "\n";
                      throw std::make_shared<RunError>();
                   }
                }
@@ -643,9 +648,10 @@ Element_p Builtin::evaluate2(std::shared_ptr<Context> cx, std::shared_ptr<Elemen
          if (debug) std::cout << "builtin " << bitext << "\n";
          
          // keep only the parameters
-         ca->pop_front();
+         List_p ca2 = ca->copy();
+         ca2->pop_front();
          
-         ca->show(d + 1);
+         if (debug) ca->show(d + 1);
          
          if (bitext == "nil?")
          {
@@ -657,13 +663,14 @@ Element_p Builtin::evaluate2(std::shared_ptr<Context> cx, std::shared_ptr<Elemen
             npar = 1;
          }
          
-         if (ca->size() == npar)
+         if (ca2->size() == npar)
          {
             if (debug) indent(d + 1);
             if (debug) std::cout << "# params correct\n";
+            if (debug) ca->show(d + 2);
             
             List_p list2 = std::make_shared<List>();
-            for (Element_p apar: ca->getElements())
+            for (Element_p apar: ca2->getElements())
             {
                if (debug) indent(d + 2);
                if (debug) std::cout << "par\n";
@@ -700,13 +707,22 @@ Element_p Builtin::evaluate2(std::shared_ptr<Context> cx, std::shared_ptr<Elemen
 
                if (debug) el0->show(d + 2);
                
+               // Nil or List is returning true
                List_p li = std::dynamic_pointer_cast<List>(el0);
+               Nil_p ni = std::dynamic_pointer_cast<Nil>(el0);
+               if (ni != nullptr)
+               {
+                  if (debug) indent(d + 2);
+                  if (debug) std::cout << "empty? nil true\n";
+                  return std::make_shared<Boolean>(true);
+               }
+               else
                if (li != nullptr)
                {
                   if (li->size() == 0)
                   {
                      if (debug) indent(d + 2);
-                     if (debug) std::cout << "empty? true\n";
+                     if (debug) std::cout << "empty? list true\n";
                      return std::make_shared<Boolean>(true);
                   }
                   else
@@ -1068,6 +1084,7 @@ void Frame::show(int d)
    {
       indent(d + 1);
       std::cout << it.first << "\n";
+      it.second->show(d + 2);
    }
 }
 

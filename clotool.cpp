@@ -4,7 +4,8 @@
 #include "parser.h"
 #include "runner.h"
 
-bool debug = false;
+bool debug  = false;
+bool debug2 = false;
 
 int main(int argc, char **argv)
 {
@@ -46,6 +47,7 @@ int main(int argc, char **argv)
       {
          std::cout << "nullptr\n";
       }
+      if (debug2) root->show(0);
    }
 }
 

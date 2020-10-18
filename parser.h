@@ -118,11 +118,11 @@ public:
    {
       if (value)
       {
-         std::cout << true;
+         std::cout << "true";
       }
       else
       {
-         std::cout << false;
+         std::cout << "false";
       }
    }
    
@@ -205,6 +205,7 @@ public:
    {
       return elements;
    }
+   List_p copy();
    void pop_front()
    {
       elements.pop_front();
