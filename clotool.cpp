@@ -6,17 +6,22 @@
 
 bool debug  = false;
 bool debug2 = false;
+bool trans  = false;
 
 int main(int argc, char **argv)
 {
    char *fname;
    int opt;
-   while ((opt = getopt(argc, argv, "df:")) != -1)
+   while ((opt = getopt(argc, argv, "tdf:")) != -1)
    {
       switch (opt)
       {
          case 'd':
             debug = true;
+            break;
+
+         case 't':
+            trans = true;
             break;
 
          case 'f':
@@ -34,9 +39,26 @@ int main(int argc, char **argv)
    //Element_p root = parser->parse("vb3.clj");
    if (root != nullptr)
    {
+      root->resetTreetype();
+      root->determTreetype(nullptr);
+
+      if (debug) std::cout << "=========transform=============\n";
+      root->transformTree(0);
+
+      if (debug) std::cout << "=========show=1================\n";
       if (debug) root->show(0);
       
+      if (debug) std::cout << "=========format================\n";
+      if (debug || trans) root->format(0);
+
+      if (debug) std::cout << "=========show 2================\n";
+      root->resetTreetype();
+      root->determTreetype(nullptr);
+      if (debug) root->show(0);
+      if (debug) std::cout << "===============================\n";
+      
       Runner_p ru = std::make_shared<Runner>(root);
+      /*
       Element_p res = ru->run();
       std::cout << "Result:\n";
       if (res != nullptr)
@@ -47,6 +69,7 @@ int main(int argc, char **argv)
       {
          std::cout << "nullptr\n";
       }
+       */
       if (debug2) root->show(0);
    }
 }

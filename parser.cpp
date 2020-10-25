@@ -12,7 +12,11 @@ void indent(int d)
    }
 }
 
-Element::Element()
+Element::Element() : treetype(tp_undefined)
+{
+}
+
+Element::~Element()
 {
 }
 
@@ -29,10 +33,28 @@ Number::~Number()
    //std::cout << "~Number " << number << "\n";
 }
 
+std::string Element::type_to_s()
+{
+   switch (treetype)
+   {
+   case tp_undefined:   return "u";
+   case tp_simple:      return "s";
+   case tp_pass:        return "p";
+   case tp_recurse:     return "r";
+   case tp_tailrecurse: return "t";
+   default:             return "x";
+   }
+}
+
 void Number::show(int d)
 {
    indent(d);
-   std::cout << "Number " << number << "\n";
+   std::cout << "Number:" << type_to_s() << " " << number << "\n";
+}
+
+void Number::format(int d)
+{
+   std::cout << number;
 }
 
 // Boolean
@@ -49,7 +71,7 @@ Boolean::~Boolean()
 void Boolean::show(int d)
 {
    indent(d);
-   std::cout << "Boolean ";
+   std::cout << "Boolean:" << type_to_s() << " " ;
    if (value != 0)
    {
       std::cout << "true\n";
@@ -57,6 +79,18 @@ void Boolean::show(int d)
    else
    {
       std::cout << "false\n";
+   }
+}
+
+void Boolean::format(int d)
+{
+   if (value != 0)
+   {
+      std::cout << "true";
+   }
+   else
+   {
+      std::cout << "false";
    }
 }
 
@@ -74,7 +108,12 @@ Nil::~Nil()
 void Nil::show(int d)
 {
    indent(d);
-   std::cout << "Nil\n";
+   std::cout << "Nil:" << type_to_s() << "\n";
+}
+
+void Nil::format(int d)
+{
+   std::cout << "nil";
 }
 
 
@@ -107,12 +146,23 @@ Element_p List::get(int i)
 void List::show(int d)
 {
    indent(d);
-   std::cout << "List\n";
+   std::cout << "List:" << type_to_s() << "\n";
 
    for (Element_p el: elements)
    {
       el->show(d + 1);
    }
+}
+
+void List::format(int d)
+{
+   std::cout << "'(";
+   for (Element_p el: elements)
+   {
+      el->format(d + 1);
+      std::cout << " ";
+   }
+   std::cout << ")";
 }
 
 void List::print()
@@ -168,7 +218,7 @@ List_p Call::copy()
 void Call::show(int d)
 {
    indent(d);
-   std::cout << "Call\n";
+   std::cout << "Call:" << type_to_s() << "\n";
 
    for (Element_p el: elements)
    {
@@ -176,6 +226,24 @@ void Call::show(int d)
    }
 }
 
+void Call::format(int d)
+{
+   indent(d);
+   std::cout << "(";
+   int i = 0;
+   for (Element_p el: elements)
+   {
+      if (i != 0)
+      {
+         indent(d + 1);
+      }      
+      el->format(d + 1);
+      std::cout << "\n";
+      i++;
+   }
+   indent(d);
+   std::cout << ")\n";
+}
 
 // Elements
 
@@ -217,12 +285,23 @@ Vector::~Vector()
 void Vector::show(int d)
 {
    indent(d);
-   std::cout << "Vector\n";
+   std::cout << "Vector:" << type_to_s() << "\n";
 
    for (Element_p el: elements)
    {
       el->show(d + 1);
    }
+}
+
+void Vector::format(int d)
+{
+   std::cout << "[";
+   for (Element_p el: elements)
+   {
+      el->format(d + 1);
+      std::cout << " ";
+   }
+   std::cout << "]";
 }
 
 Elements_p Vector::make_copy()
@@ -249,11 +328,22 @@ Elements_p Body::make_copy()
 void Body::show(int d)
 {
    indent(d);
-   std::cout << "Body\n";
+   std::cout << "Body:" << type_to_s() << "\n";
 
    for (Element_p el: elements)
    {
       el->show(d + 1);
+   }
+}
+
+void Body::format(int d)
+{
+   std::cout << "\n";
+
+   for (Element_p el: elements)
+   {
+      el->format(d + 1);
+      std::cout << "\n";
    }
 }
 
@@ -271,12 +361,24 @@ Binary::~Binary()
 void Binary::show(int d)
 {
    indent(d);
-   std::cout << "Binary\n";
+   std::cout << "Binary:" << type_to_s() << "\n";
 
    for (Element_p el: elements)
    {
       el->show(d + 1);
    }
+}
+
+void Binary::format(int d)
+{
+   std::cout << "(" << info() << " ";
+
+   for (Element_p el: elements)
+   {
+      el->format(d + 1);
+      std::cout << " ";
+   }
+   std::cout << ")";
 }
 
 // Mul
@@ -385,8 +487,17 @@ Defn::~Defn()
 void Defn::show(int d)
 {
    indent(d);
-   std::cout << "Defn " << name << "\n";
+   std::cout << "Defn:" << type_to_s() << " " << name << "\n";
    fn->show(d + 1);
+}
+
+void Defn::format(int d)
+{
+   indent(d);
+   std::cout << "(defn " << name << "\n";
+   fn->format(d);
+   indent(d);
+   std::cout << ")\n";
 }
 
 // Lambda
@@ -403,8 +514,17 @@ Lambda::~Lambda()
 void Lambda::show(int d)
 {
    indent(d);
-   std::cout << "Lambda\n";
+   std::cout << "Lambda:" << type_to_s() << "\n";
    fn->show(d + 1);
+}
+
+void Lambda::format(int d)
+{
+   //indent(d);
+   std::cout << "(fn\n";
+   fn->format(d + 1);
+   indent(d);
+   std::cout << ")";
 }
 
 // AParam
@@ -434,6 +554,15 @@ void Param::show(int d)
    std::cout << "Param " << name << " " << rest << "\n";
 }
 
+void Param::format(int d)
+{
+   if (getRest())
+   {
+      std::cout << "& ";
+   }
+   std::cout << name << " ";
+}
+
 // ParamList
 
 ParamList::ParamList()
@@ -455,6 +584,21 @@ void ParamList::show(int d)
    }
 }
 
+void ParamList::format(int d)
+{
+   std::cout << "[";
+   
+   for (AParam_p p: params)
+   {
+      if (p->getRest())
+      {
+         //std::cout << "& ";
+      }
+      p->format(d + 1);
+   }
+   std::cout << "]";
+}
+
 // Fn
 
 Fn::Fn() : body(nullptr), full(false)
@@ -469,7 +613,7 @@ Fn::~Fn()
 void Fn::show(int d)
 {
    indent(d);
-   std::cout << "Fn\n";
+   std::cout << "Fn:" << type_to_s() << "\n";
 
    indent(d + 1);
    std::cout << "full " << full <<"\n";
@@ -501,6 +645,31 @@ void Fn::show(int d)
    body->show(d + 1);
 }
 
+void Fn::format(int d)
+{
+   //std::cout << "(fn ";
+
+   if (paramlist == nullptr)
+   {
+      std::cout << "fn format paramlist nullptr\n";
+      throw std::make_unique<ParserError>();
+   }
+
+   indent(d);
+   paramlist->format(d + 1);
+   //std::cout << "\n";
+
+   if (body == nullptr)
+   {
+      std::cout << "fn format body nullptr\n";
+      throw std::make_unique<ParserError>();
+   }
+
+   //indent(d);
+   body->format(d);
+   //std::cout << ")";
+}
+
 bool Fn::assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, Element_p callel, int d)
 {
    Call_p call = std::dynamic_pointer_cast<Call>(callel);
@@ -528,6 +697,9 @@ Bind::~Bind()
    //std::cout << "~Bind\n";
 }
 
+void Bind::format(int d)
+{
+}
 
 // If
 
@@ -543,7 +715,7 @@ If::~If()
 void If::show(int d)
 {
    indent(d);
-   std::cout << "If\n";
+   std::cout << "If:" << type_to_s() << "\n";
    
    condition->show(d + 1);
    yes->show(d + 1);
@@ -551,6 +723,23 @@ void If::show(int d)
    {
       no->show(d + 1);
    }
+}
+
+void If::format(int d)
+{
+   indent(d);
+   std::cout << "(if\n";
+   
+   condition->format(d + 1);
+   std::cout << "\n";
+   yes->format(d + 1);
+   if (no != nullptr)
+   {
+      no->format(d + 1);
+      std::cout << "\n";
+   }
+   indent(d);
+   std::cout << ")";
 }
 
 // Println
@@ -566,12 +755,23 @@ Println::~Println()
 void Println::show(int d)
 {
    indent(d);
-   std::cout << "Println " << full << "\n";
+   std::cout << "Println:" << type_to_s() << " " << full << "\n";
    
    if (body != nullptr)
    {
       body->show(d + 1);
    }
+}
+
+void Println::format(int d)
+{
+   std::cout << "(println ";
+   
+   if (body != nullptr)
+   {
+      body->format(d + 1);
+   }
+   std::cout << ")\n";
 }
 
 // Ampersand
@@ -587,7 +787,12 @@ Ampersand::~Ampersand()
 void Ampersand::show(int d)
 {
    indent(d);
-   std::cout << "Ampersand\n";
+   std::cout << "Ampersand:" << type_to_s() << "\n";
+}
+
+void Ampersand::format(int d)
+{
+   std::cout << "&";
 }
 
 // Let
@@ -603,7 +808,7 @@ Let::~Let()
 void Let::show(int d)
 {
    indent(d);
-   std::cout << "Let " << full << "\n";
+   std::cout << "Let:" << type_to_s() << " " << full << "\n";
    
    for (const auto &pr: variables)
    {
@@ -617,6 +822,27 @@ void Let::show(int d)
    {
       body->show(d + 1);
    }
+}
+
+void Let::format(int d)
+{
+   indent(d);
+   std::cout << "(let\n";
+   
+   for (const auto &pr: variables)
+   {
+      std::cout << pr.first << " ";
+      
+      pr.second->format(d + 2);
+      std::cout << "\n";
+   }
+
+   if (body != nullptr)
+   {
+      body->format(d + 1);
+   }
+   indent(d);
+   std::cout << ")";
 }
 
 
@@ -635,7 +861,12 @@ Symbol::~Symbol()
 void Symbol::show(int d)
 {
    indent(d);
-   std::cout << "Symbol " << text << "\n";
+   std::cout << "Symbol:" << type_to_s() << " " << text << "\n";
+}
+
+void Symbol::format(int d)
+{
+   std::cout << text;
 }
 
 
@@ -653,7 +884,12 @@ Builtin::~Builtin()
 void Builtin::show(int d)
 {
    indent(d);
-   std::cout << "Builtin " << text << "\n";
+   std::cout << "Builtin:" << type_to_s() << " " << text << "\n";
+}
+
+void Builtin::format(int d)
+{
+   std::cout << text;
 }
 
 
@@ -672,6 +908,11 @@ void Text::show(int d)
 {
    indent(d);
    std::cout << "Text " << text << "\n";
+}
+
+void Text::format(int d)
+{
+   std::cout << "\"" << text << "\"";
 }
 
 
@@ -696,11 +937,20 @@ void Main::add(Element_p el)
 void Main::show(int d)
 {
    indent(d);
-   std::cout << "Main\n";
+   std::cout << "Main:" << type_to_s() << "\n";
 
    for (Element_p el: elements)
    {
       el->show(d + 1);
+   }
+}
+
+void Main::format(int d)
+{
+   for (Element_p el: elements)
+   {
+      el->format(d);
+      std::cout << "\n";
    }
 }
 
