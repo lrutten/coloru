@@ -2,6 +2,7 @@
 #define PARSER_H
 
 #include <vector>
+#include <map>
 #include <deque>
 #include <map>
 #include <memory>
@@ -11,6 +12,7 @@
 
 extern void indent(int d);
 extern bool debug;
+extern bool trans;
 
 
 enum type_t
@@ -36,7 +38,7 @@ class ParserError
 class Frame;
 class Context;
 class Defn;
-
+class Main;
 
 // Element
 
@@ -73,7 +75,7 @@ public:
    
    virtual type_t getType() = 0;
    virtual void resetTreetype() = 0;
-   virtual void determTreetype(std::shared_ptr<Defn> defn) = 0;
+   virtual void determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn> defn) = 0;
    virtual void transformTree(int d)
    {
       if (debug) indent(d);
@@ -82,6 +84,9 @@ public:
    virtual std::shared_ptr<Element> searchTail(std::shared_ptr<Element> el, int d)
    {
       return nullptr;
+   }
+   virtual void makeTail()
+   {
    }
    
    
@@ -119,7 +124,7 @@ public:
    {
    }
    void resetTreetype() override;
-   void determTreetype(std::shared_ptr<Defn> defn) override;
+   void determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn> defn) override;
 };
 
 using Value_p = std::shared_ptr<Value>;
@@ -251,7 +256,7 @@ public:
    void print() override;
    type_t getType() override;
    void resetTreetype() override;
-   void determTreetype(std::shared_ptr<Defn> defn) override;
+   void determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn> defn) override;
 
 private:
    std::deque<Element_p> elements;   
@@ -289,7 +294,7 @@ public:
    }
    type_t getType() override;
    void resetTreetype() override;
-   void determTreetype(std::shared_ptr<Defn> defn) override;
+   void determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn> defn) override;
 
 private:
    std::deque<Element_p> elements;   
@@ -343,7 +348,7 @@ public:
    }
    type_t getType() override;
    void resetTreetype() override;
-   void determTreetype(std::shared_ptr<Defn> defn) override;
+   void determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn> defn) override;
 
 private:
 };
@@ -366,7 +371,7 @@ public:
    }
    type_t getType() override;
    void resetTreetype() override;
-   void determTreetype(std::shared_ptr<Defn> defn) override;
+   void determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn> defn) override;
    void transformTree(int d) override;
 
 private:
@@ -389,7 +394,7 @@ public:
    }
    type_t getType() override;
    void resetTreetype() override;
-   void determTreetype(std::shared_ptr<Defn> defn) override;
+   void determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn> defn) override;
    std::shared_ptr<Element> searchTail(std::shared_ptr<Element> el, int d) override;
 
 protected:
@@ -606,7 +611,7 @@ public:
    }
    type_t getType() override;
    void resetTreetype() override;
-   void determTreetype(std::shared_ptr<Defn> defn) override;
+   void determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn> defn) override;
    void transformTree(int d) override;
 
 private:
@@ -647,7 +652,7 @@ public:
    }
    type_t getType() override;
    void resetTreetype() override;
-   void determTreetype(std::shared_ptr<Defn> defn) override;
+   void determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn> defn) override;
    
 private:
    bool                     full;
@@ -677,7 +682,7 @@ public:
    }
    type_t getType() override;
    void resetTreetype() override;
-   void determTreetype(std::shared_ptr<Defn> defn) override;
+   void determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn> defn) override;
    
 private:
 };
@@ -726,7 +731,7 @@ public:
    }
    type_t getType() override;
    void resetTreetype() override;
-   void determTreetype(std::shared_ptr<Defn> defn) override;
+   void determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn> defn) override;
    
 private:
    bool                             full;
@@ -864,7 +869,7 @@ public:
    }
    type_t getType() override;
    void resetTreetype() override;
-   void determTreetype(std::shared_ptr<Defn> defn) override;
+   void determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn> defn) override;
    void transformTree(int d) override;
    
    bool assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, Element_p call, int d);
@@ -884,6 +889,10 @@ class Defn : public Element
 public:
    Defn();
    ~Defn();
+   void addCall(Call_p call)
+   {
+      calls.push_back(call);
+   }
    void show(int d) override;
    void format(int d) override; 
    Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
@@ -910,12 +919,13 @@ public:
    }
    type_t getType() override;
    void resetTreetype() override;
-   void determTreetype(std::shared_ptr<Defn> defn) override;
+   void determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn> defn) override;
    void transformTree(int d) override;
 
 private:
-   std::string  name;
-   Fn_p         fn;
+   std::string         name;
+   Fn_p                fn;
+   std::vector<Call_p> calls;
 };
 
 using Defn_p = std::shared_ptr<Defn>;
@@ -945,7 +955,7 @@ public:
    }
    type_t getType() override;
    void resetTreetype() override;
-   void determTreetype(std::shared_ptr<Defn> defn) override;
+   void determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn> defn) override;
 
 private:
    Fn_p         fn;
@@ -987,7 +997,7 @@ public:
    }
    type_t getType() override;
    void resetTreetype() override;
-   void determTreetype(std::shared_ptr<Defn> defn) override;
+   void determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn> defn) override;
    
 private:
    Lambda_p               lambda;
@@ -1021,7 +1031,7 @@ public:
    }
    type_t getType() override;
    void resetTreetype() override;
-   void determTreetype(std::shared_ptr<Defn> defn) override;
+   void determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn> defn) override;
    
 private:
    std::string text;
@@ -1055,7 +1065,7 @@ public:
    }
    type_t getType() override;
    void resetTreetype() override;
-   void determTreetype(std::shared_ptr<Defn> defn) override;
+   void determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn> defn) override;
    
 private:
    std::string text;
@@ -1100,12 +1110,38 @@ class Main : public Elements
 public:
    Main();
    virtual ~Main();
+   void addDefn(Defn_p dfn)
+   {
+      if (debug) std::cout << "addDefn() " << dfn->getName() << "\n";
+      defines[dfn->getName()] = dfn;
+   }
+   void addCall(Call_p call)
+   {
+      Element_p first = call->getElements()[0];
+      Symbol_p sy = std::dynamic_pointer_cast<Symbol>(first);
+      if (sy != nullptr)
+      {
+         if (debug) std::cout << "addCall() " << sy->getText() << "\n";
+         if (defines.find(sy->getText()) != defines.end())
+         {
+            // Defn found
+            Defn_p df = defines[sy->getText()];
+            df->addCall(call);
+         }
+         else
+         {
+            if (debug) std::cout << "   defn " << sy->getText() << " not found\n";
+            //std::cout << "defn " << sy->getText() << " not found\n";
+            //throw std::make_unique<ParserError>();
+         }
+      }
+   }   
    void show(int d) override;
    void format(int d) override; 
    Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
    std::shared_ptr<Elements> make_copy() override
    {
-      return std::make_shared<Binary>();
+      return std::make_shared<Main>();
    }
    virtual std::string info() override
    {
@@ -1113,10 +1149,12 @@ public:
    }
    type_t getType() override;
    void resetTreetype() override;
-   void determTreetype(std::shared_ptr<Defn> defn) override;
+   void determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn> defn) override;
    void transformTree(int d) override;
+   void makeTail() override;
 
 private:
+   std::map<std::string, Defn_p> defines;
 };
 
 using Main_p = std::shared_ptr<Main>;

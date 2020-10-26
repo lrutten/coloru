@@ -39,6 +39,9 @@ int main(int argc, char **argv)
    //Element_p root = parser->parse("vb3.clj");
    if (root != nullptr)
    {
+      /*
+         moved
+         
       root->resetTreetype();
       root->determTreetype(nullptr);
 
@@ -56,6 +59,9 @@ int main(int argc, char **argv)
       root->determTreetype(nullptr);
       if (debug) root->show(0);
       if (debug) std::cout << "===============================\n";
+      */
+
+      root->makeTail();
       
       Runner_p ru = std::make_shared<Runner>(root);
       /*

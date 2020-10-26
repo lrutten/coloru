@@ -487,7 +487,7 @@ Defn::~Defn()
 void Defn::show(int d)
 {
    indent(d);
-   std::cout << "Defn:" << type_to_s() << " " << name << "\n";
+   std::cout << "Defn:" << type_to_s() << " " << name << " calls " << calls.size() << "\n";
    fn->show(d + 1);
 }
 
@@ -939,6 +939,14 @@ void Main::show(int d)
    indent(d);
    std::cout << "Main:" << type_to_s() << "\n";
 
+   indent(d + 1);
+   std::cout << "defines: ";
+   for (const auto &pr: defines)
+   {
+      std::cout << pr.first << " " << pr.second << " ";
+   }
+   std::cout << "\n";
+   
    for (Element_p el: elements)
    {
       el->show(d + 1);
