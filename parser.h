@@ -893,6 +893,10 @@ public:
    {
       calls.push_back(call);
    }
+   std::vector<Call_p> getCalls()
+   {
+      return calls;
+   }
    void show(int d) override;
    void format(int d) override; 
    Element_p evaluate(std::shared_ptr<Context> cx, int d) override;

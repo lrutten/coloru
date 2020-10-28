@@ -1091,7 +1091,10 @@ void Frame::show(int d)
    {
       indent(d + 1);
       std::cout << it.first << "\n";
-      it.second->show(d + 2);
+      if (it.second != nullptr)
+      {
+         it.second->show(d + 2);
+      }
    }
 }
 

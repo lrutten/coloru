@@ -64,7 +64,6 @@ int main(int argc, char **argv)
       root->makeTail();
       
       Runner_p ru = std::make_shared<Runner>(root);
-      /*
       Element_p res = ru->run();
       std::cout << "Result:\n";
       if (res != nullptr)
@@ -75,7 +74,6 @@ int main(int argc, char **argv)
       {
          std::cout << "nullptr\n";
       }
-       */
       if (debug2) root->show(0);
    }
 }
