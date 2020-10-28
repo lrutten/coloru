@@ -47,8 +47,6 @@ int main(int argc, char **argv)
    
    Parser_p parser = std::make_shared<Parser>();
    Element_p root = parser->parse(fname);
-   //Element_p root = parser->parse(argv[1]);
-   //Element_p root = parser->parse("vb3.clj");
    if (root != nullptr)
    {
       if (trans)
@@ -56,16 +54,19 @@ int main(int argc, char **argv)
          root->makeTail();
       }
       
-      Runner_p ru = std::make_shared<Runner>(root);
-      Element_p res = ru->run();
-      std::cout << "Result:\n";
-      if (res != nullptr)
+      if (!showclj)
       {
-         res->show(1);
-      }
-      else
-      {
-         std::cout << "nullptr\n";
+         Runner_p ru = std::make_shared<Runner>(root);
+         Element_p res = ru->run();
+         std::cout << "Result:\n";
+         if (res != nullptr)
+         {
+            res->show(1);
+         }
+         else
+         {
+            std::cout << "nullptr\n";
+         }
       }
       if (debug2) root->show(0);
    }

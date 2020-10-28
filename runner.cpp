@@ -265,11 +265,71 @@ Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
          {
             cx->push(bi->getFrame());
          }
-         
-         cx->push(fr);
-         Element_p rs = fuu->evaluate(cx, d + 1);
-         cx->pop();
 
+         if (debug) indent(d + 1);
+         if (debug) std::cout << "fuu " << type_to_s() << "\n";
+
+         // start push - evaluate - pop part
+         
+         // original code without tail recursion optimization
+         //   cx->push(fr);
+         //   Element_p rs = fuu->evaluate(cx, d + 1);
+         //   cx->pop();
+
+         Element_p rs;
+         
+         if (df == nullptr)
+         {
+            // this is not a symbol call
+            if (debug) indent(d + 1);
+            if (debug) std::cout << "no symbol call\n";
+
+            cx->push(fr);
+            rs = fuu->evaluate(cx, d + 1);
+            cx->pop();
+         }
+         else
+         {
+            // symbol call to defn
+            if (debug) indent(d + 1);
+            if (debug) std::cout << "symbol call\n";
+
+            bool it = true;
+            while (it)
+            {
+               if (debug) indent(d + 1);
+               if (debug) std::cout << "iterate\n";
+               if (getTreetype() == tp_tailrecurse)
+               {
+                  if (debug) indent(d + 2);
+                  if (debug) std::cout << "tail call\n";
+
+                  rs = fr;
+                  it = false;
+               }
+               else
+               {
+                  if (debug) indent(d + 2);
+                  if (debug) std::cout << "no tail call\n";
+
+                  cx->push(fr);
+                  rs = fuu->evaluate(cx, d + 1);
+                  Frame_p fr2 = std::dynamic_pointer_cast<Frame>(rs);
+                  cx->pop();
+                  if (fr2 != nullptr)
+                  {
+                     fr = fr2;
+                  }
+                  else
+                  {
+                     it = false;
+                  }
+               }
+            }
+         }
+         
+         // end push - evaluate - pop part
+         
          if (bi != nullptr)
          {
             cx->pop();

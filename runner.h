@@ -13,7 +13,7 @@ class RunError
 };
 
 
-class Frame
+class Frame : public Element
 {
 public:
    Frame();
@@ -22,6 +22,24 @@ public:
    Element_p search(std::string nm);
    bool exists(std::string nm);
    void show(int d);
+   
+   void format(int d) override
+   {
+   }
+   std::shared_ptr<Element> evaluate(std::shared_ptr<Context> cx, int d) override
+   {
+      return nullptr;
+   }
+   type_t getType() override
+   {
+      return tp_undefined;
+   }
+   void resetTreetype() override
+   {
+   }
+   void determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn> defn) override
+   {
+   }
    
 private:
    std::map<std::string, Element_p> bindings;
