@@ -4,18 +4,30 @@
 #include "parser.h"
 #include "runner.h"
 
-bool debug  = false;
-bool debug2 = false;
-bool trans  = false;
+bool debug   = false;
+bool debug2  = false;
+bool trans   = false;
+bool showclj = false;
 
+// options
+//
+//   f file
+//   d debug
+//   t transform to tail recursion
+//   l show transformed source code
+//
 int main(int argc, char **argv)
 {
    char *fname;
    int opt;
-   while ((opt = getopt(argc, argv, "tdf:")) != -1)
+   while ((opt = getopt(argc, argv, "ltdf:")) != -1)
    {
       switch (opt)
       {
+         case 'f':
+            fname = optarg;
+            break;
+
          case 'd':
             debug = true;
             break;
@@ -24,8 +36,8 @@ int main(int argc, char **argv)
             trans = true;
             break;
 
-         case 'f':
-            fname = optarg;
+         case 'l':
+            showclj = true;
             break;
       }
    }
@@ -39,29 +51,10 @@ int main(int argc, char **argv)
    //Element_p root = parser->parse("vb3.clj");
    if (root != nullptr)
    {
-      /*
-         moved
-         
-      root->resetTreetype();
-      root->determTreetype(nullptr);
-
-      if (debug) std::cout << "=========transform=============\n";
-      root->transformTree(0);
-
-      if (debug) std::cout << "=========show=1================\n";
-      if (debug) root->show(0);
-      
-      if (debug) std::cout << "=========format================\n";
-      if (debug || trans) root->format(0);
-
-      if (debug) std::cout << "=========show 2================\n";
-      root->resetTreetype();
-      root->determTreetype(nullptr);
-      if (debug) root->show(0);
-      if (debug) std::cout << "===============================\n";
-      */
-
-      root->makeTail();
+      if (trans)
+      {
+         root->makeTail();
+      }
       
       Runner_p ru = std::make_shared<Runner>(root);
       Element_p res = ru->run();

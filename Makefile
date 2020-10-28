@@ -1,9 +1,9 @@
 CPP_OPTIONS=-g -std=c++17
 
-all: clotool
+all: coloru
 
-clotool: clotool.o textfile.o lex.o parser.o runner.o recurse.o
-	g++ -o clotool clotool.o textfile.o lex.o parser.o runner.o recurse.o
+coloru: clotool.o textfile.o lex.o parser.o runner.o recurse.o
+	g++ -o coloru clotool.o textfile.o lex.o parser.o runner.o recurse.o
 
 clotool.o: clotool.cpp textfile.h lex.h parser.h runner.h
 	g++ -c ${CPP_OPTIONS} clotool.cpp
@@ -23,19 +23,20 @@ runner.o: runner.cpp lex.h textfile.h parser.h runner.h
 recurse.o: recurse.cpp lex.h textfile.h parser.h runner.h
 	g++ -c ${CPP_OPTIONS} recurse.cpp
 
-run: clotool
-	./clotool
+run: coloru
+	./coloru
 
-install: clotool
-	cp -v clotool ~/bin
+install: coloru
+	cp -v coloru ~/bin
 
-valgrind: clotool
-	valgrind --leak-check=full --show-leak-kinds=all ./clotool
+valgrind: coloru
+	valgrind --leak-check=full --show-leak-kinds=all ./coloru
 
 check:
 	cppcheck --enable=all .
 
 clean:
 	rm -vf *.o
-	rm -vf clotool
+	rm -vf coloru
+	rm -vf core
 

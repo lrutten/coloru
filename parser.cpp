@@ -12,7 +12,7 @@ void indent(int d)
    }
 }
 
-Element::Element() : treetype(tp_undefined)
+Element::Element() : treetype(tp_undefined), hascont(false)
 {
 }
 
@@ -35,14 +35,20 @@ Number::~Number()
 
 std::string Element::type_to_s()
 {
+   std::string k = "-";
+   if (hascont)
+   {
+      k = "k";
+   }
+ 
    switch (treetype)
    {
-   case tp_undefined:   return "u";
-   case tp_simple:      return "s";
-   case tp_pass:        return "p";
-   case tp_recurse:     return "r";
-   case tp_tailrecurse: return "t";
-   default:             return "x";
+   case tp_undefined:   return "u" + k;
+   case tp_simple:      return "s" + k;
+   case tp_pass:        return "p" + k;
+   case tp_recurse:     return "r" + k;
+   case tp_tailrecurse: return "t" + k;
+   default:             return "x" + k;
    }
 }
 

@@ -13,6 +13,7 @@
 extern void indent(int d);
 extern bool debug;
 extern bool trans;
+extern bool showclj;
 
 
 enum type_t
@@ -58,6 +59,16 @@ public:
    }
    std::string type_to_s();
 
+   bool hasCont()
+   {
+      return hascont;
+   }
+   void setCont(bool hc)
+   {
+      //if (debug) std::cout << "setCont\n";
+      hascont = hc;
+   }
+
    virtual void show(int d) = 0;
    virtual void format(int d) = 0;
    virtual std::shared_ptr<Element> evaluate(std::shared_ptr<Context> cx, int d) = 0;
@@ -76,10 +87,11 @@ public:
    virtual type_t getType() = 0;
    virtual void resetTreetype() = 0;
    virtual void determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn> defn) = 0;
-   virtual void transformTree(int d)
+   virtual bool transformTree(int d)
    {
       if (debug) indent(d);
       if (debug) std::cout << info() << "\n";
+      return false;
    }
    virtual std::shared_ptr<Element> searchTail(std::shared_ptr<Element> el, int d)
    {
@@ -92,6 +104,7 @@ public:
    
 private:
    type_t treetype;
+   bool   hascont;   // has a continuation paramater
 };
 
 using Element_p = std::shared_ptr<Element>;
@@ -372,7 +385,7 @@ public:
    type_t getType() override;
    void resetTreetype() override;
    void determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn> defn) override;
-   void transformTree(int d) override;
+   bool transformTree(int d) override;
 
 private:
 };
@@ -612,7 +625,7 @@ public:
    type_t getType() override;
    void resetTreetype() override;
    void determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn> defn) override;
-   void transformTree(int d) override;
+   bool transformTree(int d) override;
 
 private:
    Element_p condition;
@@ -846,6 +859,11 @@ public:
       return paramlist->get(i);
    }
    
+   ParamList_p getParamList()
+   {
+      return paramlist;
+   }
+
    void setParamList(ParamList_p pl)
    {
       paramlist = pl;
@@ -870,7 +888,7 @@ public:
    type_t getType() override;
    void resetTreetype() override;
    void determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn> defn) override;
-   void transformTree(int d) override;
+   bool transformTree(int d) override;
    
    bool assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, Element_p call, int d);
 
@@ -924,7 +942,7 @@ public:
    type_t getType() override;
    void resetTreetype() override;
    void determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn> defn) override;
-   void transformTree(int d) override;
+   bool transformTree(int d) override;
 
 private:
    std::string         name;
@@ -1154,7 +1172,7 @@ public:
    type_t getType() override;
    void resetTreetype() override;
    void determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn> defn) override;
-   void transformTree(int d) override;
+   bool transformTree(int d) override;
    void makeTail() override;
 
 private:
