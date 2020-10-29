@@ -294,6 +294,7 @@ Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
             if (debug) indent(d + 1);
             if (debug) std::cout << "symbol call\n";
 
+            // this is the tail recursion optimization
             bool it = true;
             while (it)
             {
@@ -304,6 +305,7 @@ Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
                   if (debug) indent(d + 2);
                   if (debug) std::cout << "tail call\n";
 
+                  // return the new frame as result
                   rs = fr;
                   it = false;
                }
@@ -312,12 +314,16 @@ Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
                   if (debug) indent(d + 2);
                   if (debug) std::cout << "no tail call\n";
 
+                  // simple call
+                  
                   cx->push(fr);
                   rs = fuu->evaluate(cx, d + 1);
                   Frame_p fr2 = std::dynamic_pointer_cast<Frame>(rs);
                   cx->pop();
                   if (fr2 != nullptr)
                   {
+                     // the evaluate returned a frame,
+                     // the while can continue
                      fr = fr2;
                   }
                   else

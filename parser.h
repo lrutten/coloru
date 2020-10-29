@@ -19,10 +19,10 @@ extern bool showclj;
 enum type_t
 {
    tp_undefined,
-   tp_simple,
-   tp_pass,
-   tp_recurse,
-   tp_tailrecurse
+   tp_simple,      // for values like number, boolean, nil, ...
+   tp_pass,        // for if
+   tp_recurse,     // non-tail recursion
+   tp_tailrecurse  // tail recursion
 };
 
 
@@ -65,7 +65,6 @@ public:
    }
    void setCont(bool hc)
    {
-      //if (debug) std::cout << "setCont\n";
       hascont = hc;
    }
 
@@ -104,7 +103,7 @@ public:
    
 private:
    type_t treetype;
-   bool   hascont;   // has a continuation paramater
+   bool   hascont;   // has a continuation parameter
 };
 
 using Element_p = std::shared_ptr<Element>;
