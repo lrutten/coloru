@@ -1,6 +1,8 @@
 #include <iostream>
 #include <sstream>
 #include <string.h>
+
+#include "easylogging++.h"
 #include "lex.h"
 
 extern bool debug;
@@ -14,9 +16,10 @@ number_t Lex::value()
 {
    return val;
 }
-  
+
 Lex::Lex(const std::string &fn) : file(std::make_shared<Textfile>(fn)), it(file->begin())
 {
+   CLOG(DEBUG, "lex") << "start";
    next();
 }
 
@@ -56,13 +59,13 @@ void Lex::next()
    {
       it++;
    }
-   
+
    if (end())
    {
       tok = tk_eof;
       return;
    }
-   if (debug) std::cout << "teken " << *it << "\n";
+   CLOG(DEBUG, "lex") << "teken " << *it;
 
    switch ( *it )
    {
@@ -118,7 +121,7 @@ void Lex::next()
          tok = tk_greater;
          it++;
          break;
-      
+
       default:
          if (isdigit(*it))
          {
@@ -131,7 +134,7 @@ void Lex::next()
             tok = tk_number;
             std::stringstream ss(nus);
             ss >> val;
-            if (debug) std::cout << "lex: tk_number " << nus << " " << val << "\n";
+            CLOG(DEBUG, "lex") << "tk_number " << nus << " " << val;
          }
          else
          if (isletter(*it))
@@ -145,83 +148,95 @@ void Lex::next()
                it++;
             }
             token_text = sym;
-            
+
             if (token_text == "defn")
             {
                tok = tk_defn;
+               CLOG(DEBUG, "lex") << "defn";
             }
             else
             if (token_text == "let")
             {
                tok = tk_let;
+               CLOG(DEBUG, "lex") << "let";
             }
             else
             if (token_text == "fn")
             {
-               if (debug) std::cout << "lex: tk_fn\n";
                tok = tk_fn;
+               CLOG(DEBUG, "lex") << "tk_fn";
             }
             else
             if (token_text == "if")
             {
                tok = tk_if;
+               CLOG(DEBUG, "lex") << "if";
             }
             else
             if (token_text == "println")
             {
                tok = tk_println;
+               CLOG(DEBUG, "lex") << "println";
             }
             else
             if (token_text == "not=")
             {
                tok = tk_notequal;
+               CLOG(DEBUG, "lex") << "not=";
             }
             else
             if (token_text == ">=")
             {
                tok = tk_greatereq;
+               CLOG(DEBUG, "lex") << ">=";
             }
             else
             if (token_text == "<=")
             {
                tok = tk_lesseq;
+               CLOG(DEBUG, "lex") << "<=";
             }
             else
             if (token_text == "true")
             {
                tok = tk_true;
+               CLOG(DEBUG, "lex") << "true";
             }
             else
             if (token_text == "false")
             {
                tok = tk_false;
+               CLOG(DEBUG, "lex") << "false";
             }
             else
             if (token_text == "nil")
             {
                tok = tk_nil;
+               CLOG(DEBUG, "lex") << "nil";
             }
             else
             if (token_text == "nil?")
             {
                tok = tk_builtin;
+               CLOG(DEBUG, "lex") << "nil?";
             }
             else
             if (token_text == "empty?")
             {
                tok = tk_builtin;
+               CLOG(DEBUG, "lex") << "empty?";
             }
             else
             {
                tok = tk_symbol;
-               if (debug) std::cout << "lex: tk_symbol " << sym << "\n";
+               CLOG(DEBUG, "lex") << "tk_symbol " << sym;
             }
          }
          else
          if (*it == '\"')
          {
             it++;  // skip "
-            
+
             std::string tes = "";
             while (!end() && *it != '\"')
             {
@@ -229,10 +244,10 @@ void Lex::next()
                it++;
             }
             it++; // skip "
-            
+
             tok        = tk_text;
             token_text = tes;
-            if (debug) std::cout << "lex: tk_text " << tes << "\n";
+            CLOG(DEBUG, "lex") << "tk_text " << tes;
          }
          else
          {

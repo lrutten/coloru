@@ -2,8 +2,8 @@ CPP_OPTIONS=-g -std=c++17
 
 all: coloru
 
-coloru: clotool.o textfile.o lex.o parser.o runner.o recurse.o
-	g++ -o coloru clotool.o textfile.o lex.o parser.o runner.o recurse.o
+coloru: clotool.o textfile.o lex.o parser.o runner.o recurse.o easylogging++.o
+	g++ -o coloru clotool.o textfile.o lex.o parser.o runner.o recurse.o easylogging++.o
 
 clotool.o: clotool.cpp textfile.h lex.h parser.h runner.h
 	g++ -c ${CPP_OPTIONS} clotool.cpp
@@ -22,6 +22,9 @@ runner.o: runner.cpp lex.h textfile.h parser.h runner.h
 
 recurse.o: recurse.cpp lex.h textfile.h parser.h runner.h
 	g++ -c ${CPP_OPTIONS} recurse.cpp
+
+easylogging++.o: easylogging++.cc easylogging++.h
+	g++ -c ${CPP_OPTIONS} easylogging++.cc
 
 run: coloru
 	./coloru

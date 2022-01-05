@@ -1,8 +1,44 @@
 #include <iostream>
 #include <getopt.h>
 
+#include "easylogging++.h"
+
 #include "parser.h"
 #include "runner.h"
+
+INITIALIZE_EASYLOGGINGPP
+
+
+class Logchannel
+{
+public:
+   Logchannel(std::string nm) : name(nm)
+   {
+      logger = el::Loggers::getLogger(nm);
+   }
+
+   void enable()
+   {
+      el::Configurations conf;
+      conf.setGlobally(el::ConfigurationType::Format, "%logger %level %msg");
+      conf.setGlobally(el::ConfigurationType::Enabled, "true");
+      el::Loggers::reconfigureLogger(name, conf);
+   }
+
+   void disable()
+   {
+      el::Configurations conf;
+      conf.setGlobally(el::ConfigurationType::Enabled, "false");
+      el::Loggers::reconfigureLogger(name, conf);
+   }
+
+private:
+   std::string  name;
+   el::Logger *logger;
+};
+
+
+
 
 bool debug   = false;
 bool debug2  = false;
@@ -18,6 +54,29 @@ bool showclj = false;
 //
 int main(int argc, char **argv)
 {
+   //START_EASYLOGGINGPP(argc, argv);
+
+   // ---- default logger -----
+   el::Configurations defaultConf;
+   defaultConf.setToDefault();
+
+   // Values are always std::string
+   defaultConf.set(el::Level::Info,
+            el::ConfigurationType::Format, "%datetime %level %msg");
+   // default logger uses default configurations
+   el::Loggers::reconfigureLogger("default", defaultConf);
+   //LOG(INFO) << "Log using default file";
+
+
+
+   Logchannel logmain("main");
+   logmain.enable();
+   CLOG(DEBUG, "main") << "start coloru";
+
+   Logchannel loglex("lex");
+   loglex.enable();
+   //CLOG(DEBUG, "lex") << "start lex";
+
    char *fname;
    int opt;
    while ((opt = getopt(argc, argv, "ltdf:")) != -1)
@@ -44,7 +103,7 @@ int main(int argc, char **argv)
 
    if (debug) std::cout << "start\n";
 
-   
+
    Parser_p parser = std::make_shared<Parser>();
    Element_p root = parser->parse(fname);
    if (root != nullptr)
@@ -53,7 +112,7 @@ int main(int argc, char **argv)
       {
          root->makeTail();
       }
-      
+
       if (!showclj)
       {
          Runner_p ru = std::make_shared<Runner>(root);
