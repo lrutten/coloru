@@ -57,7 +57,7 @@ public:
 
 protected:
    bool     end();
-   
+
 private:
    Textfile_p   file;
    iterator_t   it;

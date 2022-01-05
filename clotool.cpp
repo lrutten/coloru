@@ -20,7 +20,7 @@ public:
    void enable()
    {
       el::Configurations conf;
-      conf.setGlobally(el::ConfigurationType::Format, "%logger %level %msg");
+      conf.setGlobally(el::ConfigurationType::Format, "%level %logger %msg");
       conf.setGlobally(el::ConfigurationType::Enabled, "true");
       el::Loggers::reconfigureLogger(name, conf);
    }
@@ -74,8 +74,17 @@ int main(int argc, char **argv)
    CLOG(DEBUG, "main") << "start coloru";
 
    Logchannel loglex("lex");
-   loglex.enable();
-   //CLOG(DEBUG, "lex") << "start lex";
+   loglex.disable();
+
+   Logchannel logparser("parser");
+   logparser.enable();
+
+   Logchannel logrunner("runner");
+   logrunner.enable();
+
+   Logchannel logtextfile("textfile");
+   logtextfile.enable();
+
 
    char *fname;
    int opt;
@@ -101,7 +110,7 @@ int main(int argc, char **argv)
       }
    }
 
-   if (debug) std::cout << "start\n";
+   CLOG(DEBUG, "main") << "start";
 
 
    Parser_p parser = std::make_shared<Parser>();
@@ -120,14 +129,14 @@ int main(int argc, char **argv)
          std::cout << "Result:\n";
          if (res != nullptr)
          {
-            res->show(1);
+            res->show(1, "main");
          }
          else
          {
             std::cout << "nullptr\n";
          }
       }
-      if (debug2) root->show(0);
+      if (debug2) root->show(0, "main");
    }
 }
 

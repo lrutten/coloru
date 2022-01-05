@@ -11,6 +11,7 @@
 #include "lex.h"
 
 extern void indent(int d);
+extern std::string i(int d);
 extern bool debug;
 extern bool trans;
 extern bool showclj;
@@ -52,7 +53,7 @@ public:
    {
       return treetype;
    }
- 
+
    void setTreetype(type_t tt)
    {
       treetype = tt;
@@ -68,7 +69,7 @@ public:
       hascont = hc;
    }
 
-   virtual void show(int d) = 0;
+   virtual void show(int d, std::string chan) = 0;
    virtual void format(int d) = 0;
    virtual std::shared_ptr<Element> evaluate(std::shared_ptr<Context> cx, int d) = 0;
    virtual std::shared_ptr<Element> capture(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, int d)
@@ -82,7 +83,7 @@ public:
    virtual void print()
    {
    }
-   
+
    virtual type_t getType() = 0;
    virtual void resetTreetype() = 0;
    virtual void determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn> defn) = 0;
@@ -99,8 +100,7 @@ public:
    virtual void makeTail()
    {
    }
-   
-   
+
 private:
    type_t treetype;
    bool   hascont;   // has a continuation parameter
@@ -151,8 +151,8 @@ class Number : public Value
 public:
    explicit Number(number_t w);
    virtual ~Number();
-   void show(int d) override; 
-   void format(int d) override; 
+   void show(int d, std::string chan) override;
+   void format(int d) override;
    Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
    number_t getNumber()
    {
@@ -167,7 +167,7 @@ public:
       std::cout << number;
    }
    type_t getType() override;
-   
+
 private:
    number_t number;
 };
@@ -182,8 +182,8 @@ class Boolean : public Value
 public:
    explicit Boolean(bool w);
    virtual ~Boolean();
-   void show(int d) override; 
-   void format(int d) override; 
+   void show(int d, std::string chan) override;
+   void format(int d) override;
    Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
    number_t getValue()
    {
@@ -205,7 +205,7 @@ public:
       }
    }
    type_t getType() override;
-   
+
 private:
    bool value;
 };
@@ -220,8 +220,8 @@ class Nil : public Value
 public:
    explicit Nil();
    virtual ~Nil();
-   void show(int d) override; 
-   void format(int d) override; 
+   void show(int d, std::string chan) override;
+   void format(int d) override;
    Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
    virtual std::string info() override
    {
@@ -232,7 +232,7 @@ public:
       std::cout << "nil";
    }
    type_t getType() override;
-   
+
 private:
 };
 
@@ -259,8 +259,8 @@ public:
    }
    Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
    Element_p capture(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, int d) override;
-   void show(int d) override;
-   void format(int d) override; 
+   void show(int d, std::string chan) override;
+   void format(int d) override;
    virtual std::string info() override
    {
       return "List";
@@ -271,7 +271,7 @@ public:
    void determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn> defn) override;
 
 private:
-   std::deque<Element_p> elements;   
+   std::deque<Element_p> elements;
 };
 
 using List_p = std::shared_ptr<List>;
@@ -298,8 +298,8 @@ public:
    }
    Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
    Element_p capture(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, int d) override;
-   void show(int d) override;
-   void format(int d) override; 
+   void show(int d, std::string chan) override;
+   void format(int d) override;
    virtual std::string info() override
    {
       return "Call";
@@ -309,7 +309,7 @@ public:
    void determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn> defn) override;
 
 private:
-   std::deque<Element_p> elements;   
+   std::deque<Element_p> elements;
 };
 
 using Call_p = std::shared_ptr<Call>;
@@ -337,7 +337,7 @@ public:
    virtual std::shared_ptr<Elements> make_copy() = 0;
 
 protected:
-   std::vector<Element_p> elements;   
+   std::vector<Element_p> elements;
 };
 
 using Elements_p = std::shared_ptr<Elements>;
@@ -351,8 +351,8 @@ public:
    Vector();
    ~Vector();
    Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
-   void show(int d) override;
-   void format(int d) override; 
+   void show(int d, std::string chan) override;
+   void format(int d) override;
    Elements_p make_copy() override;
    virtual std::string info() override
    {
@@ -374,8 +374,8 @@ public:
    Body();
    ~Body();
    Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
-   void show(int d) override;
-   void format(int d) override; 
+   void show(int d, std::string chan) override;
+   void format(int d) override;
    Elements_p make_copy() override;
    virtual std::string info() override
    {
@@ -397,8 +397,8 @@ class Binary : public Elements
 public:
    Binary();
    virtual ~Binary();
-   void show(int d) override;
-   void format(int d) override; 
+   void show(int d, std::string chan) override;
+   void format(int d) override;
    Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
    Elements_p make_copy() override
    {
@@ -420,7 +420,7 @@ public:
    Mul()
    {
    }
-   void show(int d) override;
+   void show(int d, std::string chan) override;
    Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
    Elements_p make_copy() override
    {
@@ -438,7 +438,7 @@ public:
    Div()
    {
    }
-   void show(int d) override;
+   void show(int d, std::string chan) override;
    Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
    Elements_p make_copy() override
    {
@@ -456,7 +456,7 @@ public:
    Plus()
    {
    }
-   void show(int d) override;
+   void show(int d, std::string chan) override;
    Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
    Elements_p make_copy() override
    {
@@ -474,7 +474,7 @@ public:
    Min()
    {
    }
-   void show(int d) override;
+   void show(int d, std::string chan) override;
    Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
    Elements_p make_copy() override
    {
@@ -492,7 +492,7 @@ public:
    Equal()
    {
    }
-   void show(int d) override;
+   void show(int d, std::string chan) override;
    Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
    Elements_p make_copy() override
    {
@@ -510,7 +510,7 @@ public:
    Less()
    {
    }
-   void show(int d) override;
+   void show(int d, std::string chan) override;
    Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
    Elements_p make_copy() override
    {
@@ -528,7 +528,7 @@ public:
    Greater()
    {
    }
-   void show(int d) override;
+   void show(int d, std::string chan) override;
    Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
    Elements_p make_copy() override
    {
@@ -546,7 +546,7 @@ public:
    NotEqual()
    {
    }
-   void show(int d) override;
+   void show(int d, std::string chan) override;
    Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
    Elements_p make_copy() override
    {
@@ -564,7 +564,7 @@ public:
    GreaterEq()
    {
    }
-   void show(int d) override;
+   void show(int d, std::string chan) override;
    Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
    Elements_p make_copy() override
    {
@@ -582,7 +582,7 @@ public:
    LessEq()
    {
    }
-   void show(int d) override;
+   void show(int d, std::string chan) override;
    Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
    Elements_p make_copy() override
    {
@@ -601,8 +601,8 @@ class If : public Element
 public:
    If();
    ~If();
-   void show(int d) override;
-   void format(int d) override; 
+   void show(int d, std::string chan) override;
+   void format(int d) override;
    Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
    Element_p capture(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, int d) override;
    void setCondition(Element_p cond)
@@ -642,8 +642,8 @@ class Println : public Element
 public:
    Println();
    ~Println();
-   void show(int d) override;
-   void format(int d) override; 
+   void show(int d, std::string chan) override;
+   void format(int d) override;
    Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
    Element_p capture(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, int d) override;
    void setBody(Body_p bd)
@@ -665,7 +665,7 @@ public:
    type_t getType() override;
    void resetTreetype() override;
    void determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn> defn) override;
-   
+
 private:
    bool                     full;
    Body_p                   body;
@@ -680,8 +680,8 @@ class Ampersand : public Element
 public:
    Ampersand();
    ~Ampersand();
-   void show(int d) override;
-   void format(int d) override; 
+   void show(int d, std::string chan) override;
+   void format(int d) override;
    Element_p evaluate(std::shared_ptr<Context> cx, int d)
    {
    }
@@ -695,7 +695,7 @@ public:
    type_t getType() override;
    void resetTreetype() override;
    void determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn> defn) override;
-   
+
 private:
 };
 
@@ -709,8 +709,8 @@ class Let : public Element
 public:
    Let();
    ~Let();
-   void show(int d) override;
-   void format(int d) override; 
+   void show(int d, std::string chan) override;
+   void format(int d) override;
    Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
    Element_p capture(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, int d) override;
    void addVariable(std::string nm, Element_p el)
@@ -744,7 +744,7 @@ public:
    type_t getType() override;
    void resetTreetype() override;
    void determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn> defn) override;
-   
+
 private:
    bool                             full;
    std::map<std::string, Element_p> variables;
@@ -758,9 +758,9 @@ class AParam
 public:
    AParam();
    virtual ~AParam();
-   virtual void show(int d) = 0;
+   virtual void show(int d, std::string chan) = 0;
    virtual void format(int d) = 0;
-   
+
    bool getRest()
    {
       return rest;
@@ -782,13 +782,13 @@ class Param : public AParam
 public:
    Param(std::string nm);
    ~Param();
-   
+
    std::string getName()
    {
       return name;
    }
-   void show(int d) override;
-   void format(int d) override; 
+   void show(int d, std::string chan) override;
+   void format(int d) override;
    bool assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, List_p apars, int d, bool single=true) override;
 
 private:
@@ -806,12 +806,12 @@ public:
    {
       params.push_back(pa);
    }
-   
+
    int size()
    {
       return params.size();
    }
-   
+
    std::string get(int i)
    {
       AParam_p apar = params[i];
@@ -826,10 +826,10 @@ public:
       }
    }
 
-   void show(int d) override;
-   void format(int d) override; 
+   void show(int d, std::string chan) override;
+   void format(int d) override;
    bool assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, List_p apars, int d, bool single=true) override;
-   
+
 private:
    std::vector<AParam_p> params;
 };
@@ -843,21 +843,21 @@ class Fn : public Element
 public:
    Fn();
    ~Fn();
-   void show(int d) override;
-   void format(int d) override; 
+   void show(int d, std::string chan) override;
+   void format(int d) override;
    Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
    Element_p capture(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, int d) override;
-   
+
    int getParamsSize()
    {
       return paramlist->size();
    }
-   
+
    std::string getParam(int i)
    {
       return paramlist->get(i);
    }
-   
+
    ParamList_p getParamList()
    {
       return paramlist;
@@ -888,7 +888,7 @@ public:
    void resetTreetype() override;
    void determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn> defn) override;
    bool transformTree(int d) override;
-   
+
    bool assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, Element_p call, int d);
 
 private:
@@ -914,8 +914,8 @@ public:
    {
       return calls;
    }
-   void show(int d) override;
-   void format(int d) override; 
+   void show(int d, std::string chan) override;
+   void format(int d) override;
    Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
    Element_p capture(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, int d) override;
    std::string getName()
@@ -958,8 +958,8 @@ class Lambda : public Callable
 public:
    Lambda();
    ~Lambda();
-   void show(int d) override;
-   void format(int d) override; 
+   void show(int d, std::string chan) override;
+   void format(int d) override;
    Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
    Element_p capture(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, int d) override;
    Fn_p getFn()
@@ -993,8 +993,8 @@ class Bind : public Callable
 public:
    Bind();
    ~Bind();
-   void show(int d) override;
-   void format(int d) override; 
+   void show(int d, std::string chan) override;
+   void format(int d) override;
    Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
    Lambda_p getLambda()
    {
@@ -1019,7 +1019,7 @@ public:
    type_t getType() override;
    void resetTreetype() override;
    void determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn> defn) override;
-   
+
 private:
    Lambda_p               lambda;
    std::shared_ptr<Frame> frame;
@@ -1034,8 +1034,8 @@ class Symbol : public Callable
 public:
    explicit Symbol(const std::string &te);
    ~Symbol();
-   void show(int d) override;
-   void format(int d) override; 
+   void show(int d, std::string chan) override;
+   void format(int d) override;
    Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
    Element_p capture(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, int d) override;
    std::string getText()
@@ -1053,7 +1053,7 @@ public:
    type_t getType() override;
    void resetTreetype() override;
    void determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn> defn) override;
-   
+
 private:
    std::string text;
 };
@@ -1067,8 +1067,8 @@ class Builtin : public Callable
 public:
    explicit Builtin(const std::string &te);
    ~Builtin();
-   void show(int d) override;
-   void format(int d) override; 
+   void show(int d, std::string chan) override;
+   void format(int d) override;
    Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
    Element_p evaluate2(std::shared_ptr<Context> cx, std::shared_ptr<Element> call, int d);
    Element_p capture(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, int d) override;
@@ -1087,7 +1087,7 @@ public:
    type_t getType() override;
    void resetTreetype() override;
    void determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn> defn) override;
-   
+
 private:
    std::string text;
 };
@@ -1101,8 +1101,8 @@ class Text : public Value
 public:
    explicit Text(const std::string &te);
    ~Text();
-   void show(int d) override;
-   void format(int d) override; 
+   void show(int d, std::string chan) override;
+   void format(int d) override;
    Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
    Element_p capture(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, int d) override;
    std::string getText()
@@ -1118,7 +1118,7 @@ public:
       std::cout << text;
    }
    type_t getType() override;
-   
+
 private:
    std::string text;
 };
@@ -1156,9 +1156,9 @@ public:
             //throw std::make_unique<ParserError>();
          }
       }
-   }   
-   void show(int d) override;
-   void format(int d) override; 
+   }
+   void show(int d, std::string chan) override;
+   void format(int d) override;
    Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
    std::shared_ptr<Elements> make_copy() override
    {
@@ -1185,7 +1185,7 @@ class Parser
 {
 private:
    Lex_p lex;
-   
+
 public:
    Parser();
    ~Parser();

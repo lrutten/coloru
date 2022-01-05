@@ -1,5 +1,6 @@
 #include <iostream>
 
+#include "easylogging++.h"
 #include "runner.h"
 
 // --------------- evaluate() ------------------
@@ -31,8 +32,7 @@ Element_p Nil::evaluate(std::shared_ptr<Context> cx, int d)
 
 Element_p List::evaluate(std::shared_ptr<Context> cx, int d)
 {
-   if (debug) indent(d);
-   if (debug) std::cout << "List evaluate()\n";
+   CLOG(DEBUG, "runner") << i(d) << "List evaluate()\n";
 
    return shared_from_this();
 }
@@ -42,13 +42,10 @@ Element_p List::evaluate(std::shared_ptr<Context> cx, int d)
 
 bool Param::assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, List_p apars, int d, bool single)
 {
-   if (debug) indent(d);
-   if (debug) std::cout << "Param assignParameters()\n";
+   CLOG(DEBUG, "runner") << i(d) << "Param assignParameters()";
 
-   if (debug) indent(d + 1);
-   if (debug) std::cout << "rest " << getRest() << "\n";
-   if (debug) indent(d + 1);
-   if (debug) std::cout << "name " << name << "\n";
+   CLOG(DEBUG, "runner") << i(d + 1) << "rest " << getRest();
+   CLOG(DEBUG, "runner") << i(d + 1) << "name " << name;
 
    std::string fparname = name;
 
@@ -61,17 +58,15 @@ bool Param::assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame>
       {
          Element_p apar = list->get(0);
          list->pop_front();
-   
+
          Element_p aparres = apar->evaluate(cx, d + 1);
-      
-         if (debug) indent(d + 1);
-         if (debug) std::cout << "==== aparam result===\n";
-      
-         if (debug) aparres->show(d + 2);
-      
-         if (debug) indent(d + 1);
-         if (debug) std::cout << "=====\n";
-      
+
+         CLOG(DEBUG, "runner") << i(d + 1) << "==== aparam result===";
+
+         if (debug) aparres->show(d + 2, "runner");
+
+         CLOG(DEBUG, "runner") << i(d + 1) << "=====";
+
          fr->add_binding(fparname, aparres);
       }
       else
@@ -85,15 +80,13 @@ bool Param::assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame>
       // rest
       if (list->size() == 0)
       {
-         if (debug) indent(d + 1);
-         if (debug) std::cout << "add binding nil\n";
+         CLOG(DEBUG, "runner") << i(d + 1) << "add binding nil";
 
          fr->add_binding(fparname, std::make_shared<Nil>());
       }
       else
       {
-         if (debug) indent(d + 1);
-         if (debug) std::cout << "add binding list\n";
+         CLOG(DEBUG, "runner") << i(d + 1) << "add binding list";
 
          List_p list2 = std::make_shared<List>();
          for (Element_p apar: list->getElements())
@@ -113,37 +106,34 @@ bool Param::assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame>
 
 bool ParamList::assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, List_p apar, int d, bool single)
 {
-   if (debug) indent(d);
-   if (debug) std::cout << "ParamList assignParameters()\n";
-   if (debug) apar->show(d + 1);
-   
+   CLOG(DEBUG, "runner") << i(d) << "ParamList assignParameters()";
+   if (debug) apar->show(d + 1, "runner");
+
    List_p list = apar;
    if (single)
    {
-      if (debug) indent(d + 1);
-      if (debug) std::cout << "single\n";
+      CLOG(DEBUG, "runner") << i(d + 1) << "single";
       if (apar->size() == 0)
       {
          std::cout << "parameter for list missing\n";
          throw std::make_shared<RunError>();
       }
       Element_p el = apar->get(0);
-      
+
       Element_p elres = el->evaluate(cx, d + 1);
-      
+
       list = std::dynamic_pointer_cast<List>(elres);
       if (list== nullptr)
       {
-         if (debug) el->show(d + 1);
+         if (debug) el->show(d + 1, "runner");
          std::cout << "parameter must be list\n";
          throw std::make_shared<RunError>();
       }
       apar->pop_front();
-      if (debug) list->show(d + 1);
+      if (debug) list->show(d + 1, "runner");
    }
 
-   if (debug) indent(d + 1);
-   if (debug) std::cout << "list size " << list->size() << "\n";
+   CLOG(DEBUG, "runner") << i(d + 1) << "list size " << list->size();
 
    for (AParam_p par: params)
    {
@@ -165,8 +155,7 @@ bool ParamList::assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Fr
 
 Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
 {
-   if (debug) indent(d);
-   if (debug) std::cout << "Call evaluate()\n";
+   CLOG(DEBUG, "runner") << i(d) << "Call evaluate()\n";
 
    Element_p  el = get(0);
    while (std::dynamic_pointer_cast<Call>(el) != nullptr)
@@ -174,16 +163,15 @@ Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
       // This is a nested call
       el = el->evaluate(cx, d + 1);
    }
-   
+
    Callable_p ca = std::dynamic_pointer_cast<Callable>(el);
    if (ca != nullptr)
    {
       Builtin_p bin = std::dynamic_pointer_cast<Builtin>(el);
       if (bin != nullptr)
       {
-         if (debug) indent(d + 1);
-         if (debug) std::cout << "callable is builtin\n";
-         
+         CLOG(DEBUG, "runner") << i(d + 1) << "callable is builtin";
+
          Element_p rs = bin->evaluate2(cx, shared_from_this(), d + 1);
          return rs;
       }
@@ -202,10 +190,9 @@ Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
                std::cout << "function " << sy->getText() << " not found\n";
                throw std::make_shared<RunError>();
             }
-   
-            if (debug) indent(d + 1);
-            if (debug) std::cout << "function with name " << sy->getText() << " found\n";
-            
+
+            CLOG(DEBUG, "runner") << i(d + 1) << "function with name " << sy->getText() << " found";
+
             bi = std::dynamic_pointer_cast<Bind>(fun);
             if (bi != nullptr)
             {
@@ -229,7 +216,7 @@ Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
                   }
                   else
                   {
-                     if (debug) fun->show(d + 1);
+                     if (debug) fun->show(d + 1, "runner");
                      std::cout << "name found but is not a function " << sy->getText() << "\n";
                      throw std::make_shared<RunError>();
                   }
@@ -248,41 +235,38 @@ Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
                fuu = la->getFn();
             }
          }
-   
+
          // handle the parameters
          int fparsize = fuu->getParamsSize();
          int aparsize = size() - 1;
-         
-         if (debug) indent(d + 1);
-         if (debug) std::cout << "fparsize " << fparsize << " aparsize " << fparsize << "\n";
-   
+
+         CLOG(DEBUG, "runner") << i(d + 1) << "fparsize " << fparsize << " aparsize " << fparsize;
+
          Frame_p fr = std::make_shared<Frame>();
-         
+
          // assign all actual parameters to the formal parameters
          fuu->assignParameters(cx, fr, shared_from_this(), d + 1);
-         
+
          if (bi != nullptr)
          {
             cx->push(bi->getFrame());
          }
 
-         if (debug) indent(d + 1);
-         if (debug) std::cout << "fuu " << type_to_s() << "\n";
+         CLOG(DEBUG, "runner") << i(d + 1) << "fuu " << type_to_s();
 
          // start push - evaluate - pop part
-         
+
          // original code without tail recursion optimization
          //   cx->push(fr);
          //   Element_p rs = fuu->evaluate(cx, d + 1);
          //   cx->pop();
 
          Element_p rs;
-         
+
          if (df == nullptr)
          {
             // this is not a symbol call
-            if (debug) indent(d + 1);
-            if (debug) std::cout << "no symbol call\n";
+            CLOG(DEBUG, "runner") << i(d + 1) << "no symbol call";
 
             cx->push(fr);
             rs = fuu->evaluate(cx, d + 1);
@@ -291,19 +275,16 @@ Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
          else
          {
             // symbol call to defn
-            if (debug) indent(d + 1);
-            if (debug) std::cout << "symbol call\n";
+            CLOG(DEBUG, "runner") << i(d + 1) << "symbol call";
 
             // this is the tail recursion optimization
             bool it = true;
             while (it)
             {
-               if (debug) indent(d + 1);
-               if (debug) std::cout << "iterate\n";
+               CLOG(DEBUG, "runner") << i(d + 1) << "iterate";
                if (getTreetype() == tp_tailrecurse)
                {
-                  if (debug) indent(d + 2);
-                  if (debug) std::cout << "tail call\n";
+                  CLOG(DEBUG, "runner") << i(d + 2) << "tail call";
 
                   // return the new frame as result
                   rs = fr;
@@ -311,11 +292,10 @@ Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
                }
                else
                {
-                  if (debug) indent(d + 2);
-                  if (debug) std::cout << "no tail call\n";
+                  CLOG(DEBUG, "runner") << i(d + 2) << "no tail call";
 
                   // simple call
-                  
+
                   cx->push(fr);
                   rs = fuu->evaluate(cx, d + 1);
                   Frame_p fr2 = std::dynamic_pointer_cast<Frame>(rs);
@@ -333,20 +313,18 @@ Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
                }
             }
          }
-         
+
          // end push - evaluate - pop part
-         
+
          if (bi != nullptr)
          {
             cx->pop();
          }
-         
-         if (debug) indent(d + 1);
-         if (debug) std::cout << "++++ fn result+++\n";
-         if (debug) rs->show(d + 2);
-         if (debug) indent(d + 1);
-         if (debug) std::cout << "+++++++++\n";
-         
+
+         CLOG(DEBUG, "runner") << i(d + 1) << "++++ fn result+++";
+         if (debug) rs->show(d + 2, "runner");
+         CLOG(DEBUG, "runner") << i(d + 1) << "+++++++++";
+
          return rs;
       }
    }
@@ -363,40 +341,34 @@ Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
 
 Element_p Let::evaluate(std::shared_ptr<Context> cx, int d)
 {
-   if (debug) indent(d);
-   if (debug) std::cout << "Let evaluate()\n";
+   CLOG(DEBUG, "runner") << i(d) << "Let evaluate()";
 
-      
+
    Frame_p fr = std::make_shared<Frame>();
-         
+
    for (const auto &pr: variables)
    {
       Element_p   apar     = pr.second;
       std::string fparname = pr.first;
-      if (debug) indent(d + 1);
-      if (debug) std::cout << "fparname " << fparname << "\n";
+      CLOG(DEBUG, "runner") << i(d + 1) << "fparname " << fparname;
 
       Element_p aparres = apar->evaluate(cx, d + 1);
 
-      if (debug) indent(d + 1);
-      if (debug) std::cout << "==== aparam result===\n";
-      if (debug) aparres->show(d + 2);
-      if (debug) indent(d + 1);
-      if (debug) std::cout << "=====\n";
+      CLOG(DEBUG, "runner") << i(d + 1) << "==== aparam result===";
+      if (debug) aparres->show(d + 2, "runner");
+      CLOG(DEBUG, "runner") << i(d + 1) << "=====";
 
       fr->add_binding(fparname, aparres);
    }
-   
+
    cx->push(fr);
    Element_p rs = body->evaluate(cx, d + 1);
    cx->pop();
 
-   if (debug) indent(d + 1);
-   if (debug) std::cout << "++++ let result+++\n";
-   if (debug) rs->show(d + 2);
-   if (debug) indent(d + 1);
-   if (debug) std::cout << "+++++++++\n";
-   
+   CLOG(DEBUG, "runner") << i(d + 1) << "++++ let result+++";
+   if (debug) rs->show(d + 2, "runner");
+   CLOG(DEBUG, "runner") << i(d + 1) << "+++++++++\n";
+
    return rs;
 }
 
@@ -404,17 +376,16 @@ Element_p Let::evaluate(std::shared_ptr<Context> cx, int d)
 
 
 // Println
- 
+
 Element_p Println::evaluate(std::shared_ptr<Context> cx, int d)
 {
-   if (debug) indent(d);
-   if (debug) std::cout << "Println evaluate\n";
+   CLOG(DEBUG, "runner") << i(d) << "Println evaluate";
 
    Element_p result;
    for (Element_p el: body->getElements())
    {
       result = el->evaluate(cx, d + 1);
-      //if (debug) result->show(d + 2);
+      //if (debug) result->show(d + 2, "runner");
       result->print();
       std::cout << " ";
    }
@@ -434,8 +405,7 @@ Element_p Vector::evaluate(std::shared_ptr<Context> cx, int d)
 
 Element_p Body::evaluate(std::shared_ptr<Context> cx, int d)
 {
-   if (debug) indent(d);
-   if (debug) std::cout << "Body evaluate\n";
+   CLOG(DEBUG, "runner") << i(d) << "Body evaluate";
 
    Element_p result;
    for (Element_p el: elements)
@@ -539,9 +509,8 @@ Element_p Equal::evaluate(std::shared_ptr<Context> cx, int d)
    {
       Element_p el2 = el->evaluate(cx, d + 1);
 
-      if (debug) indent(d + 1);
-      if (debug) std::cout << "Equal el2\n";
-      if (debug) el2->show(d + 2);
+      CLOG(DEBUG, "runner") << i(d + 1) << "Equal el2";
+      if (debug) el2->show(d + 2, "runner");
 
       Number_p nu = std::dynamic_pointer_cast<Number>(el2);
       if (nu == nullptr)
@@ -598,14 +567,14 @@ Element_p LessEq::evaluate(std::shared_ptr<Context> cx, int d)
 Element_p Defn::evaluate(std::shared_ptr<Context> cx, int d)
 {
    cx->add_binding(name, shared_from_this());
-   
+
    return shared_from_this();
 }
 
 // Lambda
 
 Element_p Lambda::evaluate(std::shared_ptr<Context> cx, int d)
-{   
+{
    return capture(cx, nullptr, d + 1);
 }
 
@@ -613,28 +582,25 @@ Element_p Lambda::evaluate(std::shared_ptr<Context> cx, int d)
 
 Element_p Fn::evaluate(std::shared_ptr<Context> cx, int d)
 {
-   if (debug) indent(d);
-   if (debug) std::cout << "Fn evaluate\n";
-   if (debug) cx->show(d + 1);
+   CLOG(DEBUG, "runner") << i(d) << "Fn evaluate";
+   if (debug) cx->show(d + 1, "runner");
 
    return body->evaluate(cx, d + 1);
 }
 
 // Bind
 
-void Bind::show(int d)
+void Bind::show(int d, std::string chan)
 {
-   if (debug) indent(d);
-   if (debug) std::cout << "Bind\n";
+   CLOG(DEBUG, "runner") << i(d) << "Bind";
 
-   frame->show(d + 1);
-   lambda->show(d + 1);
+   frame->show(d + 1, "runner");
+   lambda->show(d + 1, "runner");
 }
 
 Element_p Bind::evaluate(std::shared_ptr<Context> cx, int d)
 {
-   if (debug) indent(d);
-   if (debug) std::cout << "Bind evaluate\n";
+   CLOG(DEBUG, "runner") << i(d) << "Bind evaluate";
 
    return shared_from_this();
 }
@@ -643,8 +609,7 @@ Element_p Bind::evaluate(std::shared_ptr<Context> cx, int d)
 
 Element_p If::evaluate(std::shared_ptr<Context> cx, int d)
 {
-   if (debug) indent(d);
-   if (debug) std::cout << "If evaluate\n";
+   CLOG(DEBUG, "runner") << i(d) << "If evaluate";
 
    Element_p el = condition->evaluate(cx, d + 1);
    Boolean_p bo = std::dynamic_pointer_cast<Boolean>(el);
@@ -653,19 +618,17 @@ Element_p If::evaluate(std::shared_ptr<Context> cx, int d)
       std::cout << "no boolean expression\n";
       throw std::make_unique<RunError>();
    }
-   
+
    if (bo->getValue())
    {
-      if (debug) indent(d + 1);
-      if (debug) std::cout << "If yes\n";
+      CLOG(DEBUG, "runner") << i(d + 1) << "If yes";
 
       return yes->evaluate(cx, d + 1);
    }
    else
    if (no != nullptr)
    {
-      if (debug) indent(d + 1);
-      if (debug) std::cout << "If no\n";
+      CLOG(DEBUG, "runner") << i(d + 1) << "If no";
 
       return no->evaluate(cx, d + 1);
    }
@@ -702,11 +665,10 @@ Element_p Builtin::evaluate(std::shared_ptr<Context> cx, int d)
 
 Element_p Builtin::evaluate2(std::shared_ptr<Context> cx, std::shared_ptr<Element> call, int d)
 {
-   if (debug) indent(d);
-   if (debug) std::cout << "Builtin evaluate2\n";
+   CLOG(DEBUG, "runner") << i(d) << "Builtin evaluate2";
 
-   if (debug) call->show(d + 1);
-   
+   if (debug) call->show(d + 1, "runner");
+
    Call_p ca = std::dynamic_pointer_cast<Call>(call);
    if (ca != nullptr)
    {
@@ -717,15 +679,14 @@ Element_p Builtin::evaluate2(std::shared_ptr<Context> cx, std::shared_ptr<Elemen
       {
          std::string bitext = bi->getText();
 
-         if (debug) indent(d + 1);
-         if (debug) std::cout << "builtin " << bitext << "\n";
-         
+         CLOG(DEBUG, "runner") << i(d + 1) << "builtin " << bitext;
+
          // keep only the parameters
          List_p ca2 = ca->copy();
          ca2->pop_front();
-         
-         if (debug) ca->show(d + 1);
-         
+
+         if (debug) ca->show(d + 1, "runner");
+
          if (bitext == "nil?")
          {
             npar = 1;
@@ -735,29 +696,26 @@ Element_p Builtin::evaluate2(std::shared_ptr<Context> cx, std::shared_ptr<Elemen
          {
             npar = 1;
          }
-         
+
          if (ca2->size() == npar)
          {
-            if (debug) indent(d + 1);
-            if (debug) std::cout << "# params correct\n";
-            if (debug) ca->show(d + 2);
-            
+            CLOG(DEBUG, "runner") << i(d + 1) << "# params correct";
+            if (debug) ca->show(d + 2, "runner");
+
             List_p list2 = std::make_shared<List>();
             for (Element_p apar: ca2->getElements())
             {
-               if (debug) indent(d + 2);
-               if (debug) std::cout << "par\n";
+               CLOG(DEBUG, "runner") << i(d + 2) << "par";
 
                Element_p aparres = apar->evaluate(cx, d + 1);
                list2->add(aparres);
 
-               if (debug) aparres->show(d + 3);
+               if (debug) aparres->show(d + 3, "runner");
             }
-            
+
             if (bitext == "nil?")
             {
-               if (debug) indent(d + 1);
-               if (debug) std::cout << "nil? executes\n";
+               CLOG(DEBUG, "runner") << i(d + 1) << "nil? executes";
 
                Element_p el0 = list2->get(0);
                Nil_p ni = std::dynamic_pointer_cast<Nil>(el0);
@@ -773,20 +731,18 @@ Element_p Builtin::evaluate2(std::shared_ptr<Context> cx, std::shared_ptr<Elemen
             else
             if (bitext == "empty?")
             {
-               if (debug) indent(d + 1);
-               if (debug) std::cout << "empty? executes\n";
+               CLOG(DEBUG, "runner") << i(d + 1) << "empty? executes";
 
                Element_p el0 = list2->get(0);
 
-               if (debug) el0->show(d + 2);
-               
+               if (debug) el0->show(d + 2, "runner");
+
                // Nil or List is returning true
                List_p li = std::dynamic_pointer_cast<List>(el0);
                Nil_p ni = std::dynamic_pointer_cast<Nil>(el0);
                if (ni != nullptr)
                {
-                  if (debug) indent(d + 2);
-                  if (debug) std::cout << "empty? nil true\n";
+                  CLOG(DEBUG, "runner") << i(d + 2) << "empty? nil true";
                   return std::make_shared<Boolean>(true);
                }
                else
@@ -794,14 +750,12 @@ Element_p Builtin::evaluate2(std::shared_ptr<Context> cx, std::shared_ptr<Elemen
                {
                   if (li->size() == 0)
                   {
-                     if (debug) indent(d + 2);
-                     if (debug) std::cout << "empty? list true\n";
+                     CLOG(DEBUG, "runner") << i(d + 2) << "empty? list true";
                      return std::make_shared<Boolean>(true);
                   }
                   else
                   {
-                     if (debug) indent(d + 2);
-                     if (debug) std::cout << "empty? false\n";
+                     CLOG(DEBUG, "runner") << i(d + 2) << "empty? false";
                      return std::make_shared<Boolean>(false);
                   }
                }
@@ -858,38 +812,33 @@ Element_p Main::evaluate(std::shared_ptr<Context> cx, int d)
 
 Element_p List::capture(Context_p cx, Frame_p fr, int d)
 {
-   if (debug) indent(d);
-   if (debug) std::cout << "List capture\n";
+   CLOG(DEBUG, "runner") << i(d) << "List capture";
 
    List_p lst = std::make_shared<List>();
    for (Element_p el: elements)
    {
       Element_p el2 = el->capture(cx, fr, d + 1);
       lst->add(el2);
-      
    }
    return lst;
 }
 
 Element_p Call::capture(Context_p cx, Frame_p fr, int d)
 {
-   if (debug) indent(d);
-   if (debug) std::cout << "Call capture\n";
+   CLOG(DEBUG, "runner") << i(d) << "Call capture";
 
    Call_p cal = std::make_shared<Call>();
    for (Element_p el: elements)
    {
       Element_p el2 = el->capture(cx, fr, d + 1);
       cal->add(el2);
-      
    }
    return cal;
 }
 
 Element_p Elements::capture(Context_p cx, Frame_p fr, int d)
 {
-   if (debug) indent(d);
-   if (debug) std::cout << "Elements capture " << info() << "\n";
+   CLOG(DEBUG, "runner") << i(d) << "Elements capture " << info();
 
    Elements_p els = make_copy();
    for (Element_p el: elements)
@@ -897,17 +846,16 @@ Element_p Elements::capture(Context_p cx, Frame_p fr, int d)
       Element_p el2 = el->capture(cx, fr, d + 1);
       els->add(el2);
    }
-   if (debug) els->show(d + 1);
+   if (debug) els->show(d + 1, "runner");
    return els;
 }
 
 Element_p If::capture(Context_p cx, Frame_p fr, int d)
 {
-   if (debug) indent(d);
-   if (debug) std::cout << "If capture\n";
+   CLOG(DEBUG, "runner") << i(d) << "If capture";
 
    If_p fi = std::make_shared<If>();
-   
+
    Element_p cond = condition->capture(cx, fr, d + 1);
    fi->setCondition(cond);
    Element_p ye   = yes->capture(cx, fr, d + 1);
@@ -922,11 +870,10 @@ Element_p If::capture(Context_p cx, Frame_p fr, int d)
 
 Element_p Println::capture(Context_p cx, Frame_p fr, int d)
 {
-   if (debug) indent(d);
-   if (debug) std::cout << "Writeln capture\n";
+   CLOG(DEBUG, "runner") << i(d) << "Writeln capture";
 
    Println_p pri = std::make_shared<Println>();
-   
+
    if (body != nullptr)
    {
       Element_p bo = body->capture(cx, fr, d + 1);
@@ -937,23 +884,21 @@ Element_p Println::capture(Context_p cx, Frame_p fr, int d)
          throw std::make_unique<RunError>();
       }
    }
-   
+
    return pri;
 }
 
 Element_p Let::capture(Context_p cx, Frame_p fr, int d)
 {
-   if (debug) indent(d);
-   if (debug) std::cout << "Let capture\n";
+   CLOG(DEBUG, "runner") << i(d) << "Let capture";
 
    Let_p lt      = std::make_shared<Let>();
    lt->full      = full;
-   
+
    Frame_p frr = std::make_shared<Frame>();
    for (const auto &pr: variables)
    {
-      if (debug) indent(d + 1);
-      if (debug) std::cout << "Let capture variable " << pr.first << "\n";
+      CLOG(DEBUG, "runner") << i(d + 1) << "Let capture variable " << pr.first;
 
       frr->add_binding(pr.first, nullptr);
 
@@ -976,30 +921,28 @@ Element_p Let::capture(Context_p cx, Frame_p fr, int d)
       throw std::make_unique<RunError>();
    }
 
-   if (debug) lt->show(d + 1);
+   if (debug) lt->show(d + 1, "runner");
 
    return lt;
 }
 
 Element_p Fn::capture(Context_p cx, Frame_p fr, int d)
 {
-   if (debug) indent(d);
-   if (debug) std::cout << "Fn capture\n";
+   CLOG(DEBUG, "runner") << i(d) << "Fn capture";
 
    Fn_p fn = std::make_shared<Fn>();
    fn->full = full;
 
    //fn->params = params;
    fn->paramlist = paramlist;
-   
+
    Frame_p frr = std::make_shared<Frame>();
    //for (std::string param: params)
-   for (int i = 0; i<paramlist->size(); i++)
+   for (int j = 0; j<paramlist->size(); j++)
    {
-      std::string param = paramlist->get(i);
-      
-      if (debug) indent(d + 1);
-      if (debug) std::cout << "Fn capture param " << param << "\n";
+      std::string param = paramlist->get(j);
+
+      CLOG(DEBUG, "runner") << i(d + 1) << "Fn capture param " << param;
 
       frr->add_binding(param, nullptr);
    }
@@ -1014,79 +957,72 @@ Element_p Fn::capture(Context_p cx, Frame_p fr, int d)
       throw std::make_unique<RunError>();
    }
 
-   if (debug) fn->show(d + 1);
+   if (debug) fn->show(d + 1, "runner");
 
    return fn;
 }
 
 Element_p Defn::capture(Context_p cx, Frame_p fr, int d)
 {
-   if (debug) indent(d);
-   if (debug) std::cout << "Dfn capture\n";
+   CLOG(DEBUG, "runner") << i(d) << "Dfn capture";
 
    Defn_p dfn = std::make_shared<Defn>();
    dfn->name = name;
-   
+
    Element_p f = fn->capture(cx, fr, d + 1);
    dfn->fn = std::dynamic_pointer_cast<Fn>(f);
-   
+
    return dfn;
 }
 
 Element_p Lambda::capture(Context_p cx, Frame_p fr, int d)
 {
-   if (debug) indent(d);
-   if (debug) std::cout << "Lambda capture\n";
+   CLOG(DEBUG, "runner") << i(d) << "Lambda capture";
 
    Lambda_p la = std::make_shared<Lambda>();
    Bind_p   bi = std::make_shared<Bind>();
-   
+
    bi->setLambda(la);
-   
+
    Frame_p fr2 = std::make_shared<Frame>();
    bi->setFrame(fr2);
-   
+
    Element_p f = fn->capture(cx, fr2, d + 1);
    la->fn = std::dynamic_pointer_cast<Fn>(f);
-   if (debug) bi->show(d + 1);
+   if (debug) bi->show(d + 1, "runner");
    return bi;
 }
 
 Element_p Symbol::capture(Context_p cx, Frame_p fr, int d)
 {
-   if (debug) indent(d);
-   if (debug) std::cout << "Symbol capture " << text << "\n";
+   CLOG(DEBUG, "runner") << i(d) << "Symbol capture " << text;
 
-   if (debug) cx->show(d + 1);
-   
+   if (debug) cx->show(d + 1, "runner");
+
    bool exi = cx->exists(text);
    if (exi)
    {
-      if (debug) indent(d + 1);
-      if (debug) std::cout << "   Symbol capture found " << text << "\n";
+      CLOG(DEBUG, "runner") << i(d + 1) << "   Symbol capture found " << text;
 
       Element_p val = cx->search(text);
       if (val != nullptr)
       {
-         if (debug) indent(d + 1);
-         if (debug) std::cout << "   val not null\n";
-         if (debug) val->show(d + 2);
-         
+         CLOG(DEBUG, "runner") << i(d + 1) << "   val not null";
+         if (debug) val->show(d + 2, "runner");
+
          // add new binding
          fr->add_binding(text, val);
 
-         if (debug) fr->show(d + 2);
+         if (debug) fr->show(d + 2, "runner");
       }
       else
       {
-         if (debug) indent(d + 1);
-         if (debug) std::cout << "   val null\n";
+         CLOG(DEBUG, "runner") << i(d + 1) << "   val null";
       }
    }
    else
    {
-      if (debug) indent(d + 1);
-      if (debug) std::cout << "Symbol capture not found " << text << "\n";
+      CLOG(DEBUG, "runner") << i(d + 1) << "Symbol capture not found " << text;
    }
    return shared_from_this();
 }
@@ -1098,8 +1034,7 @@ Element_p Builtin::capture(Context_p cx, Frame_p fr, int d)
 
 Element_p Text::capture(Context_p cx, Frame_p fr, int d)
 {
-   if (debug) indent(d);
-   if (debug) std::cout << "Text capture " << text << "\n";
+   CLOG(DEBUG, "runner") << i(d) << "Text capture " << text;
 
    return shared_from_this();
 }
@@ -1136,7 +1071,7 @@ Element_p Frame::search(std::string nm)
 
 bool Frame::exists(std::string nm)
 {
-   //show(0);
+   //show(0, "runner");
    auto it = bindings.find(nm);
    if (it != bindings.end())
    {
@@ -1148,18 +1083,16 @@ bool Frame::exists(std::string nm)
    }
 }
 
-void Frame::show(int d)
+void Frame::show(int d, std::string chan)
 {
-   indent(d);
-   std::cout << "Frame\n";
-   
+   CLOG(DEBUG, "runner") << i(d) << "Frame";
+
    for (auto it: bindings)
    {
-      indent(d + 1);
-      std::cout << it.first << "\n";
+      CLOG(DEBUG, "runner") << i(d + 1) << it.first;
       if (it.second != nullptr)
       {
-         it.second->show(d + 2);
+         it.second->show(d + 2, "runner");
       }
    }
 }
@@ -1221,14 +1154,14 @@ bool Context::exists(std::string nm)
    return false;
 }
 
-void Context::show(int d)
+void Context::show(int d, std::string chan)
 {
    indent(d);
    std::cout << "Context #" << frames.size() << "\n";
-   
+
    for (Frame_p fr: frames)
    {
-      fr->show(d + 1);
+      fr->show(d + 1, "runner");
    }
 }
 
@@ -1240,7 +1173,7 @@ Runner::Runner(Element_p rt) : root(rt)
 
 Element_p Runner::run()
 {
-   if (debug) std::cout << "start runner\n";
+   CLOG(DEBUG, "runner") << "start runner";
    Context_p cx = std::make_shared<Context>();
    cx->push();
    Element_p rs = root->evaluate(cx, 0);

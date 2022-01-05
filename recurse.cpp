@@ -5,9 +5,9 @@
 
 /*
    getType()
-   
+
    This function returns the basic type for every element.
-   
+
  */
 
 type_t Main::getType()
@@ -114,11 +114,11 @@ type_t Number::getType()
 
 /*
  resetTreetype()
- 
+
  This method resets the treetype in all the elements to tp_undefined.
  The treetype reflects the state of the tree of which this element
  is the top.
- 
+
  In some classes this method will recurse.
  */
 
@@ -127,7 +127,7 @@ void Main::resetTreetype()
    defines.clear();
    //if (debug) std::cout << "defines clear size " << defines.size() << "\n";
    setTreetype(tp_undefined);
-   
+
    for (Element_p el: getElements())
    {
       el->resetTreetype();
@@ -228,7 +228,6 @@ void Vector::resetTreetype()
 
 void Call::resetTreetype()
 {
-   
    setTreetype(tp_undefined);
 
    for (Element_p el: getElements())
@@ -262,7 +261,7 @@ void Value::resetTreetype()
    This method determines the treetype for all the elements.
    This way it is possible to detect recursive functions
    and more specificially tail or non tail.
-   
+
    Every element will have one of three types:
    * tp_simple
    * tp_recurse
@@ -315,7 +314,7 @@ void If::determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn> defn)
    condition->determTreetype(main, defn);
    yes->determTreetype(main, defn);
    no->determTreetype(main, defn);
-   
+
    type_t tp = tp_simple;
    type_t tp2 = condition->getTreetype();
    if (tp2 == tp_recurse || tp2 == tp_tailrecurse)
@@ -385,7 +384,7 @@ void Binary::determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn> de
          setTreetype(el->getTreetype());
       }
    }
-   
+
    if (getTreetype() == tp_tailrecurse)
    {
       setTreetype(tp_recurse);
@@ -431,7 +430,7 @@ void Call::determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn> defn
 
    // all calls are added to the define via main
    main->addCall(ths);
-   
+
    Element_p first = elements[0];
    Symbol_p sy = std::dynamic_pointer_cast<Symbol>(first);
    if (sy != nullptr && defn != nullptr && sy->getText() == defn->getName())
@@ -494,14 +493,14 @@ void Value::determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn> def
 
    Each method returns a bool. A true indicates that the extra continuation parameter
    k must be added in the define.
-   
+
    The method only transforms one non tail call into a tail recursive one.
    So fibonnaci will not be handled correctly.
-   
+
    At the moment only non tail recursion caused by binary is resolved.
-   
+
    The search algoritm is complex. Branches with tp_recurse are follewed until
-   a 
+   a
  */
 
 bool Main::transformTree(int d)
@@ -520,14 +519,14 @@ bool Main::transformTree(int d)
          }
       }
    }
-   
+
    return hasCont();
 }
 
 bool Fn::transformTree(int d)
 {
    Element::transformTree(d);
-   
+
    bool rs = false;
    if (body->getTreetype() == tp_recurse)
    {
@@ -543,7 +542,7 @@ bool Fn::transformTree(int d)
 bool Defn::transformTree(int d)
 {
    Element::transformTree(d);
-   
+
    bool rs = false;
    if (fn->getTreetype() == tp_recurse)
    {
@@ -553,14 +552,14 @@ bool Defn::transformTree(int d)
          setCont(true);
       }
    }
-   
+
    return hasCont();
 }
 
 bool Body::transformTree(int d)
 {
    Element::transformTree(d);
-   
+
    int i = 0;
    Element_p el2 = nullptr;
    for (Element_p el: getElements())
@@ -583,7 +582,7 @@ bool Body::transformTree(int d)
       if (debug) std::cout << "found\n";
       setCont(true);
    }
-   
+
    return hasCont();
 }
 
@@ -594,7 +593,7 @@ bool Body::transformTree(int d)
 bool If::transformTree(int d)
 {
    Element::transformTree(d);
-   
+
    if (yes->getTreetype() == tp_recurse && yes->getType() != tp_pass)
    {
       // this is a recursive branch which is not pass.
@@ -607,7 +606,7 @@ bool If::transformTree(int d)
       // parameter yes is necessary to include it in the call
       Element_p call = yes->searchTail(yes, d + 1);
       yes = call;
-      
+
       setCont(true);
    }
    else
@@ -625,23 +624,23 @@ bool If::transformTree(int d)
       Call_p  ca  = std::make_shared<Call>();
       ca->add(std::make_shared<Symbol>("k"));
       ca->add(yes);
-      
+
       yes = ca;
 
       // the uppper define gets an extra parameter k
       setCont(true);
    }
-      
-   
+
+
    // the no branch gets the same treatment as the yes branch
    if (no->getTreetype() == tp_recurse && no->getType() != tp_pass)
    {
       if (debug) indent(d + 1);
       if (debug) std::cout << "found no\n";
-      
+
       Element_p call = no->searchTail(no, d + 1);
-      if (debug) call->show(d + 1);
-      if (debug) no->show(d + 1);
+      if (debug) call->show(d + 1, "recurse");
+      if (debug) no->show(d + 1, "recurse");
       no = call;
 
       setCont(true);
@@ -660,12 +659,12 @@ bool If::transformTree(int d)
       Call_p  ca  = std::make_shared<Call>();
       ca->add(std::make_shared<Symbol>("k"));
       ca->add(yes);
-      
+
       no = ca;
 
       setCont(true);
    }
-   
+
    return hasCont();
 }
 
@@ -698,12 +697,12 @@ std::shared_ptr<Element> Binary::searchTail(std::shared_ptr<Element> el, int d)
 
       i++;
    }
-   
+
    if (call != nullptr)
    {
       if (debug) indent(d + 1);
       if (debug) std::cout << "Binary tail recursive call found\n";
-      
+
       // replace the call with symbol 'value'
       Symbol_p sy = std::make_shared<Symbol>("value");
       set(i, sy);
@@ -722,10 +721,10 @@ std::shared_ptr<Element> Binary::searchTail(std::shared_ptr<Element> el, int d)
       bod->add(ca2);
       ca2->add(std::make_shared<Symbol>("k"));
       ca2->add(el);
-      
+
       // add the lambda as extra parameter to the tail call
       (std::dynamic_pointer_cast<Call>(call))->add(la);
-      
+
       return call;
    }
    else
@@ -753,14 +752,14 @@ void Main::makeTail()
    transformTree(0);
 
    if (debug) std::cout << "=========show=1================\n";
-   if (debug) show(0);
-   
+   if (debug) show(0, "recurse");
+
    if (debug) std::cout << "=========show 2================\n";
    resetTreetype();
    determTreetype(ths, nullptr);
-   if (debug) show(0);
+   if (debug) show(0, "recurse");
    if (debug) std::cout << "===============================\n";
-   
+
    // Iterate through all the tailrecurse defines
    // and add a extra parameter to its simple calls.
    //
@@ -777,9 +776,9 @@ void Main::makeTail()
       {
          if (debug) indent(2);
          if (debug) std::cout << "tail recursion\n";
-         
+
          Defn_p df = pr.second;
-         
+
          // for each call: add extra actual parameter
          for (Call_p cl: df->getCalls())
          {
@@ -789,7 +788,7 @@ void Main::makeTail()
             {
                if (debug) indent(4);
                if (debug) std::cout << "simple\n";
-               
+
                // add extra lambda as actual parameter
                Lambda_p la = std::make_shared<Lambda>();
                Fn_p     fn = std::make_shared<Fn>();
@@ -801,11 +800,11 @@ void Main::makeTail()
                Body_p      bod  = std::make_shared<Body>();
                fn->setBody(bod);
                bod->add(std::make_shared<Symbol>("value"));
-               
+
                cl->add(la);
             }
          }
-         
+
          // add extra formal parameter k to defn
          if (df->hasCont())
          {
@@ -816,7 +815,7 @@ void Main::makeTail()
 
    // This is an extra iteration for setting treetype
    // after the parsing tree has been changed.
-   
+
    resetTreetype();
    determTreetype(ths, nullptr);
 
@@ -825,7 +824,7 @@ void Main::makeTail()
    if (debug || showclj) format(0);
 
    if (debug) std::cout << "=========show 3=================\n";
-   if (debug) show(0);
+   if (debug) show(0, "recurse");
    if (debug) std::cout << "===============================\n";
 }
 

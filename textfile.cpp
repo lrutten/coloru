@@ -3,6 +3,7 @@
 #include <sstream>
 #include <iterator>
 
+#include "easylogging++.h"
 #include "textfile.h"
 
 extern bool debug;
@@ -35,11 +36,11 @@ void Textfile::readfile()
    std::string   line;
    std::ifstream fin;
 
-   if (debug) std::cout << "readfile " << filename << "\n";
+   CLOG(DEBUG, "textfile") << "readfile " << filename;
 
    fin.open(filename);
-   if (debug) std::cout << "na open\n";
-   
+   CLOG(DEBUG, "textfile") << "na open";
+
    if(!fin.is_open())
    {
       std::cout << "Error at reading file!\n";
@@ -47,27 +48,27 @@ void Textfile::readfile()
    }
    else
    {
-      if (debug) std::cout << "open ok\n";
-   
+      CLOG(DEBUG, "textfile") << "open ok";
+
       getline(fin, line);
       while(!fin.eof())
       {
-         if (debug) std::cout << "line read " << line << "\n";
+         CLOG(DEBUG, "textfile") << "line read " << line;
          lines.push_back(remove_comment(line) + "\n");
-   
+
          getline(fin, line);
       }
-      std::cout << "Read " << lines.size() << "\n";
+      CLOG(DEBUG, "textfile") << "Read " << lines.size();
    }
 }
 
 void Textfile::show()
 {
-   std::cout << "---- lines ----\n";
-   std::cout << "   #" << lines.size() << "\n";
+   CLOG(DEBUG, "textfile") << "---- lines ----";
+   CLOG(DEBUG, "textfile") << "   #" << lines.size();
    for (std::string line: lines)
    {
-      std::cout << "line " << line << "\n";
+      CLOG(DEBUG, "textfile") << "line " << line;
    }
-   std::cout << "---- ------ ----\n";
+   CLOG(DEBUG, "textfile") << "---- ------ ----";
 }

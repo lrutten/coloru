@@ -39,6 +39,7 @@ check:
 	cppcheck --enable=all .
 
 clean:
+	rm -vf *.log
 	rm -vf *.o
 	rm -vf coloru
 	rm -vf core
