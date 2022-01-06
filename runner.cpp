@@ -155,7 +155,7 @@ bool ParamList::assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Fr
 
 Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
 {
-   CLOG(DEBUG, "runner") << i(d) << "Call evaluate()\n";
+   CLOG(DEBUG, "runner") << i(d) << "Call evaluate()";
 
    Element_p  el = get(0);
    while (std::dynamic_pointer_cast<Call>(el) != nullptr)
@@ -590,7 +590,7 @@ Element_p Fn::evaluate(std::shared_ptr<Context> cx, int d)
 
 // Bind
 
-void Bind::show(int d, std::string chan)
+void Bind::show(int d, const std::string &chan)
 {
    CLOG(DEBUG, "runner") << i(d) << "Bind";
 
@@ -1083,7 +1083,7 @@ bool Frame::exists(std::string nm)
    }
 }
 
-void Frame::show(int d, std::string chan)
+void Frame::show(int d, const std::string &chan)
 {
    CLOG(DEBUG, "runner") << i(d) << "Frame";
 
@@ -1154,10 +1154,9 @@ bool Context::exists(std::string nm)
    return false;
 }
 
-void Context::show(int d, std::string chan)
+void Context::show(int d, const std::string &chan)
 {
-   indent(d);
-   std::cout << "Context #" << frames.size() << "\n";
+   CLOG(DEBUG, chan.c_str()) << i(d) << "Context #" << frames.size();
 
    for (Frame_p fr: frames)
    {

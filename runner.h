@@ -21,7 +21,7 @@ public:
    void add_binding(std::string nm, Element_p el);
    Element_p search(std::string nm);
    bool exists(std::string nm);
-   void show(int d, std::string chan);
+   void show(int d, const std::string &chan);
 
    void format(int d) override
    {
@@ -58,7 +58,7 @@ public:
    void add_binding(std::string nm, Element_p);
    Element_p search(std::string nm);
    bool exists(std::string nm);
-   void show(int d, std::string chan);
+   void show(int d, const std::string &chan);
 
 private:
    std::deque<Frame_p> frames;

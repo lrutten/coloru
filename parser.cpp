@@ -1,8 +1,10 @@
 #include <iostream>
+#include <getopt.h>
 
 #include "easylogging++.h"
-#include "textfile.h"
+
 #include "parser.h"
+#include "runner.h"
 
 
 void indent(int d)
@@ -63,10 +65,10 @@ std::string Element::type_to_s()
    }
 }
 
-void Number::show(int d, std::string chan)
+void Number::show(int d, const std::string &chan)
 {
-   indent(d);
-   std::cout << "Number:" << type_to_s() << " " << number << "\n";
+   //CLOG(DEBUG, chan.c_str()) << "start coloru bis";
+   CLOG(DEBUG, chan.c_str())  << i(d) << "Number:" << type_to_s() << " " << number;
 }
 
 void Number::format(int d)
@@ -85,17 +87,15 @@ Boolean::~Boolean()
    //std::cout << "~Boolean " << value << "\n";
 }
 
-void Boolean::show(int d, std::string chan)
+void Boolean::show(int d, const std::string &chan)
 {
-   indent(d);
-   std::cout << "Boolean:" << type_to_s() << " " ;
    if (value != 0)
    {
-      std::cout << "true\n";
+      CLOG(DEBUG, chan.c_str()) << i(d) << "Boolean:" << type_to_s() << " true" ;
    }
    else
    {
-      std::cout << "false\n";
+      CLOG(DEBUG, chan.c_str()) << i(d) << "Boolean:" << type_to_s() << " false";
    }
 }
 
@@ -122,10 +122,9 @@ Nil::~Nil()
 {
 }
 
-void Nil::show(int d, std::string chan)
+void Nil::show(int d, const std::string &chan)
 {
-   indent(d);
-   std::cout << "Nil:" << type_to_s() << "\n";
+   CLOG(DEBUG, chan.c_str()) << i(d) << "Nil:" << type_to_s();
 }
 
 void Nil::format(int d)
@@ -160,10 +159,9 @@ Element_p List::get(int i)
    return elements[i];
 }
 
-void List::show(int d, std::string chan)
+void List::show(int d, const std::string &chan)
 {
-   indent(d);
-   std::cout << "List:" << type_to_s() << "\n";
+   CLOG(DEBUG, chan.c_str()) << i(d) << "List:" << type_to_s();
 
    for (Element_p el: elements)
    {
@@ -232,10 +230,9 @@ List_p Call::copy()
 }
 
 
-void Call::show(int d, std::string chan)
+void Call::show(int d, const std::string &chan)
 {
-   indent(d);
-   std::cout << "Call:" << type_to_s() << "\n";
+   CLOG(DEBUG, chan.c_str()) << i(d) << "Call:" << type_to_s();
 
    for (Element_p el: elements)
    {
@@ -299,10 +296,9 @@ Vector::~Vector()
    //std::cout << "~Vector\n";
 }
 
-void Vector::show(int d, std::string chan)
+void Vector::show(int d, const std::string &chan)
 {
-   indent(d);
-   std::cout << "Vector:" << type_to_s() << "\n";
+   CLOG(DEBUG, chan.c_str()) << i(d) << "Vector:" << type_to_s();
 
    for (Element_p el: elements)
    {
@@ -342,10 +338,9 @@ Elements_p Body::make_copy()
    return std::make_shared<Body>();
 }
 
-void Body::show(int d, std::string chan)
+void Body::show(int d, const std::string &chan)
 {
-   indent(d);
-   std::cout << "Body:" << type_to_s() << "\n";
+   CLOG(DEBUG, chan.c_str()) << i(d) << "Body:" << type_to_s();
 
    for (Element_p el: elements)
    {
@@ -375,10 +370,9 @@ Binary::~Binary()
    //std::cout << "~Binary\n";
 }
 
-void Binary::show(int d, std::string chan)
+void Binary::show(int d, const std::string &chan)
 {
-   indent(d);
-   std::cout << "Binary:" << type_to_s() << "\n";
+   CLOG(DEBUG, chan.c_str()) << i(d) << "Binary:" << type_to_s();
 
    for (Element_p el: elements)
    {
@@ -400,93 +394,83 @@ void Binary::format(int d)
 
 // Mul
 
-void Mul::show(int d, std::string chan)
+void Mul::show(int d, const std::string &chan)
 {
-   indent(d);
-   std::cout << "Mul\n";
+   CLOG(DEBUG, chan.c_str()) << i(d) << "Mul";
    Binary::show(d + 1, chan);
 }
 
 
 // Div
 
-void Div::show(int d, std::string chan)
+void Div::show(int d, const std::string &chan)
 {
-   indent(d);
-   std::cout << "Div\n";
+   CLOG(DEBUG, chan.c_str()) << i(d) << "Div";
    Binary::show(d + 1, chan);
 }
 
 
 // Plus
 
-void Plus::show(int d, std::string chan)
+void Plus::show(int d, const std::string &chan)
 {
-   indent(d);
-   std::cout << "Plus\n";
+   CLOG(DEBUG, chan.c_str()) << i(d) << "Plus";
    Binary::show(d + 1, chan);
 }
 
 // Min
 
-void Min::show(int d, std::string chan)
+void Min::show(int d, const std::string &chan)
 {
-   indent(d);
-   std::cout << "Min\n";
+   CLOG(DEBUG, chan.c_str()) << i(d) << "Min";
    Binary::show(d + 1, chan);
 }
 
 // Equal
 
-void Equal::show(int d, std::string chan)
+void Equal::show(int d, const std::string &chan)
 {
-   indent(d);
-   std::cout << "Equal\n";
+   CLOG(DEBUG, chan.c_str()) << i(d) << "Equal";
    Binary::show(d + 1, chan);
 }
 
 // Less
 
-void Less::show(int d, std::string chan)
+void Less::show(int d, const std::string &chan)
 {
-   indent(d);
-   std::cout << "Less\n";
+   CLOG(DEBUG, chan.c_str()) << i(d) << "Less";
    Binary::show(d + 1, chan);
 }
 
 // Greater
 
-void Greater::show(int d, std::string chan)
+void Greater::show(int d, const std::string &chan)
 {
-   indent(d);
-   std::cout << "Greater\n";
+   CLOG(DEBUG, chan.c_str()) << i(d) << "Greater";
    Binary::show(d + 1, chan);
 }
 
 // NotEqual
 
-void NotEqual::show(int d, std::string chan)
+void NotEqual::show(int d, const std::string &chan)
 {
-   indent(d);
-   std::cout << "NotEqual\n";
-   Binary::show(d + 1, chan);
+   CLOG(DEBUG, chan.c_str()) << i(d) << "NotEqual";
+   Binary::show(d + 1, chan.c_str());
 }
 
 // GreaterEq
 
-void GreaterEq::show(int d, std::string chan)
+void GreaterEq::show(int d, const std::string &chan)
 {
-   indent(d);
-   std::cout << "GreaterEq\n";
+   CLOG(DEBUG, chan.c_str()) << i(d) << "GreaterEq";
    Binary::show(d + 1, chan);
 }
 
 // LessEq
 
-void LessEq::show(int d, std::string chan)
+void LessEq::show(int d, const std::string &chan)
 {
-   indent(d);
-   std::cout << "LessEq\n";
+   CLOG(DEBUG, chan.c_str()) << i(d) << "LessEq";
    Binary::show(d + 1, chan);
 }
 
@@ -501,10 +485,9 @@ Defn::~Defn()
    //std::cout << "~Defn\n";
 }
 
-void Defn::show(int d, std::string chan)
+void Defn::show(int d, const std::string &chan)
 {
-   indent(d);
-   std::cout << "Defn:" << type_to_s() << " " << name << " calls " << calls.size() << "\n";
+   CLOG(DEBUG, chan.c_str()) << i(d) << "Defn:" << type_to_s() << " " << name << " calls " << calls.size();
    fn->show(d + 1, chan);
 }
 
@@ -528,10 +511,9 @@ Lambda::~Lambda()
    //std::cout << "~Lambda\n";
 }
 
-void Lambda::show(int d, std::string chan)
+void Lambda::show(int d, const std::string &chan)
 {
-   indent(d);
-   std::cout << "Lambda:" << type_to_s() << "\n";
+   CLOG(DEBUG, chan.c_str()) << i(d) << "Lambda:" << type_to_s();
    fn->show(d + 1, chan);
 }
 
@@ -565,10 +547,9 @@ Param::~Param()
 {
 }
 
-void Param::show(int d, std::string chan)
+void Param::show(int d, const std::string &chan)
 {
-   indent(d);
-   std::cout << "Param " << name << " " << rest << "\n";
+   CLOG(DEBUG, chan.c_str()) << i(d) << "Param " << name << " " << rest;
 }
 
 void Param::format(int d)
@@ -590,10 +571,9 @@ ParamList::~ParamList()
 {
 }
 
-void ParamList::show(int d, std::string chan)
+void ParamList::show(int d, const std::string &chan)
 {
-   indent(d);
-   std::cout << "ParamList " << rest << "\n";
+   CLOG(DEBUG, chan.c_str()) << i(d) << "ParamList " << rest;
 
    for (AParam_p p: params)
    {
@@ -627,13 +607,10 @@ Fn::~Fn()
    //std::cout << "~Fn\n";
 }
 
-void Fn::show(int d, std::string chan)
+void Fn::show(int d, const std::string &chan)
 {
-   indent(d);
-   std::cout << "Fn:" << type_to_s() << "\n";
-
-   indent(d + 1);
-   std::cout << "full " << full <<"\n";
+   CLOG(DEBUG, chan.c_str()) << i(d) << "Fn:" << type_to_s();
+   CLOG(DEBUG, chan.c_str()) << i(d + 1) << "full " << full;
 
    /*
    indent(d + 1);
@@ -647,7 +624,7 @@ void Fn::show(int d, std::string chan)
 
    if (paramlist == nullptr)
    {
-      std::cout << "fn show paramlist nullptr\n";
+      std::cout << "fn show paramlist nullptr";
       throw std::make_unique<ParserError>();
    }
 
@@ -729,10 +706,9 @@ If::~If()
    //std::cout << "~If\n";
 }
 
-void If::show(int d, std::string chan)
+void If::show(int d, const std::string &chan)
 {
-   indent(d);
-   std::cout << "If:" << type_to_s() << "\n";
+   CLOG(DEBUG, chan.c_str()) << i(d) << "If:" << type_to_s();
 
    condition->show(d + 1, chan);
    yes->show(d + 1, chan);
@@ -769,10 +745,9 @@ Println::~Println()
 {
 }
 
-void Println::show(int d, std::string chan)
+void Println::show(int d, const std::string &chan)
 {
-   indent(d);
-   std::cout << "Println:" << type_to_s() << " " << full << "\n";
+   CLOG(DEBUG, chan.c_str()) << i(d) << "Println:" << type_to_s() << " " << full;
 
    if (body != nullptr)
    {
@@ -801,10 +776,9 @@ Ampersand::~Ampersand()
 {
 }
 
-void Ampersand::show(int d, std::string chan)
+void Ampersand::show(int d, const std::string &chan)
 {
-   indent(d);
-   std::cout << "Ampersand:" << type_to_s() << "\n";
+   CLOG(DEBUG, chan.c_str()) << i(d) << "Ampersand:" << type_to_s();
 }
 
 void Ampersand::format(int d)
@@ -822,10 +796,9 @@ Let::~Let()
 {
 }
 
-void Let::show(int d, std::string chan)
+void Let::show(int d, const std::string &chan)
 {
-   indent(d);
-   std::cout << "Let:" << type_to_s() << " " << full << "\n";
+   CLOG(DEBUG, chan.c_str()) << i(d) << "Let:" << type_to_s() << " " << full;
 
    for (const auto &pr: variables)
    {
@@ -875,10 +848,9 @@ Symbol::~Symbol()
    //std::cout << "~Symbol " << text << "\n";
 }
 
-void Symbol::show(int d, std::string chan)
+void Symbol::show(int d, const std::string &chan)
 {
-   indent(d);
-   std::cout << "Symbol:" << type_to_s() << " " << text << "\n";
+   CLOG(DEBUG, chan.c_str()) << i(d) << "Symbol:" << type_to_s() << " " << text;
 }
 
 void Symbol::format(int d)
@@ -898,10 +870,9 @@ Builtin::~Builtin()
    //std::cout << "~Builtin " << text << "\n";
 }
 
-void Builtin::show(int d, std::string chan)
+void Builtin::show(int d, const std::string &chan)
 {
-   indent(d);
-   std::cout << "Builtin:" << type_to_s() << " " << text << "\n";
+   CLOG(DEBUG, chan.c_str()) << i(d) << "Builtin:" << type_to_s() << " " << text;
 }
 
 void Builtin::format(int d)
@@ -921,10 +892,9 @@ Text::~Text()
    //std::cout << "~Symbol " << text << "\n";
 }
 
-void Text::show(int d, std::string chan)
+void Text::show(int d, const std::string &chan)
 {
-   indent(d);
-   std::cout << "Text " << text << "\n";
+   CLOG(DEBUG, chan.c_str()) << i(d) << "Text " << text;
 }
 
 void Text::format(int d)
@@ -951,18 +921,15 @@ void Main::add(Element_p el)
 }
  */
 
-void Main::show(int d, std::string chan)
+void Main::show(int d, const std::string &chan)
 {
-   indent(d);
-   std::cout << "Main:" << type_to_s() << "\n";
+   CLOG(DEBUG, chan.c_str()) << i(d) << "Main:" << type_to_s();
 
-   indent(d + 1);
-   std::cout << "defines: ";
+   CLOG(DEBUG, chan.c_str()) << i(d + 1) << "defines: ";
    for (const auto &pr: defines)
    {
-      std::cout << pr.first << " " << pr.second << " ";
+      CLOG(DEBUG, chan.c_str()) << i(d + 2) << pr.first << " " << pr.second;
    }
-   std::cout << "\n";
 
    for (Element_p el: elements)
    {

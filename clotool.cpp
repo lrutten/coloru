@@ -73,6 +73,11 @@ int main(int argc, char **argv)
    logmain.enable();
    CLOG(DEBUG, "main") << "start coloru";
 
+   // only for test
+   //const std::string chan = "main";
+   //CLOG(DEBUG, chan.c_str()) << "start coloru bis";
+   
+   
    Logchannel loglex("lex");
    loglex.disable();
 
