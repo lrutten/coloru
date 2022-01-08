@@ -63,7 +63,7 @@ bool Param::assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame>
 
          CLOG(DEBUG, "runner") << i(d + 1) << "==== aparam result===";
 
-         if (debug) aparres->show(d + 2, "runner");
+         aparres->show(d + 2, "runner");
 
          CLOG(DEBUG, "runner") << i(d + 1) << "=====";
 
@@ -107,7 +107,7 @@ bool Param::assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame>
 bool ParamList::assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, List_p apar, int d, bool single)
 {
    CLOG(DEBUG, "runner") << i(d) << "ParamList assignParameters()";
-   if (debug) apar->show(d + 1, "runner");
+   apar->show(d + 1, "runner");
 
    List_p list = apar;
    if (single)
@@ -125,12 +125,12 @@ bool ParamList::assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Fr
       list = std::dynamic_pointer_cast<List>(elres);
       if (list== nullptr)
       {
-         if (debug) el->show(d + 1, "runner");
+         el->show(d + 1, "runner");
          std::cout << "parameter must be list\n";
          throw std::make_shared<RunError>();
       }
       apar->pop_front();
-      if (debug) list->show(d + 1, "runner");
+      list->show(d + 1, "runner");
    }
 
    CLOG(DEBUG, "runner") << i(d + 1) << "list size " << list->size();
@@ -216,7 +216,7 @@ Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
                   }
                   else
                   {
-                     if (debug) fun->show(d + 1, "runner");
+                     fun->show(d + 1, "runner");
                      std::cout << "name found but is not a function " << sy->getText() << "\n";
                      throw std::make_shared<RunError>();
                   }
@@ -322,7 +322,7 @@ Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
          }
 
          CLOG(DEBUG, "runner") << i(d + 1) << "++++ fn result+++";
-         if (debug) rs->show(d + 2, "runner");
+         rs->show(d + 2, "runner");
          CLOG(DEBUG, "runner") << i(d + 1) << "+++++++++";
 
          return rs;
@@ -355,7 +355,7 @@ Element_p Let::evaluate(std::shared_ptr<Context> cx, int d)
       Element_p aparres = apar->evaluate(cx, d + 1);
 
       CLOG(DEBUG, "runner") << i(d + 1) << "==== aparam result===";
-      if (debug) aparres->show(d + 2, "runner");
+      aparres->show(d + 2, "runner");
       CLOG(DEBUG, "runner") << i(d + 1) << "=====";
 
       fr->add_binding(fparname, aparres);
@@ -366,7 +366,7 @@ Element_p Let::evaluate(std::shared_ptr<Context> cx, int d)
    cx->pop();
 
    CLOG(DEBUG, "runner") << i(d + 1) << "++++ let result+++";
-   if (debug) rs->show(d + 2, "runner");
+   rs->show(d + 2, "runner");
    CLOG(DEBUG, "runner") << i(d + 1) << "+++++++++\n";
 
    return rs;
@@ -385,7 +385,7 @@ Element_p Println::evaluate(std::shared_ptr<Context> cx, int d)
    for (Element_p el: body->getElements())
    {
       result = el->evaluate(cx, d + 1);
-      //if (debug) result->show(d + 2, "runner");
+      //result->show(d + 2, "runner");
       result->print();
       std::cout << " ";
    }
@@ -510,7 +510,7 @@ Element_p Equal::evaluate(std::shared_ptr<Context> cx, int d)
       Element_p el2 = el->evaluate(cx, d + 1);
 
       CLOG(DEBUG, "runner") << i(d + 1) << "Equal el2";
-      if (debug) el2->show(d + 2, "runner");
+      el2->show(d + 2, "runner");
 
       Number_p nu = std::dynamic_pointer_cast<Number>(el2);
       if (nu == nullptr)
@@ -583,7 +583,7 @@ Element_p Lambda::evaluate(std::shared_ptr<Context> cx, int d)
 Element_p Fn::evaluate(std::shared_ptr<Context> cx, int d)
 {
    CLOG(DEBUG, "runner") << i(d) << "Fn evaluate";
-   if (debug) cx->show(d + 1, "runner");
+   cx->show(d + 1, "runner");
 
    return body->evaluate(cx, d + 1);
 }
@@ -667,7 +667,7 @@ Element_p Builtin::evaluate2(std::shared_ptr<Context> cx, std::shared_ptr<Elemen
 {
    CLOG(DEBUG, "runner") << i(d) << "Builtin evaluate2";
 
-   if (debug) call->show(d + 1, "runner");
+   call->show(d + 1, "runner");
 
    Call_p ca = std::dynamic_pointer_cast<Call>(call);
    if (ca != nullptr)
@@ -685,7 +685,7 @@ Element_p Builtin::evaluate2(std::shared_ptr<Context> cx, std::shared_ptr<Elemen
          List_p ca2 = ca->copy();
          ca2->pop_front();
 
-         if (debug) ca->show(d + 1, "runner");
+         ca->show(d + 1, "runner");
 
          if (bitext == "nil?")
          {
@@ -700,7 +700,7 @@ Element_p Builtin::evaluate2(std::shared_ptr<Context> cx, std::shared_ptr<Elemen
          if (ca2->size() == npar)
          {
             CLOG(DEBUG, "runner") << i(d + 1) << "# params correct";
-            if (debug) ca->show(d + 2, "runner");
+            ca->show(d + 2, "runner");
 
             List_p list2 = std::make_shared<List>();
             for (Element_p apar: ca2->getElements())
@@ -710,7 +710,7 @@ Element_p Builtin::evaluate2(std::shared_ptr<Context> cx, std::shared_ptr<Elemen
                Element_p aparres = apar->evaluate(cx, d + 1);
                list2->add(aparres);
 
-               if (debug) aparres->show(d + 3, "runner");
+               aparres->show(d + 3, "runner");
             }
 
             if (bitext == "nil?")
@@ -735,7 +735,7 @@ Element_p Builtin::evaluate2(std::shared_ptr<Context> cx, std::shared_ptr<Elemen
 
                Element_p el0 = list2->get(0);
 
-               if (debug) el0->show(d + 2, "runner");
+               el0->show(d + 2, "runner");
 
                // Nil or List is returning true
                List_p li = std::dynamic_pointer_cast<List>(el0);
@@ -846,7 +846,7 @@ Element_p Elements::capture(Context_p cx, Frame_p fr, int d)
       Element_p el2 = el->capture(cx, fr, d + 1);
       els->add(el2);
    }
-   if (debug) els->show(d + 1, "runner");
+   els->show(d + 1, "runner");
    return els;
 }
 
@@ -921,7 +921,7 @@ Element_p Let::capture(Context_p cx, Frame_p fr, int d)
       throw std::make_unique<RunError>();
    }
 
-   if (debug) lt->show(d + 1, "runner");
+   lt->show(d + 1, "runner");
 
    return lt;
 }
@@ -957,7 +957,7 @@ Element_p Fn::capture(Context_p cx, Frame_p fr, int d)
       throw std::make_unique<RunError>();
    }
 
-   if (debug) fn->show(d + 1, "runner");
+   fn->show(d + 1, "runner");
 
    return fn;
 }
@@ -989,7 +989,7 @@ Element_p Lambda::capture(Context_p cx, Frame_p fr, int d)
 
    Element_p f = fn->capture(cx, fr2, d + 1);
    la->fn = std::dynamic_pointer_cast<Fn>(f);
-   if (debug) bi->show(d + 1, "runner");
+   bi->show(d + 1, "runner");
    return bi;
 }
 
@@ -997,7 +997,7 @@ Element_p Symbol::capture(Context_p cx, Frame_p fr, int d)
 {
    CLOG(DEBUG, "runner") << i(d) << "Symbol capture " << text;
 
-   if (debug) cx->show(d + 1, "runner");
+   cx->show(d + 1, "runner");
 
    bool exi = cx->exists(text);
    if (exi)
@@ -1008,12 +1008,12 @@ Element_p Symbol::capture(Context_p cx, Frame_p fr, int d)
       if (val != nullptr)
       {
          CLOG(DEBUG, "runner") << i(d + 1) << "   val not null";
-         if (debug) val->show(d + 2, "runner");
+         val->show(d + 2, "runner");
 
          // add new binding
          fr->add_binding(text, val);
 
-         if (debug) fr->show(d + 2, "runner");
+         fr->show(d + 2, "runner");
       }
       else
       {

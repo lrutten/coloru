@@ -1,5 +1,7 @@
 #include <iostream>
 
+#include "easylogging++.h"
+
 #include "parser.h"
 
 
@@ -125,7 +127,7 @@ type_t Number::getType()
 void Main::resetTreetype()
 {
    defines.clear();
-   //if (debug) std::cout << "defines clear size " << defines.size() << "\n";
+   //CLOG(DEBUG, "recurse") << "defines clear size " << defines.size();
    setTreetype(tp_undefined);
 
    for (Element_p el: getElements())
@@ -560,7 +562,7 @@ bool Body::transformTree(int d)
 {
    Element::transformTree(d);
 
-   int i = 0;
+   int j = 0;
    Element_p el2 = nullptr;
    for (Element_p el: getElements())
    {
@@ -574,12 +576,11 @@ bool Body::transformTree(int d)
       {
          setCont(true);
       }
-      i++;
+      j++;
    }
    if (el2 != nullptr)
    {
-      if (debug) indent(d + 1);
-      if (debug) std::cout << "found\n";
+      CLOG(DEBUG, "recurse") << i(d + 1) << "found";
       setCont(true);
    }
 
@@ -599,8 +600,7 @@ bool If::transformTree(int d)
       // this is a recursive branch which is not pass.
       // yes will be replaced by a tail recursive call which
       // includes the eisting yes branch
-      if (debug) indent(d + 1);
-      if (debug) std::cout << "found yes\n";
+      CLOG(DEBUG, "recurse") << i(d + 1) << "found yes";
 
       // make the tail recursive call.
       // parameter yes is necessary to include it in the call
@@ -616,8 +616,7 @@ bool If::transformTree(int d)
    }
    else
    {
-      if (debug) indent(d + 1);
-      if (debug) std::cout << "yes call k 1\n";
+      CLOG(DEBUG, "recurse") << i(d + 1) << "yes call k 1";
 
       // make extra call to k
       // the yes branch is added as only parameter
@@ -635,12 +634,11 @@ bool If::transformTree(int d)
    // the no branch gets the same treatment as the yes branch
    if (no->getTreetype() == tp_recurse && no->getType() != tp_pass)
    {
-      if (debug) indent(d + 1);
-      if (debug) std::cout << "found no\n";
+      CLOG(DEBUG, "recurse") << i(d + 1) << "found no";
 
       Element_p call = no->searchTail(no, d + 1);
-      if (debug) call->show(d + 1, "recurse");
-      if (debug) no->show(d + 1, "recurse");
+      call->show(d + 1, "recurse");
+      no->show(d + 1, "recurse");
       no = call;
 
       setCont(true);
@@ -652,8 +650,7 @@ bool If::transformTree(int d)
    }
    else
    {
-      if (debug) indent(d + 1);
-      if (debug) std::cout << "no call k 1\n";
+      CLOG(DEBUG, "recurse") << i(d + 1) << "no call k 1";
 
       // make extra call to k
       Call_p  ca  = std::make_shared<Call>();
@@ -678,7 +675,7 @@ bool If::transformTree(int d)
 std::shared_ptr<Element> Binary::searchTail(std::shared_ptr<Element> el, int d)
 {
    Element_p call = nullptr;
-   int i = 0;
+   int j = 0;
    for (Element_p ell: getElements())
    {
       if (ell->getTreetype() == tp_tailrecurse)
@@ -695,17 +692,16 @@ std::shared_ptr<Element> Binary::searchTail(std::shared_ptr<Element> el, int d)
          }
       }
 
-      i++;
+      j++;
    }
 
    if (call != nullptr)
    {
-      if (debug) indent(d + 1);
-      if (debug) std::cout << "Binary tail recursive call found\n";
+      CLOG(DEBUG, "recurse") << i(d + 1) << "Binary tail recursive call found";
 
       // replace the call with symbol 'value'
       Symbol_p sy = std::make_shared<Symbol>("value");
-      set(i, sy);
+      set(j, sy);
 
       // make extra lambda
       Lambda_p la = std::make_shared<Lambda>();
@@ -748,17 +744,17 @@ void Main::makeTail()
    resetTreetype();
    determTreetype(ths, nullptr);
 
-   if (debug) std::cout << "=========transform=============\n";
+   CLOG(DEBUG, "recurse") << "=========transform=============";
    transformTree(0);
 
-   if (debug) std::cout << "=========show=1================\n";
-   if (debug) show(0, "recurse");
+   CLOG(DEBUG, "recurse") << "=========show=1================";
+   show(0, "recurse");
 
-   if (debug) std::cout << "=========show 2================\n";
+   CLOG(DEBUG, "recurse") << "=========show 2================";
    resetTreetype();
    determTreetype(ths, nullptr);
-   if (debug) show(0, "recurse");
-   if (debug) std::cout << "===============================\n";
+   show(0, "recurse");
+   CLOG(DEBUG, "recurse") << "===============================";
 
    // Iterate through all the tailrecurse defines
    // and add a extra parameter to its simple calls.
@@ -766,28 +762,23 @@ void Main::makeTail()
    // This is the extra parameter:
    //      (fn [value] value)
 
-   if (debug) indent(0);
-   if (debug) std::cout << "defines\n";
+   CLOG(DEBUG, "recurse") << i(0) << "defines";
    for (const auto &pr: defines)
    {
-      if (debug) indent(1);
-      if (debug) std::cout << "defn " << pr.first << "\n";
+      CLOG(DEBUG, "recurse") << i(1) << "defn " << pr.first;
       if (pr.second->getTreetype() == tp_tailrecurse && pr.second->hasCont())
       {
-         if (debug) indent(2);
-         if (debug) std::cout << "tail recursion\n";
+         CLOG(DEBUG, "recurse") << i(2) << "tail recursion";
 
          Defn_p df = pr.second;
 
          // for each call: add extra actual parameter
          for (Call_p cl: df->getCalls())
          {
-            if (debug) indent(3);
-            if (debug) std::cout << "call " << cl->type_to_s() << "\n";
+            CLOG(DEBUG, "recurse") << i(3) << "call " << cl->type_to_s();
             if (cl->getTreetype() == tp_simple)
             {
-               if (debug) indent(4);
-               if (debug) std::cout << "simple\n";
+               CLOG(DEBUG, "recurse") << i(4) << "simple";
 
                // add extra lambda as actual parameter
                Lambda_p la = std::make_shared<Lambda>();
@@ -820,11 +811,11 @@ void Main::makeTail()
    determTreetype(ths, nullptr);
 
    // write the transformed Clojure code
-   if (debug) std::cout << "=========format================\n";
-   if (debug || showclj) format(0);
+   CLOG(DEBUG, "recurse") << "=========format================";
+   if (showclj) format(0);
 
-   if (debug) std::cout << "=========show 3=================\n";
-   if (debug) show(0, "recurse");
-   if (debug) std::cout << "===============================\n";
+   CLOG(DEBUG, "recurse") << "=========show 3=================";
+   show(0, "recurse");
+   CLOG(DEBUG, "recurse") << "===============================";
 }
 

@@ -1078,7 +1078,7 @@ Element_p Parser::list(bool isliteral)
             CLOG(DEBUG, "parser") << "Binary pop " << i;
 
             Element_p e = lst->getElements().front();
-            if (debug) e->show(0, "parser");
+            e->show(0, "parser");
 
             lst->pop_front();
             if (i != 0)
@@ -1089,7 +1089,7 @@ Element_p Parser::list(bool isliteral)
          }
 
          CLOG(DEBUG, "parser") << "Binary " << bin->info();
-         if (debug) bin->show(0, "parser");
+         bin->show(0, "parser");
 
          // test only
          //exit(1);
@@ -1169,8 +1169,8 @@ Element_p Parser::list(bool isliteral)
                lst->pop_front();
 
                CLOG(DEBUG, "parser") << "fn";
-               if (debug) lst->show(0, "parser");
-               if (debug) lst->get(0)->show(0, "parser");
+               lst->show(0, "parser");
+               lst->get(0)->show(0, "parser");
 
                ParamList_p parlst = parameters(lst->get(0));
                fn->setParamList(parlst);
@@ -1208,7 +1208,7 @@ Element_p Parser::list(bool isliteral)
                }
                fn->setBody(bd);
                fn->setFull(true);
-               if (debug) fn->show(0, "parser");
+               fn->show(0, "parser");
 
                Lambda_p la = std::make_shared<Lambda>();
                la->setFn(fn);
@@ -1245,7 +1245,7 @@ Element_p Parser::list(bool isliteral)
                   lst->pop_front();
                   fi->setCondition(e1);
                   CLOG(DEBUG, "parser") << "if condtion";
-                  if (debug) e1->show(0, "parser");
+                  e1->show(0, "parser");
 
                   Element_p e2 = lst->getElements().front();
                   lst->pop_front();
@@ -1268,7 +1268,7 @@ Element_p Parser::list(bool isliteral)
                      lst->pop_front();
 
                      CLOG(DEBUG, "parser") << "println";
-                     if (debug) lst->show(0, "parser");
+                     lst->show(0, "parser");
 
                      Body_p bd = std::make_shared<Body>();
                      while (!lst->getElements().empty())
@@ -1278,7 +1278,7 @@ Element_p Parser::list(bool isliteral)
                         bd->add(e);
                      }
                      pri->setBody(bd);
-                     if (debug) pri->show(0, "parser");
+                     pri->show(0, "parser");
 
                      return pri;
                   }
@@ -1290,8 +1290,8 @@ Element_p Parser::list(bool isliteral)
                         lst->pop_front();
 
                         CLOG(DEBUG, "parser") << "let";
-                        if (debug) lst->show(0, "parser");
-                        if (debug) lst->get(0)->show(0, "parser");
+                        lst->show(0, "parser");
+                        lst->get(0)->show(0, "parser");
 
                         Vector_p vals = std::dynamic_pointer_cast<Vector>(lst->get(0));
                         if (vals == nullptr)
@@ -1328,7 +1328,7 @@ Element_p Parser::list(bool isliteral)
                            bd->add(e);
                         }
                         lt->setBody(bd);
-                        if (debug) lt->show(0, "parser");
+                        lt->show(0, "parser");
 
                         return lt;
                      }

@@ -12,7 +12,7 @@
 
 extern void indent(int d);
 extern std::string i(int d);
-extern bool debug;
+//extern bool debug;
 extern bool trans;
 extern bool showclj;
 
@@ -89,8 +89,7 @@ public:
    virtual void determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn> defn) = 0;
    virtual bool transformTree(int d)
    {
-      if (debug) indent(d);
-      if (debug) std::cout << info() << "\n";
+      CLOG(DEBUG, "recurse") << i(d) << info();
       return false;
    }
    virtual std::shared_ptr<Element> searchTail(std::shared_ptr<Element> el, int d)
@@ -1133,7 +1132,7 @@ public:
    virtual ~Main();
    void addDefn(Defn_p dfn)
    {
-      if (debug) std::cout << "addDefn() " << dfn->getName() << "\n";
+      CLOG(DEBUG, "parser") << "addDefn() " << dfn->getName();
       defines[dfn->getName()] = dfn;
    }
    void addCall(Call_p call)
@@ -1142,7 +1141,7 @@ public:
       Symbol_p sy = std::dynamic_pointer_cast<Symbol>(first);
       if (sy != nullptr)
       {
-         if (debug) std::cout << "addCall() " << sy->getText() << "\n";
+         CLOG(DEBUG, "parser") << "addCall() " << sy->getText();
          if (defines.find(sy->getText()) != defines.end())
          {
             // Defn found
@@ -1151,7 +1150,7 @@ public:
          }
          else
          {
-            if (debug) std::cout << "   defn " << sy->getText() << " not found\n";
+            CLOG(DEBUG, "parser") << "   defn " << sy->getText() << " not found";
             //std::cout << "defn " << sy->getText() << " not found\n";
             //throw std::make_unique<ParserError>();
          }

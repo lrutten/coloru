@@ -1,13 +1,34 @@
 #include <iostream>
 #include <getopt.h>
+#include <string>
+#include <type_traits>
+
+#include <unistd.h>
+#include <stdlib.h>
 
 #include "easylogging++.h"
 
 #include "parser.h"
 #include "runner.h"
 
+
 INITIALIZE_EASYLOGGINGPP
 
+enum class Channels
+{
+   MAIN     = 1 << 0,
+   TEXTFILE = 1 << 1,
+   LEX      = 1 << 2,
+   PARSER   = 1 << 3,
+   RUNNER   = 1 << 4,
+   RECURSE  = 1 << 5
+};
+
+template <typename E>
+constexpr auto to_underlying(E e) noexcept
+{
+    return static_cast<std::underlying_type_t<E>>(e);
+}
 
 class Logchannel
 {
@@ -25,6 +46,104 @@ public:
       el::Loggers::reconfigureLogger(name, conf);
    }
 
+   // levels
+   //    1 Global
+   //    2 Trace
+   //    4 Debug
+   //    8 Fatal
+   //   16 Error
+   //   32 Warning
+   //   64 Verbose
+   //  128 Info
+   // 1010 Unknown
+   void enable(int levels)
+   {
+      el::Configurations conf;
+      conf.setGlobally(el::ConfigurationType::Format, "%level %logger %msg");
+      
+      // Global
+      if ((levels & to_underlying(el::Level::Global)) != 0)
+      {
+         conf.set(el::Level::Global, el::ConfigurationType::Enabled, "true");
+      }
+      else
+      {
+         conf.set(el::Level::Global, el::ConfigurationType::Enabled, "false");
+      }
+
+      // Trace
+      if ((levels & to_underlying(el::Level::Trace)) != 0)
+      {
+         conf.set(el::Level::Trace, el::ConfigurationType::Enabled, "true");
+      }
+      else
+      {
+         conf.set(el::Level::Trace, el::ConfigurationType::Enabled, "false");
+      }
+      
+      // Debug
+      if ((levels & to_underlying(el::Level::Debug)) != 0)
+      {
+         conf.set(el::Level::Debug, el::ConfigurationType::Enabled, "true");
+      }
+      else
+      {
+         conf.set(el::Level::Debug, el::ConfigurationType::Enabled, "false");
+      }
+      
+      // Fatal
+      if ((levels & to_underlying(el::Level::Fatal)) != 0)
+      {
+         conf.set(el::Level::Fatal, el::ConfigurationType::Enabled, "true");
+      }
+      else
+      {
+         conf.set(el::Level::Fatal, el::ConfigurationType::Enabled, "false");
+      }
+      
+      // Error
+      if ((levels & to_underlying(el::Level::Error)) != 0)
+      {
+         conf.set(el::Level::Error, el::ConfigurationType::Enabled, "true");
+      }
+      else
+      {
+         conf.set(el::Level::Error, el::ConfigurationType::Enabled, "false");
+      }
+      
+      // Warning
+      if ((levels & to_underlying(el::Level::Warning)) != 0)
+      {
+         conf.set(el::Level::Warning, el::ConfigurationType::Enabled, "true");
+      }
+      else
+      {
+         conf.set(el::Level::Warning, el::ConfigurationType::Enabled, "false");
+      }
+      
+      // Verbose
+      if ((levels & to_underlying(el::Level::Verbose)) != 0)
+      {
+         conf.set(el::Level::Verbose, el::ConfigurationType::Enabled, "true");
+      }
+      else
+      {
+         conf.set(el::Level::Verbose, el::ConfigurationType::Enabled, "false");
+      }
+      
+      // Info
+      if ((levels & to_underlying(el::Level::Info)) != 0)
+      {
+         conf.set(el::Level::Info, el::ConfigurationType::Enabled, "true");
+      }
+      else
+      {
+         conf.set(el::Level::Info, el::ConfigurationType::Enabled, "false");
+      }
+      
+      el::Loggers::reconfigureLogger(name, conf);
+   }
+
    void disable()
    {
       el::Configurations conf;
@@ -39,16 +158,15 @@ private:
 
 
 
-
-bool debug   = false;
-bool debug2  = false;
+//bool debug   = false;
 bool trans   = false;
 bool showclj = false;
 
 // options
 //
 //   f file
-//   d debug
+//   d debug level
+//   c log channels
 //   t transform to tail recursion
 //   l show transformed source code
 //
@@ -70,30 +188,31 @@ int main(int argc, char **argv)
 
 
    Logchannel logmain("main");
-   logmain.enable();
+   logmain.disable();
    CLOG(DEBUG, "main") << "start coloru";
 
-   // only for test
-   //const std::string chan = "main";
-   //CLOG(DEBUG, chan.c_str()) << "start coloru bis";
-   
+   Logchannel logtextfile("textfile");
+   logtextfile.disable();
    
    Logchannel loglex("lex");
    loglex.disable();
 
    Logchannel logparser("parser");
-   logparser.enable();
+   logparser.disable();
 
    Logchannel logrunner("runner");
-   logrunner.enable();
+   logrunner.disable();
 
-   Logchannel logtextfile("textfile");
-   logtextfile.enable();
+   Logchannel logrecurse("recurse");
+   logrecurse.disable();
+
 
 
    char *fname;
-   int opt;
-   while ((opt = getopt(argc, argv, "ltdf:")) != -1)
+   int   dlevel;
+   int   channels;
+   int   opt;
+   while ((opt = getopt(argc, argv, "ltc:d:f:")) != -1)
    {
       switch (opt)
       {
@@ -101,8 +220,30 @@ int main(int argc, char **argv)
             fname = optarg;
             break;
 
+         case 'c':
+            //debug = true;
+            try
+            {
+               channels = std::stoi(optarg);
+            }
+            catch (std::invalid_argument &e)
+            {
+               std::cout << "use integer as argument for -c\n";
+               exit(1);
+            }
+            break;
+
          case 'd':
-            debug = true;
+            //debug = false;
+            try
+            {
+               dlevel = std::stoi(optarg);
+            }
+            catch (std::invalid_argument &e)
+            {
+               std::cout << "use integer as argument for -d\n";
+               exit(1);
+            }
             break;
 
          case 't':
@@ -114,7 +255,33 @@ int main(int argc, char **argv)
             break;
       }
    }
-
+   
+   // enable all the loggers if necesary
+   if ((channels & to_underlying(Channels::MAIN)) != 0)
+   {
+      logmain.enable(dlevel);
+   }
+   if ((channels & to_underlying(Channels::TEXTFILE)) != 0)
+   {
+      logtextfile.enable(dlevel);
+   }
+   if ((channels & to_underlying(Channels::LEX)) != 0)
+   {
+      loglex.enable(dlevel);
+   }
+   if ((channels & to_underlying(Channels::PARSER)) != 0)
+   {
+      logparser.enable(dlevel);
+   }
+   if ((channels & to_underlying(Channels::RUNNER)) != 0)
+   {
+      logrunner.enable(dlevel);
+   }
+   if ((channels & to_underlying(Channels::RECURSE)) != 0)
+   {
+      logrecurse.enable(dlevel);
+   }
+ 
    CLOG(DEBUG, "main") << "start";
 
 
@@ -141,7 +308,8 @@ int main(int argc, char **argv)
             std::cout << "nullptr\n";
          }
       }
-      if (debug2) root->show(0, "main");
+      CLOG(DEBUG, "main") << "---- root ----";
+      root->show(0, "main");
    }
 }
 
