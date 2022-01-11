@@ -155,7 +155,7 @@ bool ParamList::assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Fr
 
 Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
 {
-   CLOG(DEBUG, "runner") << i(d) << "Call evaluate()";
+   CLOG(DEBUG, "runner") << i(d) << "Call evaluate() " << type_to_s();
 
    Element_p  el = get(0);
    while (std::dynamic_pointer_cast<Call>(el) != nullptr)
@@ -196,6 +196,7 @@ Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
             bi = std::dynamic_pointer_cast<Bind>(fun);
             if (bi != nullptr)
             {
+               CLOG(DEBUG, "runner") << i(d + 1) << "bind1";
                fuu = bi->getLambda()->getFn();
             }
             else
@@ -203,6 +204,7 @@ Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
                la = std::dynamic_pointer_cast<Lambda>(fun);
                if (la != nullptr)
                {
+                  CLOG(DEBUG, "runner") << i(d + 1) << "lambda2";
                   bi = std::dynamic_pointer_cast<Bind>(la->capture(cx, nullptr, d + 1));
                   fuu = la->getFn();
                   la = nullptr;
@@ -212,6 +214,7 @@ Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
                   df = std::dynamic_pointer_cast<Defn>(fun);
                   if (df != nullptr)
                   {
+                     CLOG(DEBUG, "runner") << i(d + 1) << "defn";
                      fuu = df->getFn();
                   }
                   else
@@ -226,12 +229,14 @@ Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
          else
          if (bi != nullptr)
          {
+            CLOG(DEBUG, "runner") << i(d + 1) << "bind2";
             fuu = bi->getLambda()->getFn();
          }
          else
          {
             if (la != nullptr)
             {
+               CLOG(DEBUG, "runner") << i(d + 1) << "lambda2";
                fuu = la->getFn();
             }
          }
@@ -275,7 +280,7 @@ Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
          else
          {
             // symbol call to defn
-            CLOG(DEBUG, "runner") << i(d + 1) << "symbol call";
+            CLOG(DEBUG, "runner") << i(d + 1) << "defn symbol call";
 
             // this is the tail recursion optimization
             bool it = true;
@@ -304,6 +309,7 @@ Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
                   {
                      // the evaluate returned a frame,
                      // the while can continue
+                     CLOG(DEBUG, "runner") << i(d + 2) << "frame returned";
                      fr = fr2;
                   }
                   else
@@ -435,7 +441,7 @@ Element_p Mul::evaluate(std::shared_ptr<Context> cx, int d)
       Number_p nu = std::dynamic_pointer_cast<Number>(el2);
       if (nu == nullptr)
       {
-         std::cout << "run error\n";
+         std::cout << "run error: not a number in * expression\n";
          throw std::make_unique<RunError>();
       }
       value *= nu->getNumber();
@@ -462,7 +468,7 @@ Element_p Plus::evaluate(std::shared_ptr<Context> cx, int d)
       Number_p nu = std::dynamic_pointer_cast<Number>(el2);
       if (nu == nullptr)
       {
-         std::cout << "run error\n";
+         std::cout << "run error: not a number in + expression\n";
          throw std::make_unique<RunError>();
       }
       value += nu->getNumber();
@@ -483,7 +489,7 @@ Element_p Min::evaluate(std::shared_ptr<Context> cx, int d)
       Number_p nu = std::dynamic_pointer_cast<Number>(el2);
       if (nu == nullptr)
       {
-         std::cout << "run error\n";
+         std::cout << "run error not a number in - expression\n";
          throw std::make_unique<RunError>();
       }
       if (i == 0)
