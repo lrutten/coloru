@@ -737,24 +737,30 @@ std::shared_ptr<Element> Binary::searchTail(std::shared_ptr<Element> el, int d)
    a tail recursion call.
  */
 
-void Main::makeTail()
+bool Main::makeTail()
 {
    Main_p ths = std::dynamic_pointer_cast<Main>(shared_from_this());
 
    resetTreetype();
    determTreetype(ths, nullptr);
 
+   CLOG(DEBUG, "recurse") << "=====show 0 before transform===";
+   show(0, "recurse");
+
    CLOG(DEBUG, "recurse") << "=========transform=============";
    transformTree(0);
 
-   CLOG(DEBUG, "recurse") << "=========show=1================";
+   CLOG(DEBUG, "recurse") << "=========show 1 after transform";
    show(0, "recurse");
 
-   CLOG(DEBUG, "recurse") << "=========show 2================";
+   CLOG(DEBUG, "recurse") << "=========reset determ Treetype=";
    resetTreetype();
    determTreetype(ths, nullptr);
+
+   CLOG(DEBUG, "recurse") << "====show 2 after reset determ==";
    show(0, "recurse");
-   CLOG(DEBUG, "recurse") << "===============================";
+
+   CLOG(DEBUG, "recurse") << "========extra param============";
 
    // Iterate through all the tailrecurse defines
    // and add a extra parameter to its simple calls.
@@ -810,12 +816,26 @@ void Main::makeTail()
    resetTreetype();
    determTreetype(ths, nullptr);
 
+   CLOG(DEBUG, "recurse") << "=========show 3=================";
+   show(0, "recurse");
+   CLOG(DEBUG, "recurse") << "===============================";
+
    // write the transformed Clojure code
    CLOG(DEBUG, "recurse") << "=========format================";
    if (showclj) format(0);
 
-   CLOG(DEBUG, "recurse") << "=========show 3=================";
-   show(0, "recurse");
-   CLOG(DEBUG, "recurse") << "===============================";
+
+   // check for remaining  non tail recursion
+   for (const auto &pr: defines)
+   {
+      CLOG(DEBUG, "recurse") << i(1) << "defn check nontail" << pr.first;
+      if (pr.second->getTreetype() == tp_recurse)
+      {
+         CLOG(DEBUG, "recurse") << i(1) << "defn check nontail found" << pr.first;
+         return true;
+      }
+   }
+
+   return false;
 }
 

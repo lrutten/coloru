@@ -60,7 +60,7 @@ public:
    {
       el::Configurations conf;
       conf.setGlobally(el::ConfigurationType::Format, "%level %logger %msg");
-      
+
       // Global
       if ((levels & to_underlying(el::Level::Global)) != 0)
       {
@@ -80,7 +80,7 @@ public:
       {
          conf.set(el::Level::Trace, el::ConfigurationType::Enabled, "false");
       }
-      
+
       // Debug
       if ((levels & to_underlying(el::Level::Debug)) != 0)
       {
@@ -90,7 +90,7 @@ public:
       {
          conf.set(el::Level::Debug, el::ConfigurationType::Enabled, "false");
       }
-      
+
       // Fatal
       if ((levels & to_underlying(el::Level::Fatal)) != 0)
       {
@@ -100,7 +100,7 @@ public:
       {
          conf.set(el::Level::Fatal, el::ConfigurationType::Enabled, "false");
       }
-      
+
       // Error
       if ((levels & to_underlying(el::Level::Error)) != 0)
       {
@@ -110,7 +110,7 @@ public:
       {
          conf.set(el::Level::Error, el::ConfigurationType::Enabled, "false");
       }
-      
+
       // Warning
       if ((levels & to_underlying(el::Level::Warning)) != 0)
       {
@@ -120,7 +120,7 @@ public:
       {
          conf.set(el::Level::Warning, el::ConfigurationType::Enabled, "false");
       }
-      
+
       // Verbose
       if ((levels & to_underlying(el::Level::Verbose)) != 0)
       {
@@ -130,7 +130,7 @@ public:
       {
          conf.set(el::Level::Verbose, el::ConfigurationType::Enabled, "false");
       }
-      
+
       // Info
       if ((levels & to_underlying(el::Level::Info)) != 0)
       {
@@ -140,7 +140,7 @@ public:
       {
          conf.set(el::Level::Info, el::ConfigurationType::Enabled, "false");
       }
-      
+
       el::Loggers::reconfigureLogger(name, conf);
    }
 
@@ -193,7 +193,7 @@ int main(int argc, char **argv)
 
    Logchannel logtextfile("textfile");
    logtextfile.disable();
-   
+
    Logchannel loglex("lex");
    loglex.disable();
 
@@ -255,7 +255,7 @@ int main(int argc, char **argv)
             break;
       }
    }
-   
+
    // enable all the loggers if necesary
    if ((channels & to_underlying(Channels::MAIN)) != 0)
    {
@@ -281,7 +281,7 @@ int main(int argc, char **argv)
    {
       logrecurse.enable(dlevel);
    }
- 
+
    CLOG(DEBUG, "main") << "start";
 
 
@@ -291,7 +291,16 @@ int main(int argc, char **argv)
    {
       if (trans)
       {
-         root->makeTail();
+         CLOG(DEBUG, "main") << "%%%%%%%%%%%%%%%%%%% makeTail1 %%%%%%%%%%%%%%%%%%%";
+         bool r = root->makeTail();
+         CLOG(DEBUG, "main") << "makeTail1 result " << r;
+
+         if (r)
+         {
+            CLOG(DEBUG, "main") << "%%%%%%%%%%%%%%%%%%% makeTail2 %%%%%%%%%%%%%%%%%%%";
+            r = root->makeTail();
+            CLOG(DEBUG, "main") << "makeTail2 result " << r;
+         }
       }
 
       if (!showclj)
@@ -312,4 +321,5 @@ int main(int argc, char **argv)
       root->show(0, "main");
    }
 }
+
 

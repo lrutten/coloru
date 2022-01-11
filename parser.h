@@ -96,7 +96,7 @@ public:
    {
       return nullptr;
    }
-   virtual void makeTail()
+   virtual bool makeTail()
    {
    }
 
@@ -1171,7 +1171,7 @@ public:
    void resetTreetype() override;
    void determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn> defn) override;
    bool transformTree(int d) override;
-   void makeTail() override;
+   bool makeTail() override;
 
 private:
    std::map<std::string, Defn_p> defines;
