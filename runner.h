@@ -40,8 +40,17 @@ public:
    void determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn> defn) override
    {
    }
+   int getNr()
+   {
+      return nr;
+   }
+   void setNr(int n)
+   {
+      nr = n;
+   }
 
 private:
+   int nr;
    std::map<std::string, Element_p> bindings;
 };
 

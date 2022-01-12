@@ -29,6 +29,7 @@ enum token_t
    tk_fn,
    tk_if,
    tk_println,
+   tk_print,
    tk_number,
    tk_true,
    tk_false,

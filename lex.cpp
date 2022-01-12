@@ -179,6 +179,12 @@ void Lex::next()
                CLOG(DEBUG, "lex") << "println";
             }
             else
+            if (token_text == "print")
+            {
+               tok = tk_print;
+               CLOG(DEBUG, "lex") << "print";
+            }
+            else
             if (token_text == "not=")
             {
                tok = tk_notequal;

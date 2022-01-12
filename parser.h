@@ -672,6 +672,44 @@ private:
 
 using Println_p = std::shared_ptr<Println>;
 
+// Print
+
+class Print : public Element
+{
+public:
+   Print();
+   ~Print();
+   void show(int d, const std::string &chan) override;
+   void format(int d) override;
+   Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
+   Element_p capture(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, int d) override;
+   void setBody(Body_p bd)
+   {
+      body = bd;
+   }
+   bool isFull()
+   {
+      return full;
+   }
+   void setFull(bool fu)
+   {
+      full = fu;
+   }
+   virtual std::string info() override
+   {
+      return "Print";
+   }
+   type_t getType() override;
+   void resetTreetype() override;
+   void determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn> defn) override;
+
+private:
+   bool                     full;
+   Body_p                   body;
+};
+
+using Print_p = std::shared_ptr<Print>;
+
 // Ampersand
 
 class Ampersand : public Element
