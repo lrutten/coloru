@@ -147,6 +147,10 @@ bool ParamList::assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Fr
       }
    }
 
+   // Show the complete context
+   // d + 1
+   cx->show(0 , "lex");
+   
    return true;
 }
 
@@ -167,6 +171,8 @@ Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
    Callable_p ca = std::dynamic_pointer_cast<Callable>(el);
    if (ca != nullptr)
    {
+      CLOG(DEBUG, "runner") << i(d + 1) << "callable found";
+
       Builtin_p bin = std::dynamic_pointer_cast<Builtin>(el);
       if (bin != nullptr)
       {
@@ -400,6 +406,25 @@ Element_p Println::evaluate(std::shared_ptr<Context> cx, int d)
    return result;
 }
 
+// Print
+
+Element_p Print::evaluate(std::shared_ptr<Context> cx, int d)
+{
+   CLOG(DEBUG, "runner") << i(d) << "Print evaluate";
+
+   Element_p result;
+   for (Element_p el: body->getElements())
+   {
+      result = el->evaluate(cx, d + 1);
+      //result->show(d + 2, "runner");
+      result->print();
+      std::cout << " ";
+   }
+   //std::cout << "\n";
+
+   return result;
+}
+
 // Vector
 
 Element_p Vector::evaluate(std::shared_ptr<Context> cx, int d)
@@ -471,8 +496,10 @@ Element_p Plus::evaluate(std::shared_ptr<Context> cx, int d)
          std::cout << "run error: not a number in + expression\n";
          throw std::make_unique<RunError>();
       }
+      //std::cout << "Plus " << nu->getNumber() << "\n";
       value += nu->getNumber();
    }
+   //std::cout << "Plus sum " << value << "\n";
    return std::make_shared<Number>(value);
 }
 
@@ -521,7 +548,7 @@ Element_p Equal::evaluate(std::shared_ptr<Context> cx, int d)
       Number_p nu = std::dynamic_pointer_cast<Number>(el2);
       if (nu == nullptr)
       {
-         std::cout << "only numbers can be compared\n";
+         std::cout << "only numbers can be compared with =\n";
          throw std::make_unique<RunError>();
       }
       if (last != nullptr && last->getNumber() != nu->getNumber())
@@ -537,35 +564,140 @@ Element_p Equal::evaluate(std::shared_ptr<Context> cx, int d)
 
 Element_p Less::evaluate(std::shared_ptr<Context> cx, int d)
 {
-   return std::make_shared<Number>(0);
+   bool bo = true;
+   Number_p last = nullptr;
+   for (Element_p el: elements)
+   {
+      Element_p el2 = el->evaluate(cx, d + 1);
+
+      CLOG(DEBUG, "runner") << i(d + 1) << "Less el2";
+      el2->show(d + 2, "runner");
+
+      Number_p nu = std::dynamic_pointer_cast<Number>(el2);
+      if (nu == nullptr)
+      {
+         std::cout << "only numbers can be compared with <\n";
+         throw std::make_unique<RunError>();
+      }
+      if (last != nullptr && last->getNumber() >= nu->getNumber())
+      {
+         return std::make_shared<Boolean>(false);
+      }
+      last = nu;
+   }
+   return std::make_shared<Boolean>(true);
 }
 
 // Greater
 
 Element_p Greater::evaluate(std::shared_ptr<Context> cx, int d)
 {
-   return std::make_shared<Number>(0);
+   bool bo = true;
+   Number_p last = nullptr;
+   for (Element_p el: elements)
+   {
+      Element_p el2 = el->evaluate(cx, d + 1);
+
+      CLOG(DEBUG, "runner") << i(d + 1) << "Greater el2";
+      el2->show(d + 2, "runner");
+
+      Number_p nu = std::dynamic_pointer_cast<Number>(el2);
+      if (nu == nullptr)
+      {
+         std::cout << "only numbers can be compared with >\n";
+         throw std::make_unique<RunError>();
+      }
+      if (last != nullptr && last->getNumber() <= nu->getNumber())
+      {
+         return std::make_shared<Boolean>(false);
+      }
+      last = nu;
+   }
+   return std::make_shared<Boolean>(true);
 }
 
 // NotEqual
 
 Element_p NotEqual::evaluate(std::shared_ptr<Context> cx, int d)
 {
-   return std::make_shared<Number>(0);
+   bool bo = true;
+   Number_p last = nullptr;
+   for (Element_p el: elements)
+   {
+      Element_p el2 = el->evaluate(cx, d + 1);
+
+      CLOG(DEBUG, "runner") << i(d + 1) << "NotEqual el2";
+      el2->show(d + 2, "runner");
+
+      Number_p nu = std::dynamic_pointer_cast<Number>(el2);
+      if (nu == nullptr)
+      {
+         std::cout << "only numbers can be compared with !=\n";
+         throw std::make_unique<RunError>();
+      }
+      if (last != nullptr && last->getNumber() == nu->getNumber())
+      {
+         return std::make_shared<Boolean>(false);
+      }
+      last = nu;
+   }
+   return std::make_shared<Boolean>(true);
 }
 
 // GreaterEq
 
 Element_p GreaterEq::evaluate(std::shared_ptr<Context> cx, int d)
 {
-   return std::make_shared<Number>(0);
+   bool bo = true;
+   Number_p last = nullptr;
+   for (Element_p el: elements)
+   {
+      Element_p el2 = el->evaluate(cx, d + 1);
+
+      CLOG(DEBUG, "runner") << i(d + 1) << "Less el2";
+      el2->show(d + 2, "runner");
+
+      Number_p nu = std::dynamic_pointer_cast<Number>(el2);
+      if (nu == nullptr)
+      {
+         std::cout << "only numbers can be compared with >=\n";
+         throw std::make_unique<RunError>();
+      }
+      if (last != nullptr && last->getNumber() < nu->getNumber())
+      {
+         return std::make_shared<Boolean>(false);
+      }
+      last = nu;
+   }
+   return std::make_shared<Boolean>(true);
 }
 
 // LessEq
 
 Element_p LessEq::evaluate(std::shared_ptr<Context> cx, int d)
 {
-   return std::make_shared<Number>(0);
+   bool bo = true;
+   Number_p last = nullptr;
+   for (Element_p el: elements)
+   {
+      Element_p el2 = el->evaluate(cx, d + 1);
+
+      CLOG(DEBUG, "runner") << i(d + 1) << "LessEq el2";
+      el2->show(d + 2, "runner");
+
+      Number_p nu = std::dynamic_pointer_cast<Number>(el2);
+      if (nu == nullptr)
+      {
+         std::cout << "only numbers can be compared with <=\n";
+         throw std::make_unique<RunError>();
+      }
+      if (last != nullptr && last->getNumber() > nu->getNumber())
+      {
+         return std::make_shared<Boolean>(false);
+      }
+      last = nu;
+   }
+   return std::make_shared<Boolean>(true);
 }
 
 // Defn
@@ -876,7 +1008,7 @@ Element_p If::capture(Context_p cx, Frame_p fr, int d)
 
 Element_p Println::capture(Context_p cx, Frame_p fr, int d)
 {
-   CLOG(DEBUG, "runner") << i(d) << "Writeln capture";
+   CLOG(DEBUG, "runner") << i(d) << "Println capture";
 
    Println_p pri = std::make_shared<Println>();
 
@@ -887,6 +1019,26 @@ Element_p Println::capture(Context_p cx, Frame_p fr, int d)
       if (pri->body == nullptr)
       {
          std::cout << "Println capture body nullptr\n";
+         throw std::make_unique<RunError>();
+      }
+   }
+
+   return pri;
+}
+
+Element_p Print::capture(Context_p cx, Frame_p fr, int d)
+{
+   CLOG(DEBUG, "runner") << i(d) << "Print capture";
+
+   Print_p pri = std::make_shared<Print>();
+
+   if (body != nullptr)
+   {
+      Element_p bo = body->capture(cx, fr, d + 1);
+      pri->body = std::dynamic_pointer_cast<Body>(body->capture(cx, fr, d + 1));
+      if (pri->body == nullptr)
+      {
+         std::cout << "Print capture body nullptr\n";
          throw std::make_unique<RunError>();
       }
    }
@@ -1091,14 +1243,17 @@ bool Frame::exists(std::string nm)
 
 void Frame::show(int d, const std::string &chan)
 {
-   CLOG(DEBUG, "runner") << i(d) << "Frame";
+   CLOG(DEBUG, chan.c_str()) << i(d) << "Frame " << nr;
 
    for (auto it: bindings)
    {
-      CLOG(DEBUG, "runner") << i(d + 1) << it.first;
+      CLOG(DEBUG, chan.c_str()) << i(d + 1) << it.first;
       if (it.second != nullptr)
       {
-         it.second->show(d + 2, "runner");
+         if (std::dynamic_pointer_cast<Number>(it.second) != nullptr)
+         {
+            it.second->show(d + 2, chan.c_str());
+         }
       }
    }
 }
@@ -1120,6 +1275,7 @@ void Context::push()
 
 void Context::push(Frame_p fr)
 {
+   fr->setNr(frames.size());
    frames.push_front(fr);
 }
 
@@ -1135,12 +1291,14 @@ void Context::add_binding(std::string nm, Element_p el)
 
 Element_p Context::search(std::string nm)
 {
-   //std::cout << "Context search\n";
+   //std::cout << "Context search " << nm << "\n";
    for (Frame_p fra: frames)
    {
       Element_p el = fra->search(nm);
       if (el != nullptr)
       {
+         //el->show(1, "runner");
+         std::cout << "Context search " << nm << " fr " << fra->getNr() << "\n";
          return el;
       }
    }
@@ -1166,7 +1324,7 @@ void Context::show(int d, const std::string &chan)
 
    for (Frame_p fr: frames)
    {
-      fr->show(d + 1, "runner");
+      fr->show(d + 1, chan);
    }
 }
 

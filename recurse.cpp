@@ -47,6 +47,11 @@ type_t Println::getType()
    return tp_pass;
 }
 
+type_t Print::getType()
+{
+   return tp_pass;
+}
+
 type_t If::getType()
 {
    return tp_pass;
@@ -158,6 +163,12 @@ void Ampersand::resetTreetype()
 }
 
 void Println::resetTreetype()
+{
+   setTreetype(tp_undefined);
+   body->resetTreetype();
+}
+
+void Print::resetTreetype()
 {
    setTreetype(tp_undefined);
    body->resetTreetype();
@@ -305,6 +316,13 @@ void Ampersand::determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn>
 }
 
 void Println::determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn> defn)
+{
+   setTreetype(tp_simple);
+   body->determTreetype(main, defn);
+   setTreetype(body->getTreetype());
+}
+
+void Print::determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn> defn)
 {
    setTreetype(tp_simple);
    body->determTreetype(main, defn);
