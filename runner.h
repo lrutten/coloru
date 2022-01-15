@@ -6,6 +6,17 @@
 
 #include "parser.h"
 
+
+enum frame_t
+{
+   fr_undefined,
+   fr_main,
+   fr_defn,
+   fr_lambda,
+   fr_capture,
+   fr_let
+};
+
 // exception klassen
 
 class RunError
@@ -17,6 +28,7 @@ class Frame : public Element
 {
 public:
    Frame();
+   Frame(std::string inf);
    ~Frame();
    void add_binding(std::string nm, Element_p el);
    Element_p search(std::string nm);
@@ -48,10 +60,25 @@ public:
    {
       nr = n;
    }
-
+   int getFrType()
+   {
+      return frtype;
+   }
+   void setFrType(frame_t tp)
+   {
+      frtype = tp;
+   }
+   std::string frametp_as_s();
+   std::string getInfo()
+   {
+      return info;
+   }
+   
 private:
-   int nr;
+   int         nr;
    std::map<std::string, Element_p> bindings;
+   frame_t     frtype;
+   std::string info;
 };
 
 using Frame_p = std::shared_ptr<Frame>;
@@ -61,11 +88,11 @@ class Context
 public:
    Context();
    ~Context();
-   void push();
+   void push(frame_t frtp);
    void push(Frame_p fr);
    void pop();
    void add_binding(std::string nm, Element_p);
-   Element_p search(std::string nm);
+   Element_p search(std::string nm, bool shortsrch = false);
    bool exists(std::string nm);
    void show(int d, const std::string &chan);
 

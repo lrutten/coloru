@@ -25,7 +25,7 @@ std::string i(int d)
    return ids;
 }
 
-Element::Element() : treetype(tp_undefined), hascont(false)
+Element::Element() : treetype(tp_undefined), hascont(false), frame(nullptr)
 {
 }
 
@@ -69,6 +69,19 @@ void Number::show(int d, const std::string &chan)
 {
    //CLOG(DEBUG, chan.c_str()) << "start coloru bis";
    CLOG(DEBUG, chan.c_str())  << i(d) << "Number:" << type_to_s() << " " << number;
+   if (getFrame() != nullptr)
+   {
+      CLOG(DEBUG, chan.c_str())  << i(d + 1) << "%" << getFrame()->getNr() << "-" << getFrame()->getInfo();
+   }
+}
+
+void Number::print()
+{
+   std::cout << number;
+   if (getFrame() != nullptr)
+   {
+      std::cout << "%" << getFrame()->getNr() << "-" << getFrame()->getInfo();
+   }
 }
 
 void Number::format(int d)

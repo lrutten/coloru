@@ -68,6 +68,14 @@ public:
    {
       hascont = hc;
    }
+   std::shared_ptr<Frame> getFrame()
+   {
+      return frame;
+   }
+   void setFrame(std::shared_ptr<Frame> fr)
+   {
+      frame = fr;
+   }
 
    virtual void show(int d, const std::string &chan) = 0;
    virtual void format(int d) = 0;
@@ -101,8 +109,9 @@ public:
    }
 
 private:
-   type_t treetype;
-   bool   hascont;   // has a continuation parameter
+   type_t                 treetype;
+   bool                   hascont;   // has a continuation parameter
+   std::shared_ptr<Frame> frame;
 };
 
 using Element_p = std::shared_ptr<Element>;
@@ -152,6 +161,7 @@ public:
    virtual ~Number();
    void show(int d, const std::string &chan) override;
    void format(int d) override;
+   void print() override;
    Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
    number_t getNumber()
    {
@@ -160,10 +170,6 @@ public:
    virtual std::string info() override
    {
       return "Number";
-   }
-   void print() override
-   {
-      std::cout << number;
    }
    type_t getType() override;
 

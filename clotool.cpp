@@ -21,7 +21,8 @@ enum class Channels
    LEX      = 1 << 2,
    PARSER   = 1 << 3,
    RUNNER   = 1 << 4,
-   RECURSE  = 1 << 5
+   RECURSE  = 1 << 5,
+   CAPTURE  = 1 << 6
 };
 
 template <typename E>
@@ -206,6 +207,8 @@ int main(int argc, char **argv)
    Logchannel logrecurse("recurse");
    logrecurse.disable();
 
+   Logchannel logcapture("capture");
+   logcapture.disable();
 
 
    char *fname;
@@ -280,6 +283,10 @@ int main(int argc, char **argv)
    if ((channels & to_underlying(Channels::RECURSE)) != 0)
    {
       logrecurse.enable(dlevel);
+   }
+   if ((channels & to_underlying(Channels::CAPTURE)) != 0)
+   {
+      logcapture.enable(dlevel);
    }
 
    CLOG(DEBUG, "main") << "start";
