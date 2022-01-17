@@ -1434,8 +1434,8 @@ void Context::breek(Element_p cur)
    if (sink != nullptr)
    {
       setCurrent(cur);
-      //sink->getSink()(shared_from_this());
-      sink->getSink()(true);
+      sink->getSink()(shared_from_this());
+      //sink->getSink()(true);
    }
 }
 
@@ -1472,22 +1472,27 @@ Element_p Runner::debugger()
          cx->pop();
 
          cx->setRunning(false);
-         sink(false);
+         sink(cx);
       });
 
    bool running = true;
    while (running)
    {
-      //Context_p cx = runner.get();
-      running = runner.get();
-      std::cout << "runner breek\n";
-      /*
+      Context_p cx = runner.get();
+      //running = runner.get();
       if (cx != nullptr)
       {
          std::cout << "runner breek\n";
+         std::cout << "   current " << cx->getCurrent()->info() << "\n";
+         cx->getCurrent()->show(0, "main");
+         cx->show(0, "main");
+         
+         
          if (!cx->getRunning())
          {
+            std::cout << "runner breek stop\n";
             running = false;
+            break;
          }
       }
       else
@@ -1495,7 +1500,8 @@ Element_p Runner::debugger()
          std::cout << "runner breek cx nullptr\n";
          running = false;
       }
-       */
+      
+      // continue the coroutine
       runner();
    }
    

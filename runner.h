@@ -87,8 +87,8 @@ using Frame_p = std::shared_ptr<Frame>;
 
 class Context;
 
-//typedef boost::coroutines2::coroutine<std::shared_ptr<Context>> coro_t;
-typedef boost::coroutines2::coroutine<bool> coro_t;
+typedef boost::coroutines2::coroutine<std::shared_ptr<Context>> coro_t;
+//typedef boost::coroutines2::coroutine<bool> coro_t;
 
 
 class Sink
