@@ -3,7 +3,7 @@ CPP_OPTIONS=-g -std=c++17
 all: coloru
 
 coloru: clotool.o textfile.o lex.o parser.o runner.o recurse.o easylogging++.o
-	g++ -o coloru clotool.o textfile.o lex.o parser.o runner.o recurse.o easylogging++.o
+	g++ -o coloru clotool.o textfile.o lex.o parser.o runner.o recurse.o easylogging++.o -lboost_coroutine -lboost_context -lboost_thread -lboost_system
 
 clotool.o: clotool.cpp textfile.h lex.h parser.h runner.h
 	g++ -c ${CPP_OPTIONS} clotool.cpp

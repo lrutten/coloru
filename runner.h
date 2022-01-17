@@ -3,6 +3,7 @@
 
 #include <deque>
 #include <map>
+#include <boost/coroutine2/all.hpp>
 
 #include "parser.h"
 
@@ -83,7 +84,31 @@ private:
 
 using Frame_p = std::shared_ptr<Frame>;
 
-class Context
+
+class Context;
+
+//typedef boost::coroutines2::coroutine<std::shared_ptr<Context>> coro_t;
+typedef boost::coroutines2::coroutine<bool> coro_t;
+
+
+class Sink
+{
+public:
+   Sink(coro_t::push_type &snk);
+   coro_t::push_type &getSink()
+   {
+      return sink;
+   }
+   
+private:
+   coro_t::push_type   &sink;
+};
+
+using Sink_p = std::shared_ptr<Sink>;
+
+
+ 
+class Context : public std::enable_shared_from_this<Context>
 {
 public:
    Context();
@@ -95,9 +120,38 @@ public:
    Element_p search(std::string nm, bool shortsrch = false);
    bool exists(std::string nm);
    void show(int d, const std::string &chan);
+   Sink_p getSink()
+   {
+      return sink;
+   }
+   void setSink(Sink_p s)
+   {
+      running = true;
+      sink = s;
+   }
+   Element_p getCurrent()
+   {
+      return current;
+   }
+   void setCurrent(Element_p e)
+   {
+      current = e;
+   }
+   bool getRunning()
+   {
+      return running;
+   }
+   void setRunning(bool ru)
+   {
+      running = ru;
+   }
+   void breek(Element_p cur);
 
 private:
    std::deque<Frame_p> frames;
+   Sink_p              sink;
+   Element_p           current;
+   bool                running;
 };
 
 using Context_p = std::shared_ptr<Context>;
@@ -111,6 +165,7 @@ public:
    {
    }
    Element_p run();
+   Element_p debugger();
 
 private:
    Element_p root;

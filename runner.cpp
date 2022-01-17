@@ -162,6 +162,8 @@ Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
 {
    CLOG(DEBUG, "runner") << i(d) << "Call evaluate() " << type_to_s();
 
+   cx->breek(shared_from_this());
+   
    Element_p  el = get(0);
    while (std::dynamic_pointer_cast<Call>(el) != nullptr)
    {
@@ -1294,9 +1296,16 @@ void Frame::show(int d, const std::string &chan)
    }
 }
 
+// Sink
+
+Sink::Sink(coro_t::push_type &snk) : sink(snk)
+{
+}
+
+
 // Context
 
-Context::Context()
+Context::Context() : sink(nullptr)
 {
 }
 
@@ -1419,6 +1428,17 @@ void Context::show(int d, const std::string &chan)
    }
 }
 
+void Context::breek(Element_p cur)
+{
+   // is debugger active?
+   if (sink != nullptr)
+   {
+      setCurrent(cur);
+      //sink->getSink()(shared_from_this());
+      sink->getSink()(true);
+   }
+}
+
 // Runner
 
 Runner::Runner(Element_p rt) : root(rt)
@@ -1433,4 +1453,51 @@ Element_p Runner::run()
    Element_p rs = root->evaluate(cx, 0);
    cx->pop();
    return rs;
+}
+
+Element_p Runner::debugger()
+{
+   CLOG(DEBUG, "runner") << "start debugger";
+   
+   coro_t::pull_type runner(
+      [this](coro_t::push_type &sink)
+      {
+         Sink_p si = std::make_shared<Sink>(sink);
+         
+         Context_p cx = std::make_shared<Context>();
+         cx->setSink(si);
+         
+         cx->push(fr_main);
+         Element_p rs = root->evaluate(cx, 0);
+         cx->pop();
+
+         cx->setRunning(false);
+         sink(false);
+      });
+
+   bool running = true;
+   while (running)
+   {
+      //Context_p cx = runner.get();
+      running = runner.get();
+      std::cout << "runner breek\n";
+      /*
+      if (cx != nullptr)
+      {
+         std::cout << "runner breek\n";
+         if (!cx->getRunning())
+         {
+            running = false;
+         }
+      }
+      else
+      {
+         std::cout << "runner breek cx nullptr\n";
+         running = false;
+      }
+       */
+      runner();
+   }
+   
+   return nullptr;
 }

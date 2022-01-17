@@ -160,8 +160,9 @@ private:
 
 
 //bool debug   = false;
-bool trans   = false;
-bool showclj = false;
+bool trans    = false;
+bool showclj  = false;
+bool debugger = false;
 
 // options
 //
@@ -215,7 +216,7 @@ int main(int argc, char **argv)
    int   dlevel;
    int   channels;
    int   opt;
-   while ((opt = getopt(argc, argv, "ltc:d:f:")) != -1)
+   while ((opt = getopt(argc, argv, "eltc:d:f:")) != -1)
    {
       switch (opt)
       {
@@ -255,6 +256,10 @@ int main(int argc, char **argv)
 
          case 'l':
             showclj = true;
+            break;
+
+         case 'e':
+            debugger = true;
             break;
       }
    }
@@ -312,16 +317,33 @@ int main(int argc, char **argv)
 
       if (!showclj)
       {
-         Runner_p ru = std::make_shared<Runner>(root);
-         Element_p res = ru->run();
-         std::cout << "Result:\n";
-         if (res != nullptr)
+         if (!debugger)
          {
-            res->show(1, "main");
+            Runner_p ru = std::make_shared<Runner>(root);
+            Element_p res = ru->run();
+            std::cout << "Result:\n";
+            if (res != nullptr)
+            {
+               res->show(1, "main");
+            }
+            else
+            {
+               std::cout << "nullptr\n";
+            }
          }
          else
          {
-            std::cout << "nullptr\n";
+            Runner_p ru = std::make_shared<Runner>(root);
+            Element_p res = ru->debugger();
+            std::cout << "Result:\n";
+            if (res != nullptr)
+            {
+               res->show(1, "main");
+            }
+            else
+            {
+               std::cout << "nullptr\n";
+            }
          }
       }
       CLOG(DEBUG, "main") << "---- root ----";
