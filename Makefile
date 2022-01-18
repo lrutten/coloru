@@ -1,4 +1,4 @@
-CPP_OPTIONS=-g -std=c++17
+CPP_OPTIONS=-g -std=c++20
 
 all: coloru
 

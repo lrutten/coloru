@@ -20,7 +20,5 @@
    )
 )
 
-(let [res (fib 5 (fn [value] value))]
-   (println "(fib 5) is " res)
-)
+(fib 5 (fn [value] value))
 

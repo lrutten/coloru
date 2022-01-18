@@ -1,4 +1,5 @@
 #include <iostream>
+#include <ranges>
 
 #include "easylogging++.h"
 #include "runner.h"
@@ -162,7 +163,7 @@ Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
 {
    CLOG(DEBUG, "runner") << i(d) << "Call evaluate() " << type_to_s();
 
-   cx->breek(shared_from_this());
+   //cx->breek(shared_from_this());
    
    Element_p  el = get(0);
    while (std::dynamic_pointer_cast<Call>(el) != nullptr)
@@ -290,6 +291,7 @@ Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
             fr->setFrType(fr_lambda);
             
             cx->push(fr);
+            cx->breek(shared_from_this());
             rs = fuu->evaluate(cx, d + 1);
             cx->pop();
          }
@@ -318,6 +320,7 @@ Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
                   // simple call
 
                   cx->push(fr);
+                  cx->breek(shared_from_this());
                   rs = fuu->evaluate(cx, d + 1);
                   Frame_p fr2 = std::dynamic_pointer_cast<Frame>(rs);
                   cx->pop();
@@ -1422,7 +1425,8 @@ void Context::show(int d, const std::string &chan)
 {
    CLOG(DEBUG, chan.c_str()) << i(d) << "Context #" << frames.size();
 
-   for (Frame_p fr: frames)
+   //for (Frame_p fr: frames)
+   for (Frame_p fr: std::ranges::views::reverse(frames))
    {
       fr->show(d + 1, chan);
    }
@@ -1479,20 +1483,71 @@ Element_p Runner::debugger()
    while (running)
    {
       Context_p cx = runner.get();
-      //running = runner.get();
       if (cx != nullptr)
       {
-         std::cout << "runner breek\n";
-         std::cout << "   current " << cx->getCurrent()->info() << "\n";
-         cx->getCurrent()->show(0, "main");
-         cx->show(0, "main");
-         
-         
          if (!cx->getRunning())
          {
             std::cout << "runner breek stop\n";
             running = false;
             break;
+         }
+
+         std::cout << "current " << cx->getCurrent()->info() << "\n";
+         std::cout << ">";
+
+         //cx->getCurrent()->show(0, "main");
+         //cx->show(0, "main");
+
+         std::string line;
+         std::cin >> line;
+         
+         bool debugmode = true;
+         while (debugmode)
+         {
+            if (line == "e")
+            {
+               // exit
+               debugmode = false;
+               running = false;
+            }
+            else
+            if (line == "c")
+            {
+               // do next step
+               debugmode = false;
+            }
+            else
+            if (line == "o")
+            {
+               // show context
+               cx->show(0, "main");
+            }
+            else
+            if (line == "u")
+            {
+               // show current element
+               cx->getCurrent()->show(0, "main");
+            }
+            else
+            if (line == "h")
+            {
+               // show help
+               std::cout << "   e    exit\n";
+               std::cout << "   c    step\n";
+               std::cout << "   o    show context\n";
+               std::cout << "   u    show element\n";
+               std::cout << "   h    help\n";
+            }
+            else
+            {
+               cx->search(line);
+            }
+
+            if (debugmode)
+            {
+               std::cout << ">";
+               std::cin >> line;
+            }
          }
       }
       else
@@ -1501,8 +1556,11 @@ Element_p Runner::debugger()
          running = false;
       }
       
-      // continue the coroutine
-      runner();
+      if (running)
+      {
+         // continue the coroutine
+         runner();
+      }
    }
    
    return nullptr;
