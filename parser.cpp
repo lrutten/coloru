@@ -11,7 +11,7 @@ void indent(int d)
 {
    while (d-- > 0)
    {
-      printf("   ");
+      printf(" ");
    }
 }
 
@@ -20,7 +20,7 @@ std::string i(int d)
    std::string ids = "";
    while (d-- > 0)
    {
-      ids += "   ";
+      ids += " ";
    }
    return ids;
 }

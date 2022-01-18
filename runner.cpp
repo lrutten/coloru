@@ -194,7 +194,7 @@ Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
          Fn_p     fuu = nullptr;
          if (sy != nullptr)
          {
-            Element_p fun = cx->search(sy->getText(), true);
+            Element_p fun = cx->search(sy->getText(), d + 1, "runner", true);
             if (fun == nullptr)
             {
                std::cout << "function " << sy->getText() << " not found\n";
@@ -214,7 +214,8 @@ Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
                la = std::dynamic_pointer_cast<Lambda>(fun);
                if (la != nullptr)
                {
-                  CLOG(DEBUG, "runner") << i(d + 1) << "lambda2";
+                  // probably never reached
+                  CLOG(DEBUG, "capture") << i(d + 1) << "lambda2";
                   bi = std::dynamic_pointer_cast<Bind>(la->capture(cx, nullptr, d + 1));
                   fuu = la->getFn();
                   la = nullptr;
@@ -727,7 +728,7 @@ Element_p Defn::evaluate(std::shared_ptr<Context> cx, int d)
 
 Element_p Lambda::evaluate(std::shared_ptr<Context> cx, int d)
 {
-   CLOG(DEBUG, "runner") << i(d) << "Lambda evaluate";
+   CLOG(DEBUG, "capture") << i(d) << "Lambda evaluate, lambda3";
    return capture(cx, nullptr, d + 1);
 }
 
@@ -745,10 +746,10 @@ Element_p Fn::evaluate(std::shared_ptr<Context> cx, int d)
 
 void Bind::show(int d, const std::string &chan)
 {
-   CLOG(DEBUG, "runner") << i(d) << "Bind";
+   CLOG(DEBUG, chan.c_str()) << i(d) << "Bind";
 
-   frame->show(d + 1, "runner");
-   lambda->show(d + 1, "runner");
+   frame->show(d + 1, chan.c_str());
+   lambda->show(d + 1, chan.c_str());
 }
 
 Element_p Bind::evaluate(std::shared_ptr<Context> cx, int d)
@@ -796,7 +797,7 @@ Element_p If::evaluate(std::shared_ptr<Context> cx, int d)
 
 Element_p Symbol::evaluate(std::shared_ptr<Context> cx, int d)
 {
-   Element_p val = cx->search(text);
+   Element_p val = cx->search(text, d, "runner");
    if (val == nullptr)
    {
       std::cout << "variable " << text << " not found\n";
@@ -999,7 +1000,7 @@ Element_p Elements::capture(Context_p cx, Frame_p fr, int d)
       Element_p el2 = el->capture(cx, fr, d + 1);
       els->add(el2);
    }
-   els->show(d + 1, "capture");
+   //els->show(d + 1, "capture");
    return els;
 }
 
@@ -1095,7 +1096,7 @@ Element_p Let::capture(Context_p cx, Frame_p fr, int d)
       throw std::make_unique<RunError>();
    }
 
-   lt->show(d + 1, "capture");
+   //lt->show(d + 1, "capture");
 
    return lt;
 }
@@ -1133,7 +1134,7 @@ Element_p Fn::capture(Context_p cx, Frame_p fr, int d)
       throw std::make_unique<RunError>();
    }
 
-   fn->show(d + 1, "capture");
+   //fn->show(d + 1, "capture");
 
    return fn;
 }
@@ -1174,14 +1175,14 @@ Element_p Symbol::capture(Context_p cx, Frame_p fr, int d)
 {
    CLOG(DEBUG, "capture") << i(d) << "Symbol capture " << text;
 
-   cx->show(d + 1, "capture");
+   //cx->show(d + 1, "capture");
 
    bool exi = cx->exists(text);
    if (exi)
    {
       CLOG(DEBUG, "capture") << i(d + 1) << "Symbol capture found " << text;
 
-      Element_p val = cx->search(text);
+      Element_p val = cx->search(text, d, "capture");
       if (val != nullptr)
       {
          CLOG(DEBUG, "capture") << i(d + 1) << "val " << text << " not null";
@@ -1189,7 +1190,7 @@ Element_p Symbol::capture(Context_p cx, Frame_p fr, int d)
 
          // add new binding
          fr->add_binding(text, val);
-         cx->show(d + 2, "capture");
+         //cx->show(d + 2, "capture");
       }
       else
       {
@@ -1295,6 +1296,19 @@ void Frame::show(int d, const std::string &chan)
          {
             it.second->show(d + 2, chan.c_str());
          }
+         else
+         if (std::dynamic_pointer_cast<Bind>(it.second) != nullptr)
+         {
+            it.second->show(d + 2, chan.c_str());
+         }
+         else
+         {
+            CLOG(DEBUG, chan.c_str()) << i(d + 2) << "type " << it.second->info();
+         }
+      }
+      else
+      {
+         CLOG(DEBUG, chan.c_str()) << i(d) << "no value";
       }
    }
 }
@@ -1341,18 +1355,18 @@ void Context::add_binding(std::string nm, Element_p el)
 
 int scounter = 0;
 
-Element_p Context::search(std::string nm, bool shortsrch)
+Element_p Context::search(std::string nm, int d, const std::string &chan, bool shortsrch)
 {
    bool debug = true;
    
-   show(5, "capture");
+   //show(5, "capture");
    
-   CLOG(DEBUG, "capture") << "Context search " << nm;
+   CLOG(DEBUG, chan.c_str()) << i(d) << "Context search " << nm;
    // search in all the recent frames 
    // until the first defn or capture frame is encountered
    for (Frame_p fra: frames)
    {
-      CLOG(DEBUG, "capture") << "      fr " << fra->getNr();
+      CLOG(DEBUG, chan.c_str()) << i(d)  << "      fr " << fra->getNr();
       Element_p el = fra->search(nm);
       if (el != nullptr)
       {
@@ -1404,7 +1418,7 @@ Element_p Context::search(std::string nm, bool shortsrch)
          }
       }
    }
-   CLOG(DEBUG, "capture") << "not found " << nm;
+   CLOG(DEBUG, chan.c_str())  << i(d) << "not found " << nm;
    return nullptr;
 }
 
@@ -1520,13 +1534,13 @@ Element_p Runner::debugger()
             if (line == "o")
             {
                // show context
-               cx->show(0, "main");
+               cx->show(0, "debugger");
             }
             else
             if (line == "u")
             {
                // show current element
-               cx->getCurrent()->show(0, "main");
+               cx->getCurrent()->show(0, "debugger");
             }
             else
             if (line == "h")
@@ -1540,7 +1554,15 @@ Element_p Runner::debugger()
             }
             else
             {
-               cx->search(line);
+               Element_p el = cx->search(line, 0, "debugger");
+               if (el != nullptr)
+               {
+                  el->show(0, "debugger");
+               }
+               else
+               {
+                  std::cout << "name not " << line << " found\n";
+               }
             }
 
             if (debugmode)

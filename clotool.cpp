@@ -22,7 +22,8 @@ enum class Channels
    PARSER   = 1 << 3,
    RUNNER   = 1 << 4,
    RECURSE  = 1 << 5,
-   CAPTURE  = 1 << 6
+   CAPTURE  = 1 << 6,
+   DEBUGGER = 1 << 7
 };
 
 template <typename E>
@@ -211,6 +212,8 @@ int main(int argc, char **argv)
    Logchannel logcapture("capture");
    logcapture.disable();
 
+   Logchannel logdebugger("debugger");
+   logdebugger.enable();
 
    char *fname;
    int   dlevel;
@@ -338,7 +341,7 @@ int main(int argc, char **argv)
             std::cout << "Result:\n";
             if (res != nullptr)
             {
-               res->show(1, "main");
+               res->show(1, "debugger");
             }
             else
             {

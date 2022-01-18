@@ -117,7 +117,7 @@ public:
    void push(Frame_p fr);
    void pop();
    void add_binding(std::string nm, Element_p);
-   Element_p search(std::string nm, bool shortsrch = false);
+   Element_p search(std::string nm, int d, const std::string &chan, bool shortsrch = false);
    bool exists(std::string nm);
    void show(int d, const std::string &chan);
    Sink_p getSink()
