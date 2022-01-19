@@ -749,7 +749,7 @@ void Bind::show(int d, const std::string &chan)
    CLOG(DEBUG, chan.c_str()) << i(d) << "Bind";
 
    frame->show(d + 1, chan.c_str());
-   lambda->show(d + 1, chan.c_str());
+   //lambda->show(d + 1, chan.c_str());
 }
 
 Element_p Bind::evaluate(std::shared_ptr<Context> cx, int d)
@@ -1152,6 +1152,7 @@ Element_p Defn::capture(Context_p cx, Frame_p fr, int d)
    return dfn;
 }
 
+/*
 Element_p Lambda::capture(Context_p cx, Frame_p fr, int d)
 {
    CLOG(DEBUG, "capture") << i(d) << "Lambda capture";
@@ -1170,6 +1171,28 @@ Element_p Lambda::capture(Context_p cx, Frame_p fr, int d)
    bi->show(d + 1, "capture");
    return bi;
 }
+ */
+
+Element_p Lambda::capture(Context_p cx, Frame_p fr, int d)
+{
+   CLOG(DEBUG, "capture") << i(d) << "Lambda capture";
+
+   Lambda_p la = std::make_shared<Lambda>();
+   Bind_p   bi = std::make_shared<Bind>();
+
+   //bi->setLambda(la);
+   bi->setLambda(std::dynamic_pointer_cast<Lambda>(shared_from_this()));
+
+   Frame_p fr2 = std::make_shared<Frame>("cla");
+   fr2->setFrType(fr_capture);
+   bi->setFrame(fr2);
+
+   Element_p f = fn->capture(cx, fr2, d + 1);
+   //la->fn = std::dynamic_pointer_cast<Fn>(f);
+   bi->show(d + 1, "capture");
+   return bi;
+}
+
 
 Element_p Symbol::capture(Context_p cx, Frame_p fr, int d)
 {

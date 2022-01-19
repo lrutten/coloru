@@ -43,4 +43,6 @@ clean:
 	rm -vf *.o
 	rm -vf coloru
 	rm -vf core
+	rm -vf *~
+
 
