@@ -182,6 +182,8 @@ Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
       {
          CLOG(DEBUG, "runner") << i(d + 1) << "callable is builtin";
 
+         // no break for the debugger
+         
          Element_p rs = bin->evaluate2(cx, shared_from_this(), d + 1);
          return rs;
       }
@@ -240,7 +242,7 @@ Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
          else
          if (bi != nullptr)
          {
-            // probably never reached
+            // immediate call of lambda
             CLOG(DEBUG, "runner") << i(d + 1) << "bind2";
             fuu = bi->getLambda()->getFn();
          }
@@ -292,7 +294,10 @@ Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
             fr->setFrType(fr_lambda);
             
             cx->push(fr);
+
+            // break the execution for the debugger
             cx->breek(shared_from_this());
+
             rs = fuu->evaluate(cx, d + 1);
             cx->pop();
          }
@@ -321,7 +326,10 @@ Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
                   // simple call
 
                   cx->push(fr);
+                  
+                  // break the execution for the debugger
                   cx->breek(shared_from_this());
+
                   rs = fuu->evaluate(cx, d + 1);
                   Frame_p fr2 = std::dynamic_pointer_cast<Frame>(rs);
                   cx->pop();
@@ -1152,32 +1160,40 @@ Element_p Defn::capture(Context_p cx, Frame_p fr, int d)
    return dfn;
 }
 
-/*
 Element_p Lambda::capture(Context_p cx, Frame_p fr, int d)
 {
    CLOG(DEBUG, "capture") << i(d) << "Lambda capture";
 
+   // make a new Lambda
    Lambda_p la = std::make_shared<Lambda>();
    Bind_p   bi = std::make_shared<Bind>();
 
+   // and keep in the Bind
    bi->setLambda(la);
 
    Frame_p fr2 = std::make_shared<Frame>("cla");
    fr2->setFrType(fr_capture);
    bi->setFrame(fr2);
 
+   // keep returned value from capture as fn
    Element_p f = fn->capture(cx, fr2, d + 1);
    la->fn = std::dynamic_pointer_cast<Fn>(f);
+
    bi->show(d + 1, "capture");
    return bi;
 }
- */
+
+/*
+BAD version.
+
+This version of Lambda::capture creates an endless loop.
+The creation of a copy of the Lambda is mandatory.
 
 Element_p Lambda::capture(Context_p cx, Frame_p fr, int d)
 {
    CLOG(DEBUG, "capture") << i(d) << "Lambda capture";
 
-   Lambda_p la = std::make_shared<Lambda>();
+   //Lambda_p la = std::make_shared<Lambda>();
    Bind_p   bi = std::make_shared<Bind>();
 
    //bi->setLambda(la);
@@ -1192,7 +1208,7 @@ Element_p Lambda::capture(Context_p cx, Frame_p fr, int d)
    bi->show(d + 1, "capture");
    return bi;
 }
-
+ */
 
 Element_p Symbol::capture(Context_p cx, Frame_p fr, int d)
 {
@@ -1326,12 +1342,12 @@ void Frame::show(int d, const std::string &chan)
          }
          else
          {
-            CLOG(DEBUG, chan.c_str()) << i(d + 2) << "type " << it.second->info();
+            CLOG(DEBUG, chan.c_str()) << i(d + 2) << "type " << it.second->info(); 
          }
       }
       else
       {
-         CLOG(DEBUG, chan.c_str()) << i(d) << "no value";
+         CLOG(DEBUG, chan.c_str()) << i(d) << "no value"; 
       }
    }
 }
@@ -1389,7 +1405,7 @@ Element_p Context::search(std::string nm, int d, const std::string &chan, bool s
    // until the first defn or capture frame is encountered
    for (Frame_p fra: frames)
    {
-      CLOG(DEBUG, chan.c_str()) << i(d)  << "      fr " << fra->getNr();
+      CLOG(DEBUG, chan.c_str()) <<i(d) << "      fr " << fra->getNr();
       Element_p el = fra->search(nm);
       if (el != nullptr)
       {
@@ -1441,7 +1457,7 @@ Element_p Context::search(std::string nm, int d, const std::string &chan, bool s
          }
       }
    }
-   CLOG(DEBUG, chan.c_str())  << i(d) << "not found " << nm;
+   CLOG(DEBUG, chan.c_str()) << i(d) << "not found " << nm;
    return nullptr;
 }
 
@@ -1537,13 +1553,13 @@ Element_p Runner::debugger()
 
          std::string line;
          std::cin >> line;
-         
+
          bool debugmode = true;
          while (debugmode)
          {
-            if (line == "e")
+            if (line == "q")
             {
-               // exit
+               // quit
                debugmode = false;
                running = false;
             }
@@ -1569,7 +1585,7 @@ Element_p Runner::debugger()
             if (line == "h")
             {
                // show help
-               std::cout << "   e    exit\n";
+               std::cout << "   q    exit\n";
                std::cout << "   c    step\n";
                std::cout << "   o    show context\n";
                std::cout << "   u    show element\n";

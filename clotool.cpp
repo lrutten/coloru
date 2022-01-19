@@ -189,7 +189,6 @@ int main(int argc, char **argv)
    //LOG(INFO) << "Log using default file";
 
 
-
    Logchannel logmain("main");
    logmain.disable();
    CLOG(DEBUG, "main") << "start coloru";
@@ -214,6 +213,7 @@ int main(int argc, char **argv)
 
    Logchannel logdebugger("debugger");
    logdebugger.enable();
+
 
    char *fname;
    int   dlevel;
