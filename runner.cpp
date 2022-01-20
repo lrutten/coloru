@@ -1570,6 +1570,29 @@ Element_p Runner::debugger()
                debugmode = false;
             }
             else
+            if (line == "r")
+            {
+               // do run
+               bool ru = true;
+               while (ru)
+               {
+                  runner();
+
+                  Context_p cx = runner.get();
+                  if (cx != nullptr)
+                  {
+                     //std::cout << "current " << cx->getCurrent()->info() << "\n";
+                     
+                     if (!cx->getRunning())
+                     {
+                        std::cout << "runner breek stop\n";
+                        ru = false;
+                        exit(0);
+                     }
+                  }
+               }
+            }
+            else
             if (line == "o")
             {
                // show context
@@ -1587,6 +1610,7 @@ Element_p Runner::debugger()
                // show help
                std::cout << "   q    exit\n";
                std::cout << "   c    step\n";
+               std::cout << "   r    run\n";
                std::cout << "   o    show context\n";
                std::cout << "   u    show element\n";
                std::cout << "   h    help\n";
