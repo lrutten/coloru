@@ -11,11 +11,15 @@
 (defn fib [n d k]
    (indent d)
    (println "a called (fib " n ")")
+   (indent d)
+   (println (context!))
    (if
       (< n 3)
       (let []
          (indent (+ d 1))
          (println "b call (k 1)")
+         ;(indent d)
+         ;(println (context!))
          (k
             1 (+ d 1)
          )
@@ -29,6 +33,8 @@
             (fn [value1 d]
                (indent (+ d 1))
                (println "d called (fn " value1 ")")
+               (indent (+ d 1))
+               (println (context!))
 
                (indent (+ d 1))
                (println "e call (fib " (- n  2) "(fn ...))")
@@ -38,6 +44,8 @@
                   (fn [value2 d] 
                      (indent (+ d 1))
                      (println "f (fn " value2 ")")
+                     (indent (+ d 1))
+                     (println (context!))
 
                      (indent (+ d 1))
                      (println "g call (k " value1 " " value2 ")")

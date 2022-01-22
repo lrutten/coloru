@@ -57,10 +57,10 @@ public:
    {
       return nr;
    }
-   void setNr(int n)
-   {
-      nr = n;
-   }
+   //void setNr(int n)
+   //{
+   //   nr = n;
+   //}
    int getFrType()
    {
       return frtype;
@@ -74,8 +74,13 @@ public:
    {
       return info;
    }
+   const std::map<std::string, Element_p> &getBindings()
+   {
+      return bindings;
+   }
    
 private:
+   static int counter;
    int         nr;
    std::map<std::string, Element_p> bindings;
    frame_t     frtype;
@@ -144,6 +149,14 @@ public:
    void setRunning(bool ru)
    {
       running = ru;
+   }
+   int size()
+   {
+      return frames.size();
+   }
+   const std::deque<Frame_p> &getFrames()
+   {
+      return frames;
    }
    void breek(Element_p cur);
 

@@ -1,4 +1,5 @@
 #include <iostream>
+#include <sstream>
 #include <ranges>
 
 #include "easylogging++.h"
@@ -858,6 +859,11 @@ Element_p Builtin::evaluate2(std::shared_ptr<Context> cx, std::shared_ptr<Elemen
          {
             npar = 1;
          }
+         else
+         if (bitext == "context!")
+         {
+            npar = 0;
+         }
 
          if (ca2->size() == npar)
          {
@@ -926,6 +932,50 @@ Element_p Builtin::evaluate2(std::shared_ptr<Context> cx, std::shared_ptr<Elemen
                   std::cout << "empty? builtin expects a list\n";
                   throw std::make_shared<RunError>();
                }
+            }
+            else
+            if (bitext == "context!")
+            {
+               CLOG(DEBUG, "runner") << i(d + 1) << "context! executes";
+
+               std::stringstream ss;
+               ss << "<#" << cx->size();
+               for (Frame_p fr: std::ranges::views::reverse(cx->getFrames()))
+               {
+                  ss << "|" << fr->getNr() << "-";
+                  for (auto it: fr->getBindings())
+                  {
+                     std::string nm = it.first;
+                     Element_p  val = it.second;
+                     ss << nm;
+                     Number_p nu = std::dynamic_pointer_cast<Number>(val);
+                     if (nu != nullptr)
+                     {
+                        ss << "=(" << nu->type_to_s() << ")" << nu->getNumber();
+                        if (nu->getFrame() != nullptr)
+                        {
+                           //ss << "%" << nu->getFrame()->getNr() << "$" << nu->getFrame()->getInfo();
+                           ss << "%" << nu->getFrame()->getNr();
+                        }
+                     }
+                     else
+                     if (std::dynamic_pointer_cast<Bind>(val) != nullptr)
+                     {
+                        Bind_p bi = std::dynamic_pointer_cast<Bind>(val);
+                        ss << "bind%" << bi->getFrame()->getNr();
+                     }
+                     else
+                     {
+                        if (val->info() != "Defn")
+                        {
+                           ss << ":" << val->info();
+                        }
+                     }
+                  }
+                  ss << "\n";
+               }
+               ss << ">";
+               return std::make_shared<Text>(ss.str());
             }
          }
          else
@@ -1258,11 +1308,13 @@ Element_p Text::capture(Context_p cx, Frame_p fr, int d)
 
 // Frame
 
-Frame::Frame() : frtype(fr_undefined), info("")
+int Frame::counter = 0;
+
+Frame::Frame() : frtype(fr_undefined), info(""), nr(counter++)
 {
 }
 
-Frame::Frame(std::string inf) : frtype(fr_undefined), info(inf)
+Frame::Frame(std::string inf) : frtype(fr_undefined), info(inf), nr(counter++)
 {
 }
 
@@ -1378,7 +1430,7 @@ void Context::push(frame_t frtp)
 
 void Context::push(Frame_p fr)
 {
-   fr->setNr(frames.size());
+   //fr->setNr(frames.size());
    frames.push_front(fr);
 }
 
