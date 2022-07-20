@@ -971,6 +971,7 @@ Element_p Builtin::evaluate2(std::shared_ptr<Context> cx, std::shared_ptr<Elemen
                            ss << ":" << val->info();
                         }
                      }
+                     ss << " ";
                   }
                   ss << "\n";
                }
