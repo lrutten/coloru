@@ -184,8 +184,9 @@ Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
          CLOG(DEBUG, "runner") << i(d + 1) << "callable is builtin";
 
          // no break for the debugger
-         
+         cx->push_scope(sc_defn);
          Element_p rs = bin->evaluate2(cx, shared_from_this(), d + 1);
+         cx->pop_scope();
          return rs;
       }
       else
@@ -262,10 +263,9 @@ Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
 
          CLOG(DEBUG, "runner") << i(d + 1) << "fparsize " << fparsize << " aparsize " << fparsize;
 
+          // assign all actual parameters to the formal parameters
          Frame_p fr = std::make_shared<Frame>("params");
          fr->setFrType(fr_defn);
-         
-         // assign all actual parameters to the formal parameters
          fuu->assignParameters(cx, fr, shared_from_this(), d + 1);
 
          if (bi != nullptr)
@@ -293,7 +293,8 @@ Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
             CLOG(DEBUG, "runner") << i(d + 1) << "no symbol call";
 
             fr->setFrType(fr_lambda);
-            
+
+            cx->push_scope(sc_lambda);
             cx->push(fr, d + 1, "runner");
 
             // break the execution for the debugger
@@ -301,6 +302,7 @@ Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
 
             rs = fuu->evaluate(cx, d + 1);
             cx->pop();
+            cx->pop_scope();
          }
          else
          {
@@ -326,6 +328,7 @@ Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
 
                   // simple call
 
+                  cx->push_scope(sc_defn);
                   cx->push(fr, d + 1, "runner");
                   
                   // break the execution for the debugger
@@ -334,6 +337,7 @@ Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
                   rs = fuu->evaluate(cx, d + 1);
                   Frame_p fr2 = std::dynamic_pointer_cast<Frame>(rs);
                   cx->pop();
+                  cx->pop_scope();
                   if (fr2 != nullptr)
                   {
                      // the evaluate returned a frame,
@@ -945,7 +949,8 @@ Element_p Builtin::evaluate2(std::shared_ptr<Context> cx, std::shared_ptr<Elemen
 
                std::stringstream ss;
                ss << "<#" << cx->size();
-               for (Frame_p fr: std::ranges::views::reverse(cx->getFrames()))
+               // for (Frame_p fr: std::ranges::views::reverse(cx->getFrames()))
+               for (Frame_p fr: cx->getFrames())
                {
                   ss << "|" << fr->getNr() << "-";
                   for (auto it: fr->getBindings())
@@ -1350,10 +1355,129 @@ Sink::Sink(coro_t::push_type &snk) : sink(snk)
 }
 
 
+// Scope
+int Scope::counter = 0;
+
+
+Scope::Scope(scope_t tp) : nr(counter++)
+{
+    sctype = tp;
+}
+
+Scope::~Scope()
+{
+}
+
+void Scope::push(frame_t frtp)
+{
+    Frame_p fr = std::make_shared<Frame>("first");
+    fr->setFrType(frtp);
+    frames.push_front(fr);
+}
+
+void Scope::push(Frame_p fr, int d, const std::string &chan)
+{
+    CLOG(DEBUG, chan.c_str()) << i(d + 1) << "Scope push fr " << fr->getNr();
+    //fr->setNr(frames.size());
+    frames.push_front(fr);
+}
+
+void Scope::pop()
+{
+    frames.pop_front();
+}
+
+void Scope::add_binding(std::string nm, Element_p el)
+{
+    frames.front()->add_binding(nm, el);
+}
+
+int scounter1 = 0;
+
+Element_p Scope::search(std::string nm, int d, const std::string &chan, bool shortsrch)
+{
+    shortsrch = true;
+    bool debug = true;
+
+    //show(5, "capture");
+
+    CLOG(DEBUG, chan.c_str()) << i(d) << "Scope search " << nm << " short " << shortsrch;
+    // search in all the recent frames
+    // until the first defn or capture frame is encountered
+    for (Frame_p fra: frames)
+    {
+        //CLOG(DEBUG, chan.c_str()) <<i(d + 1) << "fr " << fra->getNr();
+        fra->show(d + 2, chan.c_str());
+        Element_p el = fra->search(nm);
+        if (el != nullptr)
+        {
+            //el->show(1, "capture");
+            if (el->getFrame() == nullptr)
+            {
+                el->setFrame(fra);
+            }
+            return el;
+        }
+
+        /*
+        if (fra->getFrType() == fr_defn || fra->getFrType() == fr_capture)
+        {
+            if (shortsrch)
+            {
+                break;
+            }
+        }
+         */
+    }
+
+    // search in the main frame
+    for (Frame_p fra: frames)
+    {
+        if (fra->getFrType() == fr_main)
+        {
+            Element_p el = fra->search(nm);
+            if (el != nullptr)
+            {
+                //el->show(1, "runner");
+                return el;
+            }
+        }
+    }
+    CLOG(DEBUG, chan.c_str()) << i(d) << "not found " << nm;
+    return nullptr;
+}
+
+bool Scope::exists(std::string nm)
+{
+    for (Frame_p fra: frames)
+    {
+        bool exi = fra->exists(nm);
+        if (exi)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+void Scope::show(int d, const std::string &chan)
+{
+    CLOG(DEBUG, chan.c_str()) << i(d) << "Scope " << nr << " #" << frames.size();
+
+    //for (Frame_p fr: frames)
+    for (Frame_p fr: std::ranges::views::reverse(frames))
+    {
+        fr->show(d + 1, chan);
+    }
+}
+
+
 // Context
 
 Context::Context() : sink(nullptr)
 {
+   Scope_p sc = std::make_shared<Scope>(sc_main);
+   scopes.push_front(sc);
 }
 
 Context::~Context()
@@ -1362,94 +1486,57 @@ Context::~Context()
 
 void Context::push(frame_t frtp)
 {
-   Frame_p fr = std::make_shared<Frame>("first");
-   fr->setFrType(frtp);
-   frames.push_front(fr);
+   //Frame_p fr = std::make_shared<Frame>("first");
+   //fr->setFrType(frtp);
+   scopes.front()->push(frtp);
 }
 
 void Context::push(Frame_p fr, int d, const std::string &chan)
 {
-   CLOG(DEBUG, chan.c_str()) << i(d + 1) << "push fr " << fr->getNr();
+   CLOG(DEBUG, chan.c_str()) << i(d + 1) << "Context push fr " << fr->getNr();
    //fr->setNr(frames.size());
-   frames.push_front(fr);
+   scopes.front()->push(fr, d, chan);
 }
 
 void Context::pop()
 {
-   frames.pop_front();
+   scopes.front()->pop();
+}
+
+void Context::push_scope(scope_t tp)
+{
+   CLOG(DEBUG, "runner") << "Context push_scope";
+   Scope_p sc = std::make_shared<Scope>(tp);
+   scopes.push_front(sc);
+}
+
+void Context::pop_scope()
+{
+   CLOG(DEBUG, "runner") << "Context pop_scope";
+   scopes.pop_front();
 }
 
 void Context::add_binding(std::string nm, Element_p el)
 {
-   frames.front()->add_binding(nm, el);
+    scopes.front()->add_binding(nm, el);
 }
 
 int scounter = 0;
 
 Element_p Context::search(std::string nm, int d, const std::string &chan, bool shortsrch)
 {
-   shortsrch = true;
-   bool debug = true;
-   
-   //show(5, "capture");
-   
    CLOG(DEBUG, chan.c_str()) << i(d) << "Context search " << nm << " short " << shortsrch;
-   // search in all the recent frames 
-   // until the first defn or capture frame is encountered
-   for (Frame_p fra: frames)
+   Element_p el = scopes.front()->search(nm, d, chan, shortsrch);
+   if (el != nullptr)
    {
-      //CLOG(DEBUG, chan.c_str()) <<i(d + 1) << "fr " << fra->getNr();
-      fra->show(d + 2, chan.c_str());
-      Element_p el = fra->search(nm);
-      if (el != nullptr)
-      {
-         //el->show(1, "capture");
-         if (debug && nm == "value1")
-         {
-            //std::cout << " <cx srch " << nm << " fr " << fra->getNr() << "> ";
-            //std::cout << " <fr" << fra->getNr() << "> ";
-            if (fra->getNr() == 31 && nm == "value1")
-            {
-               if (scounter == 0)
-               {
-                  //el->show(7, "capture");
-                  //std::cout << "\n------- break ------------\n";
-                  //exit(1);
-               }
-               else
-               {
-                  scounter++;
-               }
-            }
-         }
-         if (el->getFrame() == nullptr)
-         {
-            el->setFrame(fra);
-         }
-         return el;
-      }
-
-      if (fra->getFrType() == fr_defn || fra->getFrType() == fr_capture)
-      {
-         if (shortsrch)
-         {
-            break;
-         }
-      }
+      return el;
    }
-   
+
    // search in the main frame
-   for (Frame_p fra: frames)
+   Element_p el2 = scopes.back()->search(nm, d, chan, shortsrch);
+   if (el2 != nullptr)
    {
-      if (fra->getFrType() == fr_main)
-      {
-         Element_p el = fra->search(nm);
-         if (el != nullptr)
-         {
-            //el->show(1, "runner");
-            return el;
-         }
-      }
+      return el2;
    }
    CLOG(DEBUG, chan.c_str()) << i(d) << "not found " << nm;
    return nullptr;
@@ -1457,9 +1544,9 @@ Element_p Context::search(std::string nm, int d, const std::string &chan, bool s
 
 bool Context::exists(std::string nm)
 {
-   for (Frame_p fra: frames)
+   for (Scope_p sco: scopes)
    {
-      bool exi = fra->exists(nm);
+      bool exi = sco->exists(nm);
       if (exi)
       {
          return true;
@@ -1470,12 +1557,11 @@ bool Context::exists(std::string nm)
 
 void Context::show(int d, const std::string &chan)
 {
-   CLOG(DEBUG, chan.c_str()) << i(d) << "Context #" << frames.size();
+   CLOG(DEBUG, chan.c_str()) << i(d) << "Context #" << scopes.size();
 
-   //for (Frame_p fr: frames)
-   for (Frame_p fr: std::ranges::views::reverse(frames))
+   for (Scope_p sc: std::ranges::views::reverse(scopes))
    {
-      fr->show(d + 1, chan);
+      sc->show(d + 1, chan);
    }
 }
 
