@@ -119,7 +119,7 @@ public:
    Context();
    ~Context();
    void push(frame_t frtp);
-   void push(Frame_p fr);
+   void push(Frame_p fr, int d, const std::string &chan);
    void pop();
    void add_binding(std::string nm, Element_p);
    Element_p search(std::string nm, int d, const std::string &chan, bool shortsrch = false);

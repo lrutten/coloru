@@ -526,8 +526,12 @@ Lambda::~Lambda()
 
 void Lambda::show(int d, const std::string &chan)
 {
+   //std::cout << "Lambda::show()\n";
    CLOG(DEBUG, chan.c_str()) << i(d) << "Lambda:" << type_to_s();
-   fn->show(d + 1, chan);
+   if (fn != nullptr)
+   {
+       fn->show(d + 1, chan);
+   }
 }
 
 void Lambda::format(int d)
@@ -1468,6 +1472,7 @@ Element_p Parser::vector()
       std::cout << "eof in vector()\n";
       throw std::make_unique<ParserError>();
    }
+   return nullptr;
 }
 
 Element_p Parser::expression(bool isliteral)
