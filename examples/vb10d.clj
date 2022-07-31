@@ -6,12 +6,12 @@
       )
       (fib
          (- n 1)
-         (fn [value1]
+         (fn [v]
             (fib 
                (- n 2)
-               (fn [value2] 
+               (fn [w] 
                   (k
-                    (+ value1 value2)
+                    (+ v w)
                   )
                )
             )
@@ -20,5 +20,5 @@
    )
 )
 
-(fib 5 (fn [value] value))
+(fib 5 (fn [val] val))
 

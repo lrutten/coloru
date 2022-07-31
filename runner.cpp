@@ -164,6 +164,7 @@ Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
 {
    CLOG(DEBUG, "runner") << i(d) << "Call evaluate() " << type_to_s();
 
+   cx->show(0, "main");
    //cx->breek(shared_from_this());
    
    Element_p  el = get(0);
@@ -219,7 +220,7 @@ Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
                {
                   // probably never reached
                   CLOG(DEBUG, "capture") << i(d + 1) << "lambda2";
-                  bi = std::dynamic_pointer_cast<Bind>(la->capture(cx, nullptr, d + 1));
+                  bi = std::dynamic_pointer_cast<Bind>(la->capture(cx, nullptr, d + 1, nullptr));
                   fuu = la->getFn();
                   la = nullptr;
                }
@@ -738,7 +739,7 @@ Element_p Defn::evaluate(std::shared_ptr<Context> cx, int d)
 Element_p Lambda::evaluate(std::shared_ptr<Context> cx, int d)
 {
    CLOG(DEBUG, "capture") << i(d) << "Lambda evaluate, lambda3";
-   return capture(cx, nullptr, d + 1);
+   return capture(cx, nullptr, d + 1, nullptr);
 }
 
 // Fn
@@ -746,7 +747,7 @@ Element_p Lambda::evaluate(std::shared_ptr<Context> cx, int d)
 Element_p Fn::evaluate(std::shared_ptr<Context> cx, int d)
 {
    CLOG(DEBUG, "runner") << i(d) << "Fn evaluate";
-   cx->show(d + 1, "runner");
+   //cx->show(d + 1, "runner");
 
    return body->evaluate(cx, d + 1);
 }
@@ -755,7 +756,7 @@ Element_p Fn::evaluate(std::shared_ptr<Context> cx, int d)
 
 void Bind::show(int d, const std::string &chan)
 {
-   CLOG(DEBUG, chan.c_str()) << i(d) << "Bind";
+   CLOG(DEBUG, chan.c_str()) << i(d) << "Bind " << orig;
 
    frame->show(d + 1, chan.c_str());
    //lambda->show(d + 1, chan.c_str());
@@ -947,9 +948,12 @@ Element_p Builtin::evaluate2(std::shared_ptr<Context> cx, std::shared_ptr<Elemen
                   {
                      std::string nm = it.first;
                      Element_p  val = it.second;
-                     ss << nm;
+                     if (nm == "value1")
+                     {
+                        ss << nm;
+                     }
                      Number_p nu = std::dynamic_pointer_cast<Number>(val);
-                     if (nu != nullptr)
+                     if (nu != nullptr && nm == "value1")
                      {
                         ss << "=(" << nu->type_to_s() << ")" << nu->getNumber();
                         if (nu->getFrame() != nullptr)
@@ -958,6 +962,7 @@ Element_p Builtin::evaluate2(std::shared_ptr<Context> cx, std::shared_ptr<Elemen
                            ss << "%" << nu->getFrame()->getNr();
                         }
                      }
+                     /*
                      else
                      if (std::dynamic_pointer_cast<Bind>(val) != nullptr)
                      {
@@ -972,6 +977,7 @@ Element_p Builtin::evaluate2(std::shared_ptr<Context> cx, std::shared_ptr<Elemen
                         }
                      }
                      ss << " ";
+                      */
                   }
                   ss << "\n";
                }
@@ -996,6 +1002,9 @@ Element_p Builtin::evaluate2(std::shared_ptr<Context> cx, std::shared_ptr<Elemen
       std::cout << "internal error, Call expected\n";
       throw std::make_shared<RunError>();
    }
+   
+   // hopefully never reached
+   return nullptr;
 }
 
 
@@ -1023,65 +1032,65 @@ Element_p Main::evaluate(std::shared_ptr<Context> cx, int d)
 
 // --------------- capture() ------------------
 
-Element_p List::capture(Context_p cx, Frame_p fr, int d)
+Element_p List::capture(Context_p cx, Frame_p fr, int d, Element_p lal)
 {
    CLOG(DEBUG, "capture") << i(d) << "List capture";
 
    List_p lst = std::make_shared<List>();
    for (Element_p el: elements)
    {
-      Element_p el2 = el->capture(cx, fr, d + 1);
+      Element_p el2 = el->capture(cx, fr, d + 1, lal);
       lst->add(el2);
    }
    return lst;
 }
 
-Element_p Call::capture(Context_p cx, Frame_p fr, int d)
+Element_p Call::capture(Context_p cx, Frame_p fr, int d, Element_p lal)
 {
    CLOG(DEBUG, "capture") << i(d) << "Call capture";
 
    Call_p cal = std::make_shared<Call>();
    for (Element_p el: elements)
    {
-      Element_p el2 = el->capture(cx, fr, d + 1);
+      Element_p el2 = el->capture(cx, fr, d + 1, lal);
       cal->add(el2);
    }
    return cal;
 }
 
-Element_p Elements::capture(Context_p cx, Frame_p fr, int d)
+Element_p Elements::capture(Context_p cx, Frame_p fr, int d, Element_p lal)
 {
    CLOG(DEBUG, "capture") << i(d) << "Elements capture " << info();
 
    Elements_p els = make_copy();
    for (Element_p el: elements)
    {
-      Element_p el2 = el->capture(cx, fr, d + 1);
+      Element_p el2 = el->capture(cx, fr, d + 1, lal);
       els->add(el2);
    }
    //els->show(d + 1, "capture");
    return els;
 }
 
-Element_p If::capture(Context_p cx, Frame_p fr, int d)
+Element_p If::capture(Context_p cx, Frame_p fr, int d, Element_p lal)
 {
    CLOG(DEBUG, "capture") << i(d) << "If capture";
 
    If_p fi = std::make_shared<If>();
 
-   Element_p cond = condition->capture(cx, fr, d + 1);
+   Element_p cond = condition->capture(cx, fr, d + 1, lal);
    fi->setCondition(cond);
-   Element_p ye   = yes->capture(cx, fr, d + 1);
+   Element_p ye   = yes->capture(cx, fr, d + 1, lal);
    fi->setYes(ye);
    if (no != nullptr)
    {
-      Element_p n = no->capture(cx, fr, d + 1);
+      Element_p n = no->capture(cx, fr, d + 1, lal);
       setNo(n);
    }
    return fi;
 }
 
-Element_p Println::capture(Context_p cx, Frame_p fr, int d)
+Element_p Println::capture(Context_p cx, Frame_p fr, int d, Element_p lal)
 {
    CLOG(DEBUG, "capture") << i(d) << "Println capture";
 
@@ -1089,8 +1098,8 @@ Element_p Println::capture(Context_p cx, Frame_p fr, int d)
 
    if (body != nullptr)
    {
-      Element_p bo = body->capture(cx, fr, d + 1);
-      pri->body = std::dynamic_pointer_cast<Body>(body->capture(cx, fr, d + 1));
+      Element_p bo = body->capture(cx, fr, d + 1, lal);
+      pri->body = std::dynamic_pointer_cast<Body>(body->capture(cx, fr, d + 1, lal));
       if (pri->body == nullptr)
       {
          std::cout << "Println capture body nullptr\n";
@@ -1101,7 +1110,7 @@ Element_p Println::capture(Context_p cx, Frame_p fr, int d)
    return pri;
 }
 
-Element_p Print::capture(Context_p cx, Frame_p fr, int d)
+Element_p Print::capture(Context_p cx, Frame_p fr, int d, Element_p lal)
 {
    CLOG(DEBUG, "capture") << i(d) << "Print capture";
 
@@ -1109,8 +1118,8 @@ Element_p Print::capture(Context_p cx, Frame_p fr, int d)
 
    if (body != nullptr)
    {
-      Element_p bo = body->capture(cx, fr, d + 1);
-      pri->body = std::dynamic_pointer_cast<Body>(body->capture(cx, fr, d + 1));
+      Element_p bo = body->capture(cx, fr, d + 1, lal);
+      pri->body = std::dynamic_pointer_cast<Body>(body->capture(cx, fr, d + 1, lal));
       if (pri->body == nullptr)
       {
          std::cout << "Print capture body nullptr\n";
@@ -1121,7 +1130,7 @@ Element_p Print::capture(Context_p cx, Frame_p fr, int d)
    return pri;
 }
 
-Element_p Let::capture(Context_p cx, Frame_p fr, int d)
+Element_p Let::capture(Context_p cx, Frame_p fr, int d, Element_p lal)
 {
    CLOG(DEBUG, "capture") << i(d) << "Let capture";
 
@@ -1136,7 +1145,7 @@ Element_p Let::capture(Context_p cx, Frame_p fr, int d)
 
       frr->add_binding(pr.first, nullptr);
 
-      Element_p val = pr.second->capture(cx, fr, d + 1);
+      Element_p val = pr.second->capture(cx, fr, d + 1, lal);
       if (val == nullptr)
       {
          std::cout << "Let capture val nullptr\n";
@@ -1146,7 +1155,7 @@ Element_p Let::capture(Context_p cx, Frame_p fr, int d)
    }
 
    cx->push(frr);
-   lt->body = std::dynamic_pointer_cast<Body>(body->capture(cx, fr, d + 1));
+   lt->body = std::dynamic_pointer_cast<Body>(body->capture(cx, fr, d + 1, lal));
    cx->pop();
 
    if (lt->body == nullptr)
@@ -1160,7 +1169,7 @@ Element_p Let::capture(Context_p cx, Frame_p fr, int d)
    return lt;
 }
 
-Element_p Fn::capture(Context_p cx, Frame_p fr, int d)
+Element_p Fn::capture(Context_p cx, Frame_p fr, int d, Element_p lal)
 {
    CLOG(DEBUG, "capture") << i(d) << "Fn capture";
 
@@ -1184,7 +1193,7 @@ Element_p Fn::capture(Context_p cx, Frame_p fr, int d)
    }
 
    cx->push(frr);
-   fn->body = std::dynamic_pointer_cast<Body>(body->capture(cx, fr, d + 1));
+   fn->body = std::dynamic_pointer_cast<Body>(body->capture(cx, fr, d + 1, lal));
    cx->pop();
 
    if (fn->body == nullptr)
@@ -1198,40 +1207,51 @@ Element_p Fn::capture(Context_p cx, Frame_p fr, int d)
    return fn;
 }
 
-Element_p Defn::capture(Context_p cx, Frame_p fr, int d)
+Element_p Defn::capture(Context_p cx, Frame_p fr, int d, Element_p lal)
 {
    CLOG(DEBUG, "capture") << i(d) << "Dfn capture";
 
    Defn_p dfn = std::make_shared<Defn>();
    dfn->name = name;
 
-   Element_p f = fn->capture(cx, fr, d + 1);
+   Element_p f = fn->capture(cx, fr, d + 1, lal);
    dfn->fn = std::dynamic_pointer_cast<Fn>(f);
 
    return dfn;
 }
 
-Element_p Lambda::capture(Context_p cx, Frame_p fr, int d)
+Element_p Lambda::capture(Context_p cx, Frame_p fr, int d, Element_p lal)
 {
    CLOG(DEBUG, "capture") << i(d) << "Lambda capture";
 
-   // make a new Lambda
-   Lambda_p la = std::make_shared<Lambda>();
-   Bind_p   bi = std::make_shared<Bind>();
-
-   // and keep in the Bind
-   bi->setLambda(la);
-
-   Frame_p fr2 = std::make_shared<Frame>("cla");
-   fr2->setFrType(fr_capture);
-   bi->setFrame(fr2);
-
-   // keep returned value from capture as fn
-   Element_p f = fn->capture(cx, fr2, d + 1);
-   la->fn = std::dynamic_pointer_cast<Fn>(f);
-
-   bi->show(d + 1, "capture");
-   return bi;
+   lal = nullptr;
+   if (lal != nullptr)
+   {
+      return shared_from_this();
+   }
+   else
+   {
+      // make a new Lambda
+      Lambda_p la = std::make_shared<Lambda>();
+      Bind_p   bi = std::make_shared<Bind>();
+   
+      // and keep in the Bind
+      bi->setLambda(la);
+      
+      // keep the nr of the youngest frame in the context
+      bi->setOrig(cx->front()->getNr());
+   
+      Frame_p fr2 = std::make_shared<Frame>("cla");
+      fr2->setFrType(fr_capture);
+      bi->setFrame(fr2);
+   
+      // keep returned value from capture as fn
+      Element_p f = fn->capture(cx, fr2, d + 1, shared_from_this());
+      la->fn = std::dynamic_pointer_cast<Fn>(f);
+   
+      bi->show(d + 1, "capture");
+      return bi;
+   }
 }
 
 /*
@@ -1261,8 +1281,14 @@ Element_p Lambda::capture(Context_p cx, Frame_p fr, int d)
 }
  */
 
-Element_p Symbol::capture(Context_p cx, Frame_p fr, int d)
+Element_p Symbol::capture(Context_p cx, Frame_p fr, int d, Element_p lal)
 {
+   // only for test
+   if (text == "fib")
+   {
+      return shared_from_this();
+   }
+
    CLOG(DEBUG, "capture") << i(d) << "Symbol capture " << text;
 
    //cx->show(d + 1, "capture");
@@ -1278,9 +1304,12 @@ Element_p Symbol::capture(Context_p cx, Frame_p fr, int d)
          CLOG(DEBUG, "capture") << i(d + 1) << "val " << text << " not null";
          val->show(d + 2, "capture");
 
-         // add new binding
-         fr->add_binding(text, val);
-         //cx->show(d + 2, "capture");
+         if (std::dynamic_pointer_cast<Defn>(val) == nullptr)
+         {
+            // add new binding
+            fr->add_binding(text, val);
+            //cx->show(d + 2, "capture");
+         }
       }
       else
       {
@@ -1294,12 +1323,12 @@ Element_p Symbol::capture(Context_p cx, Frame_p fr, int d)
    return shared_from_this();
 }
 
-Element_p Builtin::capture(Context_p cx, Frame_p fr, int d)
+Element_p Builtin::capture(Context_p cx, Frame_p fr, int d, Element_p lal)
 {
    return shared_from_this();
 }
 
-Element_p Text::capture(Context_p cx, Frame_p fr, int d)
+Element_p Text::capture(Context_p cx, Frame_p fr, int d, Element_p lal)
 {
    CLOG(DEBUG, "capture") << i(d) << "Text capture " << text;
 
@@ -1373,6 +1402,7 @@ std::string Frame::frametp_as_s()
    case fr_let:
       return "l";
    }
+   return "-";
 }
 
 void Frame::show(int d, const std::string &chan)
@@ -1404,6 +1434,21 @@ void Frame::show(int d, const std::string &chan)
       }
    }
 }
+
+std::string Frame::line(std::shared_ptr<Context> cx)
+{
+   std::stringstream ss;
+   ss << "(frame " << nr << " " << frametp_as_s();
+   
+   for (auto it: bindings)
+   {
+      ss << "(" << it.first << " " << it.second->line(cx) << ")";
+   }
+   
+   ss << ")";
+   return ss.str();
+}
+
 
 // Sink
 
@@ -1445,12 +1490,24 @@ void Context::add_binding(std::string nm, Element_p el)
    frames.front()->add_binding(nm, el);
 }
 
-int scounter = 0;
+Frame_p Context::front()
+{
+   return frames.front();
+}
+
+int dcounter = 0;
+
 
 Element_p Context::search(std::string nm, int d, const std::string &chan, bool shortsrch)
 {
-   bool debug = true;
+   bool debug = false;
+   //shortsrch = true;
+   bool verbose = false;
    
+   if (nm == "value1")
+   {
+      verbose = true;
+   }
    //show(5, "capture");
    
    CLOG(DEBUG, chan.c_str()) << i(d) << "Context search " << nm;
@@ -1459,31 +1516,43 @@ Element_p Context::search(std::string nm, int d, const std::string &chan, bool s
    for (Frame_p fra: frames)
    {
       CLOG(DEBUG, chan.c_str()) <<i(d) << "      fr " << fra->getNr();
+      if (verbose)
+      {
+         std::cout << "fr " << fra->getNr() << "*";
+      }
       Element_p el = fra->search(nm);
       if (el != nullptr)
       {
          //el->show(1, "capture");
-         if (debug && nm == "value1")
+         if (debug && nm == "value1" &&
+             std::dynamic_pointer_cast<Number>(el) != nullptr)
+            // std::dynamic_pointer_cast<Number>(el)->getNumber() == 3
+            //)
          {
-            //std::cout << " <cx srch " << nm << " fr " << fra->getNr() << "> ";
-            //std::cout << " <fr" << fra->getNr() << "> ";
-            if (fra->getNr() == 31 && nm == "value1")
+            if (dcounter == 19)
             {
-               if (scounter == 0)
-               {
-                  //el->show(7, "capture");
-                  //std::cout << "\n------- break ------------\n";
-                  //exit(1);
-               }
-               else
-               {
-                  scounter++;
-               }
+               std::cout << " <cx srch " << nm << " fr " << fra->getNr() << "> \n";
+               //std::cout << " <fr" << fra->getNr() << "> ";
+               el->show(7, "main");
+               
+               std::cout << "\n------- context ------------\n";
+               show(7, "main");
+               std::cout << "\n------- break ------------\n";
+               exit(1);
+            }
+            else
+            {
+               dcounter++;
+               //std::cout << "dcounter++ " << dcounter << "\n";
             }
          }
          if (el->getFrame() == nullptr)
          {
             el->setFrame(fra);
+         }
+         if (verbose)
+         {
+            std::cout << "\n";
          }
          return el;
       }
@@ -1506,11 +1575,19 @@ Element_p Context::search(std::string nm, int d, const std::string &chan, bool s
          if (el != nullptr)
          {
             //el->show(1, "runner");
+            if (verbose)
+            {
+               std::cout << "\n";
+            }
             return el;
          }
       }
    }
    CLOG(DEBUG, chan.c_str()) << i(d) << "not found " << nm;
+   if (verbose)
+   {
+      std::cout << "\n";
+   }
    return nullptr;
 }
 
@@ -1562,6 +1639,7 @@ Element_p Runner::run()
    cx->push(fr_main);
    Element_p rs = root->evaluate(cx, 0);
    cx->pop();
+   CLOG(DEBUG, "runner") << "stop runner cx #" << cx->size();
    return rs;
 }
 
@@ -1580,6 +1658,12 @@ Element_p Runner::debugger()
          cx->push(fr_main);
          Element_p rs = root->evaluate(cx, 0);
          cx->pop();
+
+         std::cout << "Result:\n";
+         if (rs != nullptr)
+         {
+            rs->show(1, "debugger");
+         }
 
          cx->setRunning(false);
          sink(cx);
@@ -1635,11 +1719,13 @@ Element_p Runner::debugger()
                   if (cx != nullptr)
                   {
                      //std::cout << "current " << cx->getCurrent()->info() << "\n";
+                     std::cout << cx->getCurrent()->line(cx) << "\n";
                      
                      if (!cx->getRunning())
                      {
                         std::cout << "runner breek stop\n";
                         ru = false;
+                        
                         exit(0);
                      }
                   }
@@ -1656,6 +1742,7 @@ Element_p Runner::debugger()
             {
                // show current element
                cx->getCurrent()->show(0, "debugger");
+               std::cout << cx->getCurrent()->line(cx) << "\n";
             }
             else
             if (line == "h")

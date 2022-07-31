@@ -35,6 +35,7 @@ public:
    Element_p search(std::string nm);
    bool exists(std::string nm);
    void show(int d, const std::string &chan);
+   std::string line(std::shared_ptr<Context> cx) override;
 
    void format(int d) override
    {
@@ -125,6 +126,7 @@ public:
    Element_p search(std::string nm, int d, const std::string &chan, bool shortsrch = false);
    bool exists(std::string nm);
    void show(int d, const std::string &chan);
+   Frame_p front();
    Sink_p getSink()
    {
       return sink;
