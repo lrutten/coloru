@@ -159,6 +159,8 @@ private:
 };
 
 
+std::string version = "0.6.0";
+std::string date    = "31/ 7/2022";
 
 //bool debug   = false;
 bool trans    = false;
@@ -167,6 +169,7 @@ bool debugger = false;
 
 // options
 //
+//   h help
 //   f file
 //   d debug level
 //   c log channels
@@ -219,11 +222,25 @@ int main(int argc, char **argv)
    int   dlevel;
    int   channels;
    int   opt;
-   while ((opt = getopt(argc, argv, "eltc:d:f:")) != -1)
+   while ((opt = getopt(argc, argv, "heltc:d:f:")) != -1)
    {
       switch (opt)
       {
-         case 'f':
+         case 'h':
+            std::cout << "coloru\n";
+            std::cout << " version: " << version << "\n";
+            std::cout << " date: " << date << "\n";
+            std::cout << " options:\n";
+            std::cout << "   -h help\n";
+            std::cout << "   -f file\n";
+            std::cout << "   -d debug level\n";
+            std::cout << "   -c log channels\n";
+            std::cout << "   -t transform to tail recursion\n";
+            std::cout << "   -l show transformed source code\n";
+            exit(0);
+            break;
+
+          case 'f':
             fname = optarg;
             break;
 
