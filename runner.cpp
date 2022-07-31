@@ -268,18 +268,16 @@ Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
          fr->setFrType(fr_defn);
          fuu->assignParameters(cx, fr, shared_from_this(), d + 1);
 
+         /*
          if (bi != nullptr)
          {
             cx->push(bi->getFrame(), d + 1, "runner");
          }
+         */
 
          CLOG(DEBUG, "runner") << i(d + 1) << "fuu " << type_to_s();
 
-         // capture test
-         //cx->show(0 , "capture");
-         
          // start push - evaluate - pop part
-
          // original code without tail recursion optimization
          //   cx->push(fr);
          //   Element_p rs = fuu->evaluate(cx, d + 1);
@@ -294,7 +292,14 @@ Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
 
             fr->setFrType(fr_lambda);
 
-            cx->push_scope(sc_lambda);
+            if (bi != nullptr)
+            {
+               cx->push_scope(bi->getScope());
+            }
+            else
+            {
+               cx->push_scope(sc_lambda);
+            }
             cx->push(fr, d + 1, "runner");
 
             // break the execution for the debugger
@@ -336,7 +341,7 @@ Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
 
                   rs = fuu->evaluate(cx, d + 1);
                   Frame_p fr2 = std::dynamic_pointer_cast<Frame>(rs);
-                  cx->pop();
+                  //cx->pop();
                   cx->pop_scope();
                   if (fr2 != nullptr)
                   {
@@ -742,12 +747,14 @@ Element_p Defn::evaluate(std::shared_ptr<Context> cx, int d)
 Element_p Lambda::evaluate(std::shared_ptr<Context> cx, int d)
 {
    CLOG(DEBUG, "capture") << i(d) << "Lambda evaluate, lambda3";
-   Element_p res = capture(cx, nullptr, d + 1, 0);
+   //Element_p res = capture(cx, nullptr, d + 1, 0);
 
-   //return shared_from_this();
+   Bind_p   bi = std::make_shared<Bind>();
+   bi->setLambda(std::dynamic_pointer_cast<Lambda>(shared_from_this()));
+   bi->setScope(cx->current_scope()->copy());
 
    // Lambda::capture returns a Binding
-   return res;
+   return bi;
 }
 
 // Fn
@@ -766,7 +773,10 @@ void Bind::show(int d, const std::string &chan)
 {
    CLOG(DEBUG, chan.c_str()) << i(d) << "Bind";
 
-   frame->show(d + 1, chan.c_str());
+   if (scope != nullptr)
+   {
+       scope->show(d + 1, chan.c_str());
+   }
    //lambda->show(d + 1, chan.c_str());
 }
 
@@ -1471,6 +1481,18 @@ void Scope::show(int d, const std::string &chan)
     }
 }
 
+Scope_p Scope::copy()
+{
+    Scope_p sc = std::make_shared<Scope>(sc_capture);
+
+    //CLOG(DEBUG, "runner") << "Scope copy a this " << frames.size();
+    //CLOG(DEBUG, "runner") << "Scope copy a sc   " << sc->frames.size();
+    sc->frames = frames;
+    //CLOG(DEBUG, "runner") << "Scope copy b this " << frames.size();
+    //CLOG(DEBUG, "runner") << "Scope copy b sc   " << sc->frames.size();
+
+    return sc;
+}
 
 // Context
 
@@ -1505,15 +1527,25 @@ void Context::pop()
 
 void Context::push_scope(scope_t tp)
 {
-   CLOG(DEBUG, "runner") << "Context push_scope";
+   CLOG(DEBUG, "runner") << "Context push_scope a";
    Scope_p sc = std::make_shared<Scope>(tp);
    scopes.push_front(sc);
 }
 
+void Context::push_scope(Scope_p sc)
+{
+    CLOG(DEBUG, "runner") << "Context push_scope b";
+    scopes.push_front(sc);
+}
+
 void Context::pop_scope()
 {
-   CLOG(DEBUG, "runner") << "Context pop_scope";
+   CLOG(DEBUG, "runner") << "Context pop_scope " << scopes.size();
    scopes.pop_front();
+}
+Scope_p Context::current_scope()
+{
+    return scopes.front();
 }
 
 void Context::add_binding(std::string nm, Element_p el)

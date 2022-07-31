@@ -699,7 +699,7 @@ bool Fn::assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr
 
 // Bind
 
-Bind::Bind() : lambda(nullptr)
+Bind::Bind() : scope(nullptr)
 {
 }
 

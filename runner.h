@@ -135,6 +135,7 @@ public:
     Element_p search(std::string nm, int d, const std::string &chan, bool shortsrch = false);
     bool exists(std::string nm);
     void show(int d, const std::string &chan);
+    std::shared_ptr<Scope> copy();
     int size()
     {
         return frames.size();
@@ -167,7 +168,9 @@ public:
    void push(Frame_p fr, int d, const std::string &chan);
    void pop();
    void push_scope(scope_t tp);
+   void push_scope(Scope_p sc);
    void pop_scope();
+   Scope_p current_scope();
    void add_binding(std::string nm, Element_p);
    Element_p search(std::string nm, int d, const std::string &chan, bool shortsrch = false);
    bool exists(std::string nm);

@@ -1035,7 +1035,7 @@ using Lambda_p = std::shared_ptr<Lambda>;
 
 // Bind
 
-class Frame;
+class Scope;
 
 class Bind : public Callable
 {
@@ -1045,13 +1045,21 @@ public:
    void show(int d, const std::string &chan) override;
    void format(int d) override;
    Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
-   Lambda_p getLambda()
+   std::shared_ptr<Lambda> getLambda()
    {
       return lambda;
    }
-   void setLambda(Lambda_p la)
+   void setLambda(std::shared_ptr<Lambda> la)
    {
       lambda = la;
+   }
+   std::shared_ptr<Scope> getScope()
+   {
+      return scope;
+   }
+   void setScope(std::shared_ptr<Scope> sc)
+   {
+      scope = sc;
    }
    std::shared_ptr<Frame> getFrame()
    {
@@ -1070,7 +1078,8 @@ public:
    void determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn> defn) override;
 
 private:
-   Lambda_p               lambda;
+   std::shared_ptr<Lambda> lambda;
+   std::shared_ptr<Scope> scope;
    std::shared_ptr<Frame> frame;
 };
 
