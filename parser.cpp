@@ -1,5 +1,4 @@
 #include <iostream>
-#include <sstream>
 #include <getopt.h>
 
 #include "easylogging++.h"
@@ -90,13 +89,6 @@ void Number::format(int d)
    std::cout << number;
 }
 
-std::string Number::line(std::shared_ptr<Context> cx)
-{
-   std::stringstream ss;
-   ss << number;
-   return ss.str();
-}
-
 // Boolean
 
 Boolean::Boolean(bool val) : value(val)
@@ -132,19 +124,6 @@ void Boolean::format(int d)
    }
 }
 
-std::string Boolean::line(std::shared_ptr<Context> cx)
-{
-   std::stringstream ss;
-   if (value != 0)
-   {
-      ss << "true";
-   }
-   else
-   {
-      ss << "false";
-   }
-   return ss.str();
-}
 
 // Nil
 
@@ -164,13 +143,6 @@ void Nil::show(int d, const std::string &chan)
 void Nil::format(int d)
 {
    std::cout << "nil";
-}
-
-std::string Nil::line(std::shared_ptr<Context> cx)
-{
-   std::stringstream ss;
-   ss << "nil";
-   return ss.str();
 }
 
 
@@ -220,20 +192,6 @@ void List::format(int d)
    }
    std::cout << ")";
 }
-
-std::string List::line(std::shared_ptr<Context> cx)
-{
-   std::stringstream ss;
-   ss << "'(";
-   for (Element_p el: elements)
-   {
-      ss << el->line(cx);
-      ss << " ";
-   }
-   ss << ")";
-   return ss.str();
-}
-
 
 void List::print()
 {
@@ -314,22 +272,6 @@ void Call::format(int d)
    std::cout << ")\n";
 }
 
-
-std::string Call::line(std::shared_ptr<Context> cx)
-{
-   std::stringstream ss;
-   ss << "(";
-   int i = 0;
-   for (Element_p el: elements)
-   {
-      ss << el->line(cx) << " ";
-      i++;
-   }
-   ss << ")";
-   return ss.str();
-}
-
-
 // Elements
 
 Elements::Elements()
@@ -388,20 +330,6 @@ void Vector::format(int d)
    std::cout << "]";
 }
 
-std::string Vector::line(std::shared_ptr<Context> cx)
-{
-   std::stringstream ss;
-   std::cout << "[";
-   for (Element_p el: elements)
-   {
-      ss << el->line(cx);
-      ss << " ";
-   }
-   std::cout << "]";
-   return ss.str();
-}
-
-
 Elements_p Vector::make_copy()
 {
    return std::make_shared<Vector>();
@@ -444,16 +372,6 @@ void Body::format(int d)
    }
 }
 
-std::string Body::line(std::shared_ptr<Context> cx)
-{
-   std::stringstream ss;
-   for (Element_p el: elements)
-   {
-      ss << el->line(cx);
-   }
-   return ss.str();
-}
-
 // Binary
 
 Binary::Binary()
@@ -485,20 +403,6 @@ void Binary::format(int d)
       std::cout << " ";
    }
    std::cout << ")";
-}
-
-std::string Binary::line(std::shared_ptr<Context> cx)
-{
-   std::stringstream ss;
-   ss << "(" << info() << " ";
-
-   for (Element_p el: elements)
-   {
-      ss << el->line(cx);
-      ss << " ";
-   }
-   ss << ")";
-   return ss.str();
 }
 
 // Mul
@@ -609,15 +513,6 @@ void Defn::format(int d)
    std::cout << ")\n";
 }
 
-std::string Defn::line(std::shared_ptr<Context> cx)
-{
-   std::stringstream ss;
-   ss << "(defn " << name << " ";
-   ss << fn->line(cx);
-   ss << ")";
-   return ss.str();
-}
-
 // Lambda
 
 Lambda::Lambda() : fn(nullptr)
@@ -646,15 +541,6 @@ void Lambda::format(int d)
    fn->format(d + 1);
    indent(d);
    std::cout << ")";
-}
-
-std::string Lambda::line(std::shared_ptr<Context> cx)
-{
-   std::stringstream ss;
-   ss << "(la ";
-   ss << fn->line(cx);
-   ss << ")";
-   return ss.str();
 }
 
 // AParam
@@ -692,17 +578,6 @@ void Param::format(int d)
    std::cout << name << " ";
 }
 
-std::string Param::line(std::shared_ptr<Context> cx)
-{
-   std::stringstream ss;
-   if (getRest())
-   {
-      ss << "& ";
-   }
-   ss << name << " ";
-   return ss.str();
-}
-
 // ParamList
 
 ParamList::ParamList()
@@ -735,24 +610,7 @@ void ParamList::format(int d)
       }
       p->format(d + 1);
    }
-   std::cout << "] ";
-}
-
-std::string ParamList::line(std::shared_ptr<Context> cx)
-{
-   std::stringstream ss;
-   ss << "[";
-
-   for (AParam_p p: params)
-   {
-      if (p->getRest())
-      {
-         //std::cout << "& ";
-      }
-      ss << p->line(cx);
-   }
-   ss << "]";
-   return ss.str();
+   std::cout << "]";
 }
 
 // Fn
@@ -823,31 +681,6 @@ void Fn::format(int d)
    //std::cout << ")";
 }
 
-std::string Fn::line(std::shared_ptr<Context> cx)
-{
-   std::stringstream ss;
-   ss << "(fn ";
-
-   if (paramlist == nullptr)
-   {
-      std::cout << "fn format paramlist nullptr\n";
-      throw std::make_unique<ParserError>();
-   }
-
-   ss << paramlist->line(cx);
-   //std::cout << "\n";
-
-   if (body == nullptr)
-   {
-      std::cout << "fn format body nullptr\n";
-      throw std::make_unique<ParserError>();
-   }
-
-   ss << body->line(cx);
-   ss << ")";
-   return ss.str();
-}
-
 bool Fn::assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, Element_p callel, int d)
 {
    Call_p call = std::dynamic_pointer_cast<Call>(callel);
@@ -877,21 +710,6 @@ Bind::~Bind()
 
 void Bind::format(int d)
 {
-}
-
-std::string Bind::line(std::shared_ptr<Context> cx)
-{
-   std::stringstream ss;
-   ss << "(bind ";
-   ss << frame->line(cx);
-   ss << lambda->line(cx);
-   ss << ")";
-   return ss.str();
-   
-   
-   
-   
-   return ss.str();
 }
 
 // If
@@ -934,21 +752,6 @@ void If::format(int d)
    std::cout << ")";
 }
 
-std::string If::line(std::shared_ptr<Context> cx)
-{
-   std::stringstream ss;
-   ss << "(if";
-
-   ss << condition->line(cx);
-   ss << yes->line(cx);
-   if (no != nullptr)
-   {
-      ss << no->line(cx);
-   }
-   ss << ")";
-   return ss.str();
-}
-
 // Println
 
 Println::Println()
@@ -978,19 +781,6 @@ void Println::format(int d)
       body->format(d + 1);
    }
    std::cout << ")\n";
-}
-
-std::string Println::line(std::shared_ptr<Context> cx)
-{
-   std::stringstream ss;
-   ss << "(println ";
-
-   if (body != nullptr)
-   {
-      ss << body->line(cx);
-   }
-   ss << ")";
-   return ss.str();
 }
 
 // Print
@@ -1024,19 +814,6 @@ void Print::format(int d)
    std::cout << ")\n";
 }
 
-std::string Print::line(std::shared_ptr<Context> cx)
-{
-   std::stringstream ss;
-   ss << "(print ";
-
-   if (body != nullptr)
-   {
-      ss << body->line(cx);
-   }
-   ss << ")";
-   return ss.str();
-}
-
 // Ampersand
 
 Ampersand::Ampersand()
@@ -1055,13 +832,6 @@ void Ampersand::show(int d, const std::string &chan)
 void Ampersand::format(int d)
 {
    std::cout << "&";
-}
-
-std::string Ampersand::line(std::shared_ptr<Context> cx)
-{
-   std::stringstream ss;
-   ss << "&";
-   return ss.str();
 }
 
 // Let
@@ -1113,27 +883,6 @@ void Let::format(int d)
    std::cout << ")";
 }
 
-std::string Let::line(std::shared_ptr<Context> cx)
-{
-   std::stringstream ss;
-   ss << "(let [";
-
-   for (const auto &pr: variables)
-   {
-      ss << pr.first << " ";
-
-      ss << pr.second->line(cx);
-   }
-   ss << "]";
-   
-   if (body != nullptr)
-   {
-      ss << body->line(cx);
-   }
-   ss << ")";
-   return ss.str();
-}
-
 
 
 // Symbol
@@ -1157,23 +906,6 @@ void Symbol::format(int d)
    std::cout << text;
 }
 
-std::string Symbol::line(std::shared_ptr<Context> cx)
-{
-   std::stringstream ss;
-   ss << text;
-   
-   Element_p val = cx->search(text, 0, "runner");
-   if (val != nullptr)
-   {
-      if (std::dynamic_pointer_cast<Number>(val) != nullptr)
-      {
-         int nmbr = std::dynamic_pointer_cast<Number>(val)->getNumber();
-         ss << ":" << nmbr;
-      }
-   }
-   
-   return ss.str();
-}
 
 // Builtin
 
@@ -1196,12 +928,6 @@ void Builtin::format(int d)
    std::cout << text;
 }
 
-std::string Builtin::line(std::shared_ptr<Context> cx)
-{
-   std::stringstream ss;
-   ss << text;
-   return ss.str();
-}
 
 // Text
 
@@ -1222,13 +948,6 @@ void Text::show(int d, const std::string &chan)
 void Text::format(int d)
 {
    std::cout << "\"" << text << "\"";
-}
-
-std::string Text::line(std::shared_ptr<Context> cx)
-{
-   std::stringstream ss;
-   ss << "\"" << text << "\"";
-   return ss.str();
 }
 
 
@@ -1273,16 +992,6 @@ void Main::format(int d)
       el->format(d);
       std::cout << "\n";
    }
-}
-
-std::string Main::line(std::shared_ptr<Context> cx)
-{
-   std::stringstream ss;
-   for (Element_p el: elements)
-   {
-      ss << el->line(cx);
-   }
-   return ss.str();
 }
 
 

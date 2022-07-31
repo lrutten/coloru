@@ -164,7 +164,6 @@ Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
 {
    CLOG(DEBUG, "runner") << i(d) << "Call evaluate() " << type_to_s();
 
-   cx->show(0, "main");
    //cx->breek(shared_from_this());
    
    Element_p  el = get(0);
@@ -764,7 +763,7 @@ Element_p Lambda::evaluate(std::shared_ptr<Context> cx, int d)
 Element_p Fn::evaluate(std::shared_ptr<Context> cx, int d)
 {
    CLOG(DEBUG, "runner") << i(d) << "Fn evaluate";
-   //cx->show(d + 1, "runner");
+   cx->show(d + 1, "runner");
 
    return body->evaluate(cx, d + 1);
 }
@@ -773,7 +772,7 @@ Element_p Fn::evaluate(std::shared_ptr<Context> cx, int d)
 
 void Bind::show(int d, const std::string &chan)
 {
-   CLOG(DEBUG, chan.c_str()) << i(d) << "Bind " << orig;
+   CLOG(DEBUG, chan.c_str()) << i(d) << "Bind";
 
    if (scope != nullptr)
    {
@@ -969,12 +968,9 @@ Element_p Builtin::evaluate2(std::shared_ptr<Context> cx, std::shared_ptr<Elemen
                   {
                      std::string nm = it.first;
                      Element_p  val = it.second;
-                     if (nm == "value1")
-                     {
-                        ss << nm;
-                     }
+                     ss << nm;
                      Number_p nu = std::dynamic_pointer_cast<Number>(val);
-                     if (nu != nullptr && nm == "value1")
+                     if (nu != nullptr)
                      {
                         ss << "=(" << nu->type_to_s() << ")" << nu->getNumber();
                         if (nu->getFrame() != nullptr)
@@ -983,7 +979,6 @@ Element_p Builtin::evaluate2(std::shared_ptr<Context> cx, std::shared_ptr<Elemen
                            ss << "%" << nu->getFrame()->getNr();
                         }
                      }
-                     /*
                      else
                      if (std::dynamic_pointer_cast<Bind>(val) != nullptr)
                      {
@@ -998,7 +993,6 @@ Element_p Builtin::evaluate2(std::shared_ptr<Context> cx, std::shared_ptr<Elemen
                         }
                      }
                      ss << " ";
-                      */
                   }
                   ss << "\n";
                }
@@ -1147,21 +1141,6 @@ void Frame::show(int d, const std::string &chan)
       }
    }
 }
-
-std::string Frame::line(std::shared_ptr<Context> cx)
-{
-   std::stringstream ss;
-   ss << "(frame " << nr << " " << frametp_as_s();
-   
-   for (auto it: bindings)
-   {
-      ss << "(" << it.first << " " << it.second->line(cx) << ")";
-   }
-   
-   ss << ")";
-   return ss.str();
-}
-
 
 // Sink
 
@@ -1358,13 +1337,7 @@ void Context::add_binding(std::string nm, Element_p el)
     scopes.front()->add_binding(nm, el);
 }
 
-Frame_p Context::front()
-{
-   return frames.front();
-}
-
-int dcounter = 0;
-
+int scounter = 0;
 
 Element_p Context::search(std::string nm, int d, const std::string &chan, bool shortsrch)
 {
@@ -1382,10 +1355,6 @@ Element_p Context::search(std::string nm, int d, const std::string &chan, bool s
       return el2;
    }
    CLOG(DEBUG, chan.c_str()) << i(d) << "not found " << nm;
-   if (verbose)
-   {
-      std::cout << "\n";
-   }
    return nullptr;
 }
 
@@ -1436,7 +1405,6 @@ Element_p Runner::run()
    cx->push(fr_main);
    Element_p rs = root->evaluate(cx, 0);
    cx->pop();
-   CLOG(DEBUG, "runner") << "stop runner cx #" << cx->size();
    return rs;
 }
 
@@ -1455,12 +1423,6 @@ Element_p Runner::debugger()
          cx->push(fr_main);
          Element_p rs = root->evaluate(cx, 0);
          cx->pop();
-
-         std::cout << "Result:\n";
-         if (rs != nullptr)
-         {
-            rs->show(1, "debugger");
-         }
 
          cx->setRunning(false);
          sink(cx);
@@ -1516,13 +1478,11 @@ Element_p Runner::debugger()
                   if (cx != nullptr)
                   {
                      //std::cout << "current " << cx->getCurrent()->info() << "\n";
-                     std::cout << cx->getCurrent()->line(cx) << "\n";
                      
                      if (!cx->getRunning())
                      {
                         std::cout << "runner breek stop\n";
                         ru = false;
-                        
                         exit(0);
                      }
                   }
@@ -1539,7 +1499,6 @@ Element_p Runner::debugger()
             {
                // show current element
                cx->getCurrent()->show(0, "debugger");
-               std::cout << cx->getCurrent()->line(cx) << "\n";
             }
             else
             if (line == "h")
