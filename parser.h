@@ -81,10 +81,6 @@ public:
    virtual void format(int d) = 0;
    virtual std::string line(std::shared_ptr<Context> cx) = 0;
    virtual std::shared_ptr<Element> evaluate(std::shared_ptr<Context> cx, int d) = 0;
-   virtual std::shared_ptr<Element> capture(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, int d, std::shared_ptr<Element> lal = nullptr)
-   {
-      return shared_from_this();
-   }
    virtual std::string info()
    {
       return "Element";
@@ -107,7 +103,6 @@ public:
    }
    virtual bool makeTail()
    {
-      return false;
    }
 
 private:
@@ -269,7 +264,6 @@ public:
       elements.pop_front();
    }
    Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
-   Element_p capture(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, int d, std::shared_ptr<Element> lal = nullptr) override;
    void show(int d, const std::string &chan) override;
    void format(int d) override;
    std::string line(std::shared_ptr<Context> cx) override;
@@ -309,7 +303,6 @@ public:
       elements.pop_front();
    }
    Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
-   Element_p capture(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, int d, std::shared_ptr<Element> lal = nullptr) override;
    void show(int d, const std::string &chan) override;
    void format(int d) override;
    std::string line(std::shared_ptr<Context> cx) override;
@@ -346,7 +339,6 @@ public:
    {
       elements[i] = el;
    }
-   Element_p capture(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, int d, std::shared_ptr<Element> lal = nullptr) override;
    virtual std::shared_ptr<Elements> make_copy() = 0;
 
 protected:
@@ -621,7 +613,6 @@ public:
    void format(int d) override;
    std::string line(std::shared_ptr<Context> cx) override;
    Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
-   Element_p capture(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, int d, std::shared_ptr<Element> lal = nullptr) override;
    void setCondition(Element_p cond)
    {
       condition = cond;
@@ -663,7 +654,6 @@ public:
    void format(int d) override;
    std::string line(std::shared_ptr<Context> cx) override;
    Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
-   Element_p capture(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, int d, std::shared_ptr<Element> lal = nullptr) override;
    void setBody(Body_p bd)
    {
       body = bd;
@@ -702,7 +692,6 @@ public:
    void format(int d) override;
    std::string line(std::shared_ptr<Context> cx) override;
    Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
-   Element_p capture(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, int d, std::shared_ptr<Element> lal = nullptr) override;
    void setBody(Body_p bd)
    {
       body = bd;
@@ -742,11 +731,7 @@ public:
    std::string line(std::shared_ptr<Context> cx) override;
    Element_p evaluate(std::shared_ptr<Context> cx, int d)
    {
-      return nullptr;
-   }
-   Element_p capture(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, int d, Element_p lal = nullptr)
-   {
-      return shared_from_this();
+       return nullptr;
    }
    virtual std::string info() override
    {
@@ -773,7 +758,6 @@ public:
    void format(int d) override;
    std::string line(std::shared_ptr<Context> cx) override;
    Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
-   Element_p capture(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, int d, std::shared_ptr<Element> lal = nullptr) override;
    void addVariable(std::string nm, Element_p el)
    {
       variables.insert({nm, el});
@@ -911,7 +895,6 @@ public:
    void format(int d) override;
    std::string line(std::shared_ptr<Context> cx) override;
    Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
-   Element_p capture(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, int d, std::shared_ptr<Element> lal = nullptr) override;
 
    int getParamsSize()
    {
@@ -983,7 +966,6 @@ public:
    void format(int d) override;
    std::string line(std::shared_ptr<Context> cx) override;
    Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
-   Element_p capture(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, int d, std::shared_ptr<Element> lal = nullptr) override;
    std::string getName()
    {
       return name;
@@ -1019,6 +1001,8 @@ using Defn_p = std::shared_ptr<Defn>;
 
 // Lambda
 
+class Bind;
+
 class Lambda : public Callable
 {
 public:
@@ -1028,7 +1012,6 @@ public:
    void format(int d) override;
    std::string line(std::shared_ptr<Context> cx) override;
    Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
-   Element_p capture(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, int d, std::shared_ptr<Element> lal = nullptr) override;
    Fn_p getFn()
    {
       return fn;
@@ -1053,7 +1036,7 @@ using Lambda_p = std::shared_ptr<Lambda>;
 
 // Bind
 
-class Frame;
+class Scope;
 
 class Bind : public Callable
 {
@@ -1064,13 +1047,21 @@ public:
    void format(int d) override;
    std::string line(std::shared_ptr<Context> cx) override;
    Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
-   Lambda_p getLambda()
+   std::shared_ptr<Lambda> getLambda()
    {
       return lambda;
    }
-   void setLambda(Lambda_p la)
+   void setLambda(std::shared_ptr<Lambda> la)
    {
       lambda = la;
+   }
+   std::shared_ptr<Scope> getScope()
+   {
+      return scope;
+   }
+   void setScope(std::shared_ptr<Scope> sc)
+   {
+      scope = sc;
    }
    std::shared_ptr<Frame> getFrame()
    {
@@ -1097,7 +1088,8 @@ public:
    void determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn> defn) override;
 
 private:
-   Lambda_p               lambda;
+   std::shared_ptr<Lambda> lambda;
+   std::shared_ptr<Scope> scope;
    std::shared_ptr<Frame> frame;
    int                    orig;     // youngest frame nr at the time of the capture
 };
@@ -1115,7 +1107,6 @@ public:
    void format(int d) override;
    std::string line(std::shared_ptr<Context> cx) override;
    Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
-   Element_p capture(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, int d, std::shared_ptr<Element> lal = nullptr) override;
    std::string getText()
    {
       return text;
@@ -1150,7 +1141,6 @@ public:
    std::string line(std::shared_ptr<Context> cx) override;
    Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
    Element_p evaluate2(std::shared_ptr<Context> cx, std::shared_ptr<Element> call, int d);
-   Element_p capture(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, int d, std::shared_ptr<Element> lal = nullptr) override;
    std::string getText()
    {
       return text;
@@ -1184,7 +1174,6 @@ public:
    void format(int d) override;
    std::string line(std::shared_ptr<Context> cx) override;
    Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
-   Element_p capture(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, int d, std::shared_ptr<Element> lal = nullptr) override;
    std::string getText()
    {
       return text;

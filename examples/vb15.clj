@@ -1,28 +1,10 @@
-(defn fibc [k]
-   (k
-      10
-   )
+(defn doe2 [k]
+   (k 3)
 )
 
-(defn fibb [k]
-   (k
-      20
-   )
+(defn doe [val]
+   (doe2 (fn [v] (+ v val)))
 )
 
-(defn fiba [k]
-   (fibb
-      (fn [value1]
-         (fibc 
-            (fn [value2] 
-               (k
-                 (+ value1 value2)
-               )
-            )
-         )
-      )
-   )
-)
-
-(fiba (fn [value] value))
+(println "resultaat " (doe 7))
 

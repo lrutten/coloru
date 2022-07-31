@@ -18,6 +18,15 @@ enum frame_t
    fr_let
 };
 
+enum scope_t
+{
+    sc_undefined,
+    sc_main,
+    sc_defn,
+    sc_lambda,
+    sc_capture
+};
+
 // exception klassen
 
 class RunError
@@ -113,15 +122,56 @@ private:
 using Sink_p = std::shared_ptr<Sink>;
 
 
- 
+
+
+class Scope : public std::enable_shared_from_this<Scope>
+{
+public:
+    Scope(scope_t sc);
+    ~Scope();
+    void push(frame_t frtp);
+    void push(Frame_p fr, int d, const std::string &chan);
+    void pop();
+    void add_binding(std::string nm, Element_p);
+    Element_p search(std::string nm, int d, const std::string &chan, bool shortsrch = false);
+    bool exists(std::string nm);
+    void show(int d, const std::string &chan);
+    std::shared_ptr<Scope> copy();
+    int size()
+    {
+        return frames.size();
+    }
+    const std::deque<Frame_p> &getFrames()
+    {
+        return frames;
+    }
+
+private:
+    static int counter;
+    int         nr;
+    std::deque<Frame_p> frames;
+    scope_t             sctype;
+};
+
+using Scope_p = std::shared_ptr<Scope>;
+
+
+
+
+
+
 class Context : public std::enable_shared_from_this<Context>
 {
 public:
    Context();
    ~Context();
    void push(frame_t frtp);
-   void push(Frame_p fr);
+   void push(Frame_p fr, int d, const std::string &chan);
    void pop();
+   void push_scope(scope_t tp);
+   void push_scope(Scope_p sc);
+   void pop_scope();
+   Scope_p current_scope();
    void add_binding(std::string nm, Element_p);
    Element_p search(std::string nm, int d, const std::string &chan, bool shortsrch = false);
    bool exists(std::string nm);
@@ -154,16 +204,24 @@ public:
    }
    int size()
    {
-      return frames.size();
+      return getFrames().size();
    }
-   const std::deque<Frame_p> &getFrames()
+   const std::deque<Frame_p> getFrames()
    {
+      std::deque<Frame_p> frames;
+      for (Scope_p sc: scopes)
+      {
+          for (Frame_p fr: sc->getFrames())
+          {
+              frames.push_front(fr);
+          }
+      }
       return frames;
    }
    void breek(Element_p cur);
 
 private:
-   std::deque<Frame_p> frames;
+   std::deque<Scope_p> scopes;
    Sink_p              sink;
    Element_p           current;
    bool                running;

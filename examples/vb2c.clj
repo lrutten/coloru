@@ -6,6 +6,7 @@
        (* n (fac (- n 1)))
     )
 )
-(fac 2)
+
+(println "fac 5 " (fac 5))
 
 

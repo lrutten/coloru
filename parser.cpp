@@ -631,8 +631,12 @@ Lambda::~Lambda()
 
 void Lambda::show(int d, const std::string &chan)
 {
+   //std::cout << "Lambda::show()\n";
    CLOG(DEBUG, chan.c_str()) << i(d) << "Lambda:" << type_to_s();
-   fn->show(d + 1, chan);
+   if (fn != nullptr)
+   {
+       fn->show(d + 1, chan);
+   }
 }
 
 void Lambda::format(int d)
@@ -862,7 +866,7 @@ bool Fn::assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr
 
 // Bind
 
-Bind::Bind() : lambda(nullptr), orig(-1)
+Bind::Bind() : scope(nullptr)
 {
 }
 
@@ -1759,7 +1763,6 @@ Element_p Parser::vector()
       std::cout << "eof in vector()\n";
       throw std::make_unique<ParserError>();
    }
-   // never reached
    return nullptr;
 }
 
