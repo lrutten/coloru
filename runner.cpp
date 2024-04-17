@@ -184,9 +184,14 @@ Element_p Call::evaluate(std::shared_ptr<Context> cx, int d)
          CLOG(DEBUG, "runner") << i(d + 1) << "callable is builtin";
 
          // no break for the debugger
-         cx->push_scope(sc_defn);
+
+         // 16/ 4/2024 discarded
+         // cx->push_scope(sc_defn);
+
          Element_p rs = bin->evaluate2(cx, shared_from_this(), d + 1);
-         cx->pop_scope();
+
+         // 16/ 4/2024 discarded
+         // cx->pop_scope();
          return rs;
       }
       else
@@ -1114,7 +1119,7 @@ std::string Frame::frametp_as_s()
 
 void Frame::show(int d, const std::string &chan)
 {
-   CLOG(DEBUG, chan.c_str()) << i(d) << "Frame " << nr << " " << frametp_as_s();
+   CLOG(DEBUG, chan.c_str()) << i(d) << "|Frame " << nr << " " << frametp_as_s();
 
    for (auto it: bindings)
    {
@@ -1195,7 +1200,7 @@ Element_p Scope::search(std::string nm, int d, const std::string &chan, bool sho
 
     //show(5, "capture");
 
-    CLOG(DEBUG, chan.c_str()) << i(d) << "Scope search " << nm << " short " << shortsrch;
+    CLOG(DEBUG, chan.c_str()) << i(d) << "Scope search " << nm << " short " << shortsrch << " #" << frames.size();
     // search in all the recent frames
     // until the first defn or capture frame is encountered
     for (Frame_p fra: frames)
@@ -1256,7 +1261,7 @@ bool Scope::exists(std::string nm)
 
 void Scope::show(int d, const std::string &chan)
 {
-    CLOG(DEBUG, chan.c_str()) << i(d) << "Scope " << nr << " #" << frames.size();
+    CLOG(DEBUG, chan.c_str()) << i(d) << "|Scope " << nr << " #" << frames.size();
 
     //for (Frame_p fr: frames)
     for (Frame_p fr: std::ranges::views::reverse(frames))
@@ -1311,14 +1316,14 @@ void Context::pop()
 
 void Context::push_scope(scope_t tp)
 {
-   CLOG(DEBUG, "runner") << "Context push_scope a";
+   CLOG(DEBUG, "runner") << "Context push_scope primo";
    Scope_p sc = std::make_shared<Scope>(tp);
    scopes.push_front(sc);
 }
 
 void Context::push_scope(Scope_p sc)
 {
-    CLOG(DEBUG, "runner") << "Context push_scope b";
+    CLOG(DEBUG, "runner") << "Context push_scope secundo";
     scopes.push_front(sc);
 }
 
@@ -1373,7 +1378,7 @@ bool Context::exists(std::string nm)
 
 void Context::show(int d, const std::string &chan)
 {
-   CLOG(DEBUG, chan.c_str()) << i(d) << "Context #" << scopes.size();
+   CLOG(DEBUG, chan.c_str()) << i(d) << "|Context #" << scopes.size();
 
    for (Scope_p sc: std::ranges::views::reverse(scopes))
    {
