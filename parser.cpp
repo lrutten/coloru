@@ -162,6 +162,11 @@ void List::add(Element_p el)
    elements.push_back(el);
 }
 
+void List::add_front(Element_p el)
+{
+   elements.push_front(el);
+}
+
 std::size_t List::size()
 {
    return elements.size();
@@ -204,6 +209,16 @@ void List::print()
    std::cout << ')';
 }
 
+List_p List::copy()
+{
+   List_p li = std::make_shared<List>();
+   for (Element_p el: elements)
+   {
+      li->add(el);
+   }
+
+   return li;
+}
 
 // Call
 

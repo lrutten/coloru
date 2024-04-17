@@ -442,7 +442,8 @@ Element_p Println::evaluate(std::shared_ptr<Context> cx, int d)
    }
    std::cout << "\n";
 
-   return result;
+   //return result;
+   return std::make_shared<Nil>();
 }
 
 // Print
@@ -461,14 +462,18 @@ Element_p Print::evaluate(std::shared_ptr<Context> cx, int d)
    }
    //std::cout << "\n";
 
-   return result;
+   //return result;
+   return std::make_shared<Nil>();
 }
 
 // Vector
 
 Element_p Vector::evaluate(std::shared_ptr<Context> cx, int d)
 {
-   return std::make_shared<Number>(0);
+   //return std::make_shared<Number>(0);
+   std::cout << "don't use vectors as a value type.\n";
+   std::cout << "vectors as a value type are not yet implemented.\n";
+   throw std::make_shared<RunError>();
 }
 
 // Body
@@ -480,6 +485,8 @@ Element_p Body::evaluate(std::shared_ptr<Context> cx, int d)
    Element_p result;
    for (Element_p el: elements)
    {
+      CLOG(DEBUG, "runner") << i(d + 1) << "Body element";
+      el->show(d + 2, "runner");
       result = el->evaluate(cx, d + 1);
    }
    return result;
@@ -889,6 +896,11 @@ Element_p Builtin::evaluate2(std::shared_ptr<Context> cx, std::shared_ptr<Elemen
          {
             npar = 0;
          }
+         else
+         if (bitext == "cons")
+         {
+            npar = 2;
+         }
 
          if (ca2->size() == npar)
          {
@@ -1003,6 +1015,47 @@ Element_p Builtin::evaluate2(std::shared_ptr<Context> cx, std::shared_ptr<Elemen
                }
                ss << ">";
                return std::make_shared<Text>(ss.str());
+            }
+            else
+            if (bitext == "cons")
+            {
+               CLOG(DEBUG, "runner") << i(d + 1) << "cons executes";
+
+               Element_p el0 = list2->get(0);
+               Element_p el1 = list2->get(1);
+
+               el0->show(d + 2, "runner");
+               el1->show(d + 2, "runner");
+
+               List_p   li = std::dynamic_pointer_cast<List>(el1);
+               Nil_p    ni = std::dynamic_pointer_cast<Nil>(el1);
+               Number_p nu = std::dynamic_pointer_cast<Number>(el1);
+               if (li != nullptr)
+               {
+                  CLOG(DEBUG, "runner") << i(d + 1) << "cons copy, add_front";
+                  List_p li2 = li->copy();
+                  li2->add_front(el0);
+                  return li2;
+               }
+               else
+               if (ni != nullptr)
+               {
+                  CLOG(DEBUG, "runner") << i(d + 1) << "cons no copy, add_front";
+                  List_p li2 = std::make_shared<List>();
+                  li2->add_front(el0);
+                  return li2;
+               }
+               else
+               if (nu != nullptr)
+               {
+                  std::cout << "cons builtin expects a list, not a number\n";
+                  throw std::make_shared<RunError>();
+               }
+               else
+               {
+                  std::cout << "cons builtin expects a list\n";
+                  throw std::make_shared<RunError>();
+               }
             }
          }
          else

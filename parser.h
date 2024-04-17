@@ -250,6 +250,7 @@ public:
    List();
    ~List();
    void add(Element_p el);
+   void add_front(Element_p el);
    std::size_t size();
    Element_p get(int i);
    std::deque<Element_p > getElements()
@@ -260,6 +261,8 @@ public:
    {
       elements.pop_front();
    }
+   std::shared_ptr<List> copy();
+
    Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
    void show(int d, const std::string &chan) override;
    void format(int d) override;

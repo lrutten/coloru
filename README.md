@@ -1,9 +1,9 @@
 ---
-title: Clojure engine in C++17
+title: Clojure engine in C++20
 ---
 
 
-`coloru` is a very limited Clojure engine written in C++17.
+`coloru` is a very limited Clojure engine written in C++20.
 
 It is developed as an excercise to learn implementing tail recursion optimization.
 Whether or not the optimization is applied can be chosen with an command line argument.
@@ -18,10 +18,11 @@ These are the limits:
 * Macro's are not allowed.
 * Global values are not allowed, so `def` is rejected.
 * Lists can be used.
+* Vectors cannot be used as data type, only as parameter list.
 * Quote must be done with `'`.
 * Parameter destructuring for lists is implemented
     * The ampersand `&` is allowed.
-* There are only 2 builtins: `nil?` and `empty?`.
+* There are only 3 builtins: `nil?` and `empty?` and `cons`.
 * `println` is implemented.
 * Loops must be implemented with recursion.
 * No `and`, `or` and `not` in `if`.
@@ -51,6 +52,10 @@ These are the command line options:
 
 `-l`
 : print the optimized code on the screen
+
+`-e`
+
+: starts the program in the debugger
 
 ## Examples
 
@@ -89,7 +94,17 @@ make
 The executable `coloru` can be found in the current directory.
 Copy and use it. 
 
+# Log
 
+## 17/ 4/2024 version `0.6.1`
+
+These are the corrections/additions.
+
+* `cons` is added.
+* `println` and `print` return `nil`.
+* The extra scope for builtins is removed.
+* Extra logging is added in `runner`.
+* The use of a vector `[]` as data type returns an error.
 
 # Links
 
