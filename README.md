@@ -106,6 +106,10 @@ These are the corrections/additions.
 * Extra logging is added in `runner`.
 * The use of a vector `[]` as data type returns an error.
 
+## 19/ 4/2024 commit
+
+* List destructuring accepts also `nil`.
+
 # Links
 
 * [https://eli.thegreenplace.net/2017/on-recursion-continuations-and-trampolines/](https://eli.thegreenplace.net/2017/on-recursion-continuations-and-trampolines/)
