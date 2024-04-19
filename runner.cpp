@@ -88,7 +88,7 @@ bool Param::assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame>
       }
       else
       {
-         CLOG(DEBUG, "runner") << i(d + 1) << "add binding list";
+         CLOG(DEBUG, "runner") << i(d + 1) << "add binding list (rest)";
 
          List_p list2 = std::make_shared<List>();
          for (Element_p apar: list->getElements())
@@ -114,7 +114,10 @@ bool ParamList::assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Fr
    List_p list = apar;
    if (single)
    {
+      // This part is only executed on all ParamList's
+      // on a lower level.
       CLOG(DEBUG, "runner") << i(d + 1) << "single";
+
       if (apar->size() == 0)
       {
          std::cout << "parameter for list missing\n";
@@ -124,15 +127,36 @@ bool ParamList::assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Fr
 
       Element_p elres = el->evaluate(cx, d + 1);
 
+      Nil_p ni = std::dynamic_pointer_cast<Nil>(elres);
       list = std::dynamic_pointer_cast<List>(elres);
-      if (list== nullptr)
+      if (list == nullptr)
       {
-         el->show(d + 1, "runner");
-         std::cout << "parameter must be list\n";
-         throw std::make_shared<RunError>();
+         // not a list
+         if (ni != nullptr)
+         {
+            //it is nil
+            CLOG(DEBUG, "runner") << i(d + 1) << "parameter is nil instead of list";
+
+            // Make a list with 1 nil
+            //   '(nil)
+            list = std::make_shared<List>();
+            list->add(std::make_shared<Nil>());
+         }
+         else
+         {
+            // not a list nor nil, error
+            el->show(d + 1, "runner");
+            std::cout << "parameter must be list\n";
+            throw std::make_shared<RunError>();
+         }
       }
+
       apar->pop_front();
       list->show(d + 1, "runner");
+   }
+   else
+   {
+      CLOG(DEBUG, "runner") << i(d + 1) << "no single";
    }
 
    CLOG(DEBUG, "runner") << i(d + 1) << "list size " << list->size();
