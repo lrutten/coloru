@@ -110,6 +110,8 @@ These are the corrections/additions.
 
 * List destructuring accepts also `nil`.
 
+## 25/ 4/2024 version `0.6.2`
+
 # Links
 
 * [https://eli.thegreenplace.net/2017/on-recursion-continuations-and-trampolines/](https://eli.thegreenplace.net/2017/on-recursion-continuations-and-trampolines/)
