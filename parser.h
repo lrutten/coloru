@@ -668,7 +668,7 @@ public:
    void determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn> defn) override;
 
 private:
-   bool                     full;
+   bool                     full; // parse this only once
    Body_p                   body;
 };
 
@@ -705,7 +705,7 @@ public:
    void determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn> defn) override;
 
 private:
-   bool                     full;
+   bool                     full; // parse this only once
    Body_p                   body;
 };
 
@@ -804,10 +804,19 @@ public:
    {
       rest = rst;
    }
-   virtual bool assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, List_p apars, int d, bool single=true) = 0;
+   bool isListonly()
+   {
+      return listonly;
+   }
+   void setListonly(bool lo)
+   {
+      listonly = lo;
+   }
+   virtual bool assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, List_p apars, int d, bool ssingle=false) = 0;
 
 protected:
-   bool rest;    // preceding ampersand detected
+   bool rest;     // preceding ampersand detected
+   bool listonly; // this formal parameter expects a list as actual parameter
 };
 
 using AParam_p = std::shared_ptr<AParam>;
@@ -824,7 +833,7 @@ public:
    }
    void show(int d, const std::string &chan) override;
    void format(int d) override;
-   bool assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, List_p apars, int d, bool single=true) override;
+   bool assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, List_p apars, int d, bool ssingle=false) override;
 
 private:
    std::string name;
@@ -863,7 +872,7 @@ public:
 
    void show(int d, const std::string &chan) override;
    void format(int d) override;
-   bool assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, List_p apars, int d, bool single=true) override;
+   bool assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, List_p apars, int d, bool ssingle=false) override;
 
 private:
    std::vector<AParam_p> params;
@@ -926,7 +935,7 @@ public:
    bool assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, Element_p call, int d);
 
 private:
-   bool                     full;
+   bool                     full; // parse this only once
    ParamList_p              paramlist;
    Body_p                   body;
 };

@@ -39,12 +39,11 @@ Element_p List::evaluate(std::shared_ptr<Context> cx, int d)
    return shared_from_this();
 }
 
-
 // Param
 
-bool Param::assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, List_p apars, int d, bool single)
+bool Param::assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, List_p apars, int d, bool ssingle)
 {
-   CLOG(DEBUG, "runner") << i(d) << "Param assignParameters()";
+   CLOG(DEBUG, "runner") << i(d) << "Param assignParameters() " << ssingle;
 
    CLOG(DEBUG, "runner") << i(d + 1) << "rest " << getRest();
    CLOG(DEBUG, "runner") << i(d + 1) << "name " << name;
@@ -106,13 +105,14 @@ bool Param::assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame>
 
 // ParamList
 
-bool ParamList::assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, List_p apar, int d, bool single)
+bool ParamList::assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, List_p apar, int d, bool ssingle)
 {
-   CLOG(DEBUG, "runner") << i(d) << "ParamList assignParameters()";
+   CLOG(DEBUG, "runner") << i(d) << "ParamList assignParameters() " << ssingle;
    apar->show(d + 1, "runner");
 
    List_p list = apar;
-   if (single)
+   if (ssingle)
+   //if (isListonly())
    {
       // This part is only executed on all ParamList's
       // on a lower level.
@@ -165,11 +165,11 @@ bool ParamList::assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Fr
    {
       if (par->getRest())
       {
-         par->assignParameters(cx, fr, list, d + 2, false);
+         par->assignParameters(cx, fr, list, d + 2); // implicit false
       }
       else
       {
-         par->assignParameters(cx, fr, list, d + 2);
+         par->assignParameters(cx, fr, list, d + 2, true);
       }
    }
 
@@ -177,9 +177,10 @@ bool ParamList::assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Fr
    // d + 1
    // only for a short test
    //cx->show(0 , "capture");
-   
+
    return true;
 }
+
 
 
 // Call
@@ -795,6 +796,22 @@ Element_p Lambda::evaluate(std::shared_ptr<Context> cx, int d)
 }
 
 // Fn
+
+bool Fn::assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, Element_p callel, int d)
+{
+   Call_p call = std::dynamic_pointer_cast<Call>(callel);
+
+   // copy the call parameters to a list
+   List_p list = std::make_shared<List>();
+   for (int i = 1; i<call->getElements().size(); i++)
+   {
+      Element_p el = call->get(i);
+      list->add(el);
+   }
+
+   paramlist->assignParameters(cx, fr, list, d); // ssingle implicit false
+   return true;
+}
 
 Element_p Fn::evaluate(std::shared_ptr<Context> cx, int d)
 {

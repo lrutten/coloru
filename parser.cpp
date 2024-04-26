@@ -560,7 +560,7 @@ void Lambda::format(int d)
 
 // AParam
 
-AParam::AParam() : rest(false)
+AParam::AParam() : rest(false), listonly(true)
 {
 }
 
@@ -694,22 +694,6 @@ void Fn::format(int d)
    //indent(d);
    body->format(d);
    //std::cout << ")";
-}
-
-bool Fn::assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, Element_p callel, int d)
-{
-   Call_p call = std::dynamic_pointer_cast<Call>(callel);
-
-   // copy the call parameters to a list
-   List_p list = std::make_shared<List>();
-   for (int i = 1; i<call->getElements().size(); i++)
-   {
-      Element_p el = call->get(i);
-      list->add(el);
-   }
-
-   paramlist->assignParameters(cx, fr, list, d, false);
-   return true;
 }
 
 // Bind
@@ -1287,6 +1271,8 @@ Element_p Parser::list(bool isliteral)
                }
                else
                {
+                  // this else is never executed,
+                  // so the full flag can be omitted
                   CLOG(DEBUG, "parser") << "fn full";
                }
 
