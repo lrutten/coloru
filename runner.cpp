@@ -41,12 +41,15 @@ Element_p List::evaluate(std::shared_ptr<Context> cx, int d)
 
 // Param
 
+// Parameter ssingle is not in use anymore.
+//
 bool Param::assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, List_p apars, int d, bool ssingle)
 {
-   CLOG(DEBUG, "runner") << i(d) << "Param assignParameters() " << ssingle;
+   CLOG(DEBUG, "runner") << i(d) << "Param assignParameters() " << ssingle << " lo " << listonly;
 
    CLOG(DEBUG, "runner") << i(d + 1) << "rest " << getRest();
    CLOG(DEBUG, "runner") << i(d + 1) << "name " << name;
+   apars->show(d + 1, "runner");
 
    std::string fparname = name;
 
@@ -105,17 +108,21 @@ bool Param::assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame>
 
 // ParamList
 
+// Parameter ssingle is not in use anymore.
+//
 bool ParamList::assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, List_p apar, int d, bool ssingle)
 {
-   CLOG(DEBUG, "runner") << i(d) << "ParamList assignParameters() " << ssingle;
+   CLOG(DEBUG, "runner") << i(d) << "ParamList assignParameters() " << ssingle << " lo " << listonly;
    apar->show(d + 1, "runner");
 
    List_p list = apar;
-   if (ssingle)
-   //if (isListonly())
+   //if (ssingle)      // old way of testing
+   if (isListonly())   // new way of testing
    {
       // This part is only executed on all ParamList's
-      // on a lower level.
+      // on a lower level which are not preceded by an ampersand.
+
+      // This part tests on list and nil.
       CLOG(DEBUG, "runner") << i(d + 1) << "single";
 
       if (apar->size() == 0)
@@ -152,6 +159,7 @@ bool ParamList::assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Fr
       }
 
       apar->pop_front();
+      CLOG(DEBUG, "runner") << i(d + 1) << "apar size after pop_front" << apar->size();
       list->show(d + 1, "runner");
    }
    else
@@ -159,7 +167,7 @@ bool ParamList::assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Fr
       CLOG(DEBUG, "runner") << i(d + 1) << "no single";
    }
 
-   CLOG(DEBUG, "runner") << i(d + 1) << "list size " << list->size();
+   CLOG(DEBUG, "runner") << i(d + 1) << "list size after no/yes single" << list->size();
 
    for (AParam_p par: params)
    {

@@ -1239,6 +1239,7 @@ public:
    Parser();
    ~Parser();
    Element_p parse(std::string fn);
+   ParamList_p parameters_rec(Element_p els);
    ParamList_p parameters(Element_p els);
    Element_p list(bool isliteral=false);
    Element_p vector();

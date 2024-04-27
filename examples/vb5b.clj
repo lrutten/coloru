@@ -1,7 +1,6 @@
-(defn lijst [] '(11 22 33 44 55))
 
 (defn tel 
-   [[ a b & [c & d] ]] (println a "---" b "---" c "---" d))
+   [[ a & [b & c] ]] (println a "---" b "---" c))
 
-(tel (lijst))
+(tel '(11 22 33 44))
 

@@ -997,7 +997,7 @@ void Main::format(int d)
 
 // parserfuncties
 
-ParamList_p Parser::parameters(Element_p els)
+ParamList_p Parser::parameters_rec(Element_p els)
 {
    bool rest      = false;  // ampersand detected
    bool restel    = false;  // element after ampersand detected
@@ -1055,13 +1055,14 @@ ParamList_p Parser::parameters(Element_p els)
                   throw std::make_unique<ParserError>();
                }
 
-               AParam_p par = parameters(param3);
+               AParam_p par = parameters_rec(param3);
                pl->addParam(par);
 
                if (rest)
                {
                   restel = true;
                   par->setRest(true);
+                  par->setListonly(false);
                }
             }
             else
@@ -1079,6 +1080,15 @@ ParamList_p Parser::parameters(Element_p els)
    }
    return pl;
 }
+
+ParamList_p Parser::parameters(Element_p els)
+{
+   ParamList_p pars = parameters_rec(els);
+   pars->setListonly(false);
+
+   return pars;
+}
+
 
 Element_p Parser::list(bool isliteral)
 {
@@ -1167,6 +1177,7 @@ Element_p Parser::list(bool isliteral)
 
             Fn_p fn = std::make_shared<Fn>();
             ParamList_p parlst = parameters(lst->get(0));
+            //parlst->setListonly(false);
             fn->setParamList(parlst);
 
             /*
@@ -1220,6 +1231,7 @@ Element_p Parser::list(bool isliteral)
                lst->get(0)->show(0, "parser");
 
                ParamList_p parlst = parameters(lst->get(0));
+               // parlst->setListonly(false);
                fn->setParamList(parlst);
 
                /*
