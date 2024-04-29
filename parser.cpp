@@ -850,7 +850,8 @@ void Let::show(int d, const std::string &chan)
    for (const auto &pr: variables)
    {
       indent(d + 1);
-      std::cout << pr.first << "\n";
+      //std::cout << pr.first << "\n";
+      pr.first->show(d + 2, chan);
 
       pr.second->show(d + 2, chan);
    }
@@ -1393,6 +1394,9 @@ Element_p Parser::list(bool isliteral)
    
                            for (int i=0; i<vals->size()/2; i++)
                            {
+                              CLOG(DEBUG, "parser") << "for vals " << i;
+                              /*
+                               * old code
                               Symbol_p name = std::dynamic_pointer_cast<Symbol>(vals->get(i));
                               if (name == nullptr)
                               {
@@ -1400,9 +1404,37 @@ Element_p Parser::list(bool isliteral)
                                  throw std::make_unique<ParserError>();
                               }
                               lt->addVariable(name->getText(), vals->get(i + 1));
+                               */
+                              Symbol_p sym = std::dynamic_pointer_cast<Symbol>(vals->get(2*i));
+                              Vector_p vec = std::dynamic_pointer_cast<Vector>(vals->get(2*i));
+                              if (sym == nullptr)
+                              {
+                                 if (vec == nullptr)
+                                 {
+                                    std::cout << "error in let: value name must be symbol or vector\n";
+                                    CLOG(DEBUG, "parser") << "vals get " << i;
+                                    vals->get(i)->show(0, "parser");
+                                    throw std::make_unique<ParserError>();
+                                 }
+                              }
+
+                              CLOG(DEBUG, "parser") << "name is symbol or vector";
+
+                              // Ok, we have a symbol or a vector.
+                              // Encapsulate this single symbol or vector
+                              // into a new vector in order to parse it.
+                              Vector_p valname = std::make_shared<Vector>();
+                              valname->add(vals->get(2*i));
+                              valname->show(0, "parser");
+
+
+                              // parse
+                              // parameters() expects a vector.
+                              AParam_p par = parameters(valname);
+                              lt->addVariable(par, vals->get(2*i + 1));
                            }
                            lst->pop_front();
-   
+
                            Body_p bd = std::make_shared<Body>();
                            while (!lst->getElements().empty())
                            {
@@ -1412,7 +1444,7 @@ Element_p Parser::list(bool isliteral)
                            }
                            lt->setBody(bd);
                            lt->show(0, "parser");
-   
+
                            return lt;
                         }
                         else

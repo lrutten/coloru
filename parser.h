@@ -738,56 +738,6 @@ private:
 using Ampersand_p = std::shared_ptr<Ampersand>;
 
 
-// Let
-
-class Let : public Element
-{
-public:
-   Let();
-   ~Let();
-   void show(int d, const std::string &chan) override;
-   void format(int d) override;
-   Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
-   void addVariable(std::string nm, Element_p el)
-   {
-      variables.insert({nm, el});
-   }
-   int getVariablesSize()
-   {
-      return variables.size();
-   }
-   Element_p getVariable(std::string nm)
-   {
-      return variables[nm];
-   }
-   void setBody(Body_p bd)
-   {
-      body = bd;
-   }
-   bool isFull()
-   {
-      return full;
-   }
-   void setFull(bool fu)
-   {
-      full = fu;
-   }
-   virtual std::string info() override
-   {
-      return "Let";
-   }
-   type_t getType() override;
-   void resetTreetype() override;
-   void determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn> defn) override;
-
-private:
-   bool                             full;
-   std::map<std::string, Element_p> variables;
-   Body_p                           body;
-};
-
-using Let_p = std::shared_ptr<Let>;
-
 class AParam
 {
 public:
@@ -879,6 +829,64 @@ private:
 };
 
 using ParamList_p = std::shared_ptr<ParamList>;
+
+// Let
+
+class Let : public Element
+{
+public:
+   Let();
+   ~Let();
+   void show(int d, const std::string &chan) override;
+   void format(int d) override;
+   Element_p evaluate(std::shared_ptr<Context> cx, int d) override;
+
+   //void addVariable(std::string nm, Element_p el)
+   void addVariable(AParam_p par, Element_p el)
+   {
+      variables.insert({par, el});
+   }
+
+   // not in use
+   //int getVariablesSize()
+   //{
+   //   return variables.size();
+   //}
+
+   // not in use
+   //Element_p getVariable(std::string nm)
+   //{
+   //   return variables[nm];
+   //}
+
+   void setBody(Body_p bd)
+   {
+      body = bd;
+   }
+   bool isFull()
+   {
+      return full;
+   }
+   void setFull(bool fu)
+   {
+      full = fu;
+   }
+   virtual std::string info() override
+   {
+      return "Let";
+   }
+   type_t getType() override;
+   void resetTreetype() override;
+   void determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn> defn) override;
+
+private:
+   bool                             full;
+   //std::map<std::string, Element_p> variables;
+   std::map<AParam_p, Element_p>    variables;
+   Body_p                           body;
+};
+
+using Let_p = std::shared_ptr<Let>;
 
 // Fn
 

@@ -159,8 +159,8 @@ private:
 };
 
 
-std::string version = "0.6.2";
-std::string date    = "25/ 4/2024";
+std::string version = "0.6.3";
+std::string date    = "29/ 4/2024";
 
 //bool debug   = false;
 bool trans    = false;

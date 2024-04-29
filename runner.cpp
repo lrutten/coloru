@@ -433,8 +433,9 @@ Element_p Let::evaluate(std::shared_ptr<Context> cx, int d)
    for (const auto &pr: variables)
    {
       Element_p   apar     = pr.second;
-      std::string fparname = pr.first;
-      CLOG(DEBUG, "runner") << i(d + 1) << "fparname " << fparname;
+      //std::string fparname = pr.first;
+      AParam_p fpar = pr.first;
+      CLOG(DEBUG, "runner") << i(d + 1) << "fparname ";
 
       Element_p aparres = apar->evaluate(cx, d + 1);
 
@@ -442,7 +443,12 @@ Element_p Let::evaluate(std::shared_ptr<Context> cx, int d)
       aparres->show(d + 2, "runner");
       CLOG(DEBUG, "runner") << i(d + 1) << "=====";
 
-      fr->add_binding(fparname, aparres);
+      //fr->add_binding(fparname, aparres);
+      List_p aparlst = std::make_shared<List>();
+      aparlst->add(aparres);
+
+      // assignparameters expects a list containing the actual parameters.
+      fpar->assignParameters(cx, fr, aparlst, d + 1);
    }
 
    cx->push(fr, d + 1, "runner");
