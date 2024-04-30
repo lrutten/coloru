@@ -104,6 +104,10 @@ public:
    {
        return false;
    }
+   virtual std::shared_ptr<Element> deep_copy()
+   {
+      return shared_from_this();
+   }
 
 private:
    type_t                 treetype;
@@ -274,6 +278,7 @@ public:
    type_t getType() override;
    void resetTreetype() override;
    void determTreetype(std::shared_ptr<Main> main, std::shared_ptr<Defn> defn) override;
+   virtual std::shared_ptr<Element> deep_copy() override;
 
 private:
    std::deque<Element_p> elements;

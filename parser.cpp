@@ -220,6 +220,17 @@ List_p List::copy()
    return li;
 }
 
+Element_p List::deep_copy()
+{
+   List_p li = std::make_shared<List>();
+   for (Element_p el: elements)
+   {
+      li->add(el->deep_copy());
+   }
+
+   return li;
+}
+
 // Call
 
 Call::Call()

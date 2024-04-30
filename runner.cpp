@@ -448,7 +448,8 @@ Element_p Let::evaluate(std::shared_ptr<Context> cx, int d)
       aparlst->add(aparres);
 
       // assignparameters expects a list containing the actual parameters.
-      fpar->assignParameters(cx, fr, aparlst, d + 1);
+      List_p aparlst_cpy = std::dynamic_pointer_cast<List>(aparlst->deep_copy());
+      fpar->assignParameters(cx, fr, aparlst_cpy, d + 1);
    }
 
    cx->push(fr, d + 1, "runner");
