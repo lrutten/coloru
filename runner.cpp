@@ -938,6 +938,7 @@ Element_p Builtin::evaluate2(std::shared_ptr<Context> cx, std::shared_ptr<Elemen
 
          ca->show(d + 1, "runner");
 
+         bool strict = true;     // true: test on exact number, false test on >=
          if (bitext == "nil?")
          {
             npar = 1;
@@ -962,8 +963,15 @@ Element_p Builtin::evaluate2(std::shared_ptr<Context> cx, std::shared_ptr<Elemen
          {
             npar = 1;
          }
+         else
+         if (bitext == "list")
+         {
+            // list: 0, 1, 2 ... parameters
+            npar   = 0;
+            strict = false;
+         }
 
-         if (ca2->size() == npar)
+         if (ca2->size() == npar || !strict && ca2->size() >= npar)
          {
             CLOG(DEBUG, "runner") << i(d + 1) << "# params correct";
             ca->show(d + 2, "runner");
@@ -1139,6 +1147,20 @@ Element_p Builtin::evaluate2(std::shared_ptr<Context> cx, std::shared_ptr<Elemen
                   CLOG(DEBUG, "runner") << i(d + 2) << "seq? false";
                   return std::make_shared<Boolean>(false);
                }
+            }
+            else
+            if (bitext == "list")
+            {
+               CLOG(DEBUG, "runner") << i(d + 1) << "list executes";
+
+               List_p lis = std::make_shared<List>();
+               for (Element_p el: list2->getElements())
+               {
+                  CLOG(DEBUG, "runner") << i(d + 2) << "el";
+
+                  lis->add(el);
+               }
+               return lis;
             }
          }
          else

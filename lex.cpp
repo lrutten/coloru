@@ -251,6 +251,12 @@ void Lex::next()
                CLOG(DEBUG, "lex") << "seq?";
             }
             else
+            if (token_text == "list")
+            {
+               tok = tk_builtin;
+               CLOG(DEBUG, "lex") << "list";
+            }
+            else
             {
                tok = tk_symbol;
                CLOG(DEBUG, "lex") << "tk_symbol " << sym;
