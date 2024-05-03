@@ -970,6 +970,32 @@ Element_p Builtin::evaluate2(std::shared_ptr<Context> cx, std::shared_ptr<Elemen
             npar   = 0;
             strict = false;
          }
+         else
+         if (bitext == "and")
+         {
+            // and: 1, 2 ... parameters
+            npar   = 1;
+            strict = false;
+         }
+         else
+         if (bitext == "or")
+         {
+            // or: 1, 2 ... parameters
+            npar   = 1;
+            strict = false;
+         }
+         else
+         if (bitext == "not")
+         {
+            // not: 1 parameter
+            npar   = 1;
+         }
+         else
+         if (bitext == "mod")
+         {
+            // mod: 1 parameter
+            npar   = 2;
+         }
 
          if (ca2->size() == npar || !strict && ca2->size() >= npar)
          {
@@ -1161,6 +1187,93 @@ Element_p Builtin::evaluate2(std::shared_ptr<Context> cx, std::shared_ptr<Elemen
                   lis->add(el);
                }
                return lis;
+            }
+            else
+            if (bitext == "and")
+            {
+               CLOG(DEBUG, "runner") << i(d + 1) << "and executes";
+
+               for (Element_p el: list2->getElements())
+               {
+                  CLOG(DEBUG, "runner") << i(d + 2) << "el";
+                  Boolean_p bo = std::dynamic_pointer_cast<Boolean>(el);
+                  if (bo == nullptr)
+                  {
+                     std::cout << "and builtin expects booleans\n";
+                     throw std::make_shared<RunError>();
+                  }
+                  if (!bo->getValue())
+                  {
+                     return std::make_shared<Boolean>(false);
+                  }
+               }
+               return std::make_shared<Boolean>(true);
+            }
+            else
+            if (bitext == "or")
+            {
+               CLOG(DEBUG, "runner") << i(d + 1) << "or executes";
+
+               for (Element_p el: list2->getElements())
+               {
+                  CLOG(DEBUG, "runner") << i(d + 2) << "el";
+
+                  Boolean_p bo = std::dynamic_pointer_cast<Boolean>(el);
+                  if (bo == nullptr)
+                  {
+                     std::cout << "or builtin expects booleans\n";
+                     throw std::make_shared<RunError>();
+                  }
+                  bo->show(d + 2, "runner");
+                  if (bo->getValue())
+                  {
+                     return std::make_shared<Boolean>(true);
+                  }
+               }
+               return std::make_shared<Boolean>(false);
+            }
+            else
+            if (bitext == "not")
+            {
+               CLOG(DEBUG, "runner") << i(d + 1) << "not executes";
+
+               Boolean_p bo = std::dynamic_pointer_cast<Boolean>(list2->get(0));
+               if (bo == nullptr)
+               {
+                  std::cout << "not builtin expects a boolean\n";
+                  throw std::make_shared<RunError>();
+               }
+               if (bo->getValue())
+               {
+                  return std::make_shared<Boolean>(false);
+               }
+               else
+               {
+                  return std::make_shared<Boolean>(true);
+               }
+            }
+            else
+            if (bitext == "mod")
+            {
+               CLOG(DEBUG, "runner") << i(d + 1) << "mod executes";
+
+               Element_p el0 = list2->get(0);
+               Element_p el1 = list2->get(1);
+
+               el0->show(d + 2, "runner");
+               el1->show(d + 2, "runner");
+
+               Number_p nu0 = std::dynamic_pointer_cast<Number>(el0);
+               Number_p nu1 = std::dynamic_pointer_cast<Number>(el1);
+               if (nu0 == nullptr || nu1 == nullptr)
+               {
+                  std::cout << "mod builtin expects 2 numbers\n";
+                  throw std::make_shared<RunError>();
+               }
+
+               int n0 = nu0->getNumber();
+               int n1 = nu1->getNumber();
+               return std::make_shared<Number>(n0 % n1);
             }
          }
          else

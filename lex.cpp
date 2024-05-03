@@ -257,6 +257,30 @@ void Lex::next()
                CLOG(DEBUG, "lex") << "list";
             }
             else
+            if (token_text == "and")
+            {
+               tok = tk_builtin;
+               CLOG(DEBUG, "lex") << "and";
+            }
+            else
+            if (token_text == "or")
+            {
+               tok = tk_builtin;
+               CLOG(DEBUG, "lex") << "or";
+            }
+            else
+            if (token_text == "not")
+            {
+               tok = tk_builtin;
+               CLOG(DEBUG, "lex") << "not";
+            }
+            else
+            if (token_text == "mod")
+            {
+               tok = tk_builtin;
+               CLOG(DEBUG, "lex") << "mod";
+            }
+            else
             {
                tok = tk_symbol;
                CLOG(DEBUG, "lex") << "tk_symbol " << sym;
