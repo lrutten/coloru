@@ -245,6 +245,12 @@ void Lex::next()
                CLOG(DEBUG, "lex") << "cons";
             }
             else
+            if (token_text == "seq?")
+            {
+               tok = tk_builtin;
+               CLOG(DEBUG, "lex") << "seq?";
+            }
+            else
             {
                tok = tk_symbol;
                CLOG(DEBUG, "lex") << "tk_symbol " << sym;

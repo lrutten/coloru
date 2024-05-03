@@ -957,6 +957,11 @@ Element_p Builtin::evaluate2(std::shared_ptr<Context> cx, std::shared_ptr<Elemen
          {
             npar = 2;
          }
+         else
+         if (bitext == "seq?")
+         {
+            npar = 1;
+         }
 
          if (ca2->size() == npar)
          {
@@ -1111,6 +1116,28 @@ Element_p Builtin::evaluate2(std::shared_ptr<Context> cx, std::shared_ptr<Elemen
                {
                   std::cout << "cons builtin expects a list\n";
                   throw std::make_shared<RunError>();
+               }
+            }
+            else
+            if (bitext == "seq?")
+            {
+               CLOG(DEBUG, "runner") << i(d + 1) << "seq? executes";
+
+               Element_p el0 = list2->get(0);
+
+               el0->show(d + 2, "runner");
+
+               // List is returning true, everything else gives false
+               List_p li = std::dynamic_pointer_cast<List>(el0);
+               if (li != nullptr)
+               {
+                  CLOG(DEBUG, "runner") << i(d + 2) << "seq? true";
+                  return std::make_shared<Boolean>(true);
+               }
+               else
+               {
+                  CLOG(DEBUG, "runner") << i(d + 2) << "seq? false";
+                  return std::make_shared<Boolean>(false);
                }
             }
          }
