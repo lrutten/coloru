@@ -179,7 +179,7 @@ Element_p List::get(int i)
 
 void List::show(int d, const std::string &chan)
 {
-   CLOG(DEBUG, chan.c_str()) << i(d) << "List:" << type_to_s();
+   CLOG(DEBUG, chan.c_str()) << i(d) << "List:" << type_to_s() << " #" << size();
 
    for (Element_p el: elements)
    {
@@ -571,7 +571,7 @@ void Lambda::format(int d)
 
 // AParam
 
-AParam::AParam() : rest(false), listonly(true)
+AParam::AParam() : rest(false), listonly(true), beforeamp(false)
 {
 }
 
@@ -592,7 +592,7 @@ Param::~Param()
 
 void Param::show(int d, const std::string &chan)
 {
-   CLOG(DEBUG, chan.c_str()) << i(d) << "Param " << name << " " << rest;
+   CLOG(DEBUG, chan.c_str()) << i(d) << "Param " << name << " " << rest << " " << beforeamp;
 }
 
 void Param::format(int d)
@@ -602,6 +602,16 @@ void Param::format(int d)
       std::cout << "& ";
    }
    std::cout << name << " ";
+}
+
+void Param::setBeforeAmp(int d, bool val)
+{
+   CLOG(DEBUG, "parser") << i(d) << "Param setBeforeAmp d " << d;
+   if (d > 1 && val)
+   {
+      CLOG(DEBUG, "parser") << i(d) << "Param setBeforeAmp true";
+      beforeamp = true;
+   }
 }
 
 // ParamList
@@ -616,7 +626,7 @@ ParamList::~ParamList()
 
 void ParamList::show(int d, const std::string &chan)
 {
-   CLOG(DEBUG, chan.c_str()) << i(d) << "ParamList " << rest;
+   CLOG(DEBUG, chan.c_str()) << i(d) << "ParamList " << rest << " " << beforeamp;
 
    for (AParam_p p: params)
    {
@@ -637,6 +647,55 @@ void ParamList::format(int d)
       p->format(d + 1);
    }
    std::cout << "]";
+}
+
+// Is there any Param with rest set?
+bool ParamList::hasRest()
+{
+   for (AParam_p p: params)
+   {
+      if (p->getRest())
+      {
+         return true;
+      }
+   }
+   return false;
+}
+
+// Run through all the sub params
+// and set beforeamp according to the following rule:
+//
+// * Param's is in the root ParamList all get false
+//   even if there is an &
+// * In non-root ParamList's the Param's before the & get true.
+void ParamList::setBeforeAmp(int d, bool val)
+{
+   CLOG(DEBUG, "parser") << i(d) << "ParamList setBeforeAmp d " << d;
+   bool first = true;
+   for (AParam_p p: params)
+   {
+      bool bfa = false;
+      if (d >= 1 && hasRest())
+      {
+         // only non-root ParamList which has an &
+         bfa = true;
+      }
+
+      // Is this a Param preceded by &?
+      if (p->getRest())
+      {
+         // stop using true as value for beforeamp
+         first = false;
+      }
+      if (first)
+      {
+         p->setBeforeAmp(d + 1, bfa);
+      }
+      else
+      {
+         p->setBeforeAmp(d + 1, false);
+      }
+   }
 }
 
 // Fn
@@ -1097,6 +1156,7 @@ ParamList_p Parser::parameters(Element_p els)
 {
    ParamList_p pars = parameters_rec(els);
    pars->setListonly(false);
+   pars->setBeforeAmp(0, false);
 
    return pars;
 }

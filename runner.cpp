@@ -53,7 +53,9 @@ bool Param::assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame>
 
    std::string fparname = name;
 
+   // not here: make deep copy to provent loss of first element
    List_p list = apars;
+   //List_p list = std::dynamic_pointer_cast<List>(apars->deep_copy());
 
    if (!rest)
    {
@@ -72,6 +74,16 @@ bool Param::assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame>
          CLOG(DEBUG, "runner") << i(d + 1) << "=====";
 
          fr->add_binding(fparname, aparres);
+      }
+      else
+      if (beforeamp)
+      {
+         // When destructuring a list, nil can be used
+         // instead of raising an error.
+         // if not enough actual parameters, assign nil.
+         Nil_p nl = std::make_shared<Nil>();
+
+         fr->add_binding(fparname, nl);
       }
       else
       {
@@ -116,6 +128,10 @@ bool ParamList::assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Fr
    apar->show(d + 1, "runner");
 
    List_p list = apar;
+
+   // no deep copy here
+   //List_p list = std::dynamic_pointer_cast<List>(apar->deep_copy());
+
    //if (ssingle)      // old way of testing
    if (isListonly())   // new way of testing
    {
@@ -448,6 +464,7 @@ Element_p Let::evaluate(std::shared_ptr<Context> cx, int d)
       aparlst->add(aparres);
 
       // assignparameters expects a list containing the actual parameters.
+      // deep copy can stay here
       List_p aparlst_cpy = std::dynamic_pointer_cast<List>(aparlst->deep_copy());
       fpar->assignParameters(cx, fr, aparlst_cpy, d + 1);
    }
@@ -816,7 +833,8 @@ bool Fn::assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr
 {
    Call_p call = std::dynamic_pointer_cast<Call>(callel);
 
-   // copy the call parameters to a list
+   // Copy the call parameters to a list.
+   // The first element is omitted.
    List_p list = std::make_shared<List>();
    for (int i = 1; i<call->getElements().size(); i++)
    {
@@ -824,7 +842,15 @@ bool Fn::assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr
       list->add(el);
    }
 
-   paramlist->assignParameters(cx, fr, list, d); // ssingle implicit false
+   // Make a deep copy of the parameter list.
+   // This is necessary because the process of assigning the parameter
+   // will shorten the actual parameter list.
+   // The copy prevents the use of the falsely shortened list.
+
+   // is not working
+   List_p list_cpy = std::dynamic_pointer_cast<List>(list->deep_copy());
+
+   paramlist->assignParameters(cx, fr, list_cpy, d); // ssingle implicit false
    return true;
 }
 
@@ -1340,13 +1366,17 @@ void Frame::add_binding(std::string nm, Element_p el)
    bindings.insert({nm, el});
 }
 
+
+// return a deep copy of the found element.
+// This way changes in lists while assiging parameters
+// cause no unforseen changes.
 Element_p Frame::search(std::string nm)
 {
    //std::cout << "Frame search\n";
    auto it = bindings.find(nm);
    if (it != bindings.end())
    {
-      return it->second;
+      return it->second->deep_copy();
    }
    else
    {

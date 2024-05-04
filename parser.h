@@ -768,10 +768,12 @@ public:
       listonly = lo;
    }
    virtual bool assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, List_p apars, int d, bool ssingle=false) = 0;
+   virtual void setBeforeAmp(int d, bool val) = 0;
 
 protected:
-   bool rest;     // preceding ampersand detected
-   bool listonly; // this formal parameter expects a list as actual parameter
+   bool rest;      // preceding ampersand detected
+   bool listonly;  // this formal parameter expects a list as actual parameter
+   bool beforeamp; // this formal parameter is followed by an ampersand
 };
 
 using AParam_p = std::shared_ptr<AParam>;
@@ -789,6 +791,7 @@ public:
    void show(int d, const std::string &chan) override;
    void format(int d) override;
    bool assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, List_p apars, int d, bool ssingle=false) override;
+   void setBeforeAmp(int d, bool val) override;
 
 private:
    std::string name;
@@ -825,9 +828,11 @@ public:
       }
    }
 
+   bool hasRest();
    void show(int d, const std::string &chan) override;
    void format(int d) override;
    bool assignParameters(std::shared_ptr<Context> cx, std::shared_ptr<Frame> fr, List_p apars, int d, bool ssingle=false) override;
+   void setBeforeAmp(int d, bool val) override;
 
 private:
    std::vector<AParam_p> params;
