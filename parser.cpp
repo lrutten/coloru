@@ -11,7 +11,7 @@ void indent(int d)
 {
    while (d-- > 0)
    {
-      printf(" ");
+      std::cout << " ";
    }
 }
 
@@ -78,10 +78,12 @@ void Number::show(int d, const std::string &chan)
 void Number::print()
 {
    std::cout << number;
+   /*
    if (getFrame() != nullptr)
    {
       std::cout << "%" << getFrame()->getNr() << "-" << getFrame()->getInfo();
    }
+    */
 }
 
 void Number::format(int d)
@@ -919,7 +921,7 @@ void Let::show(int d, const std::string &chan)
 
    for (const auto &pr: variables)
    {
-      indent(d + 1);
+      //indent(d + 1);
       //std::cout << pr.first << "\n";
       pr.first->show(d + 2, chan);
 
@@ -934,7 +936,7 @@ void Let::show(int d, const std::string &chan)
 
 void Let::format(int d)
 {
-   indent(d);
+   ///indent(d);
    std::cout << "(let\n";
 
    for (const auto &pr: variables)
@@ -949,7 +951,7 @@ void Let::format(int d)
    {
       body->format(d + 1);
    }
-   indent(d);
+   ///indent(d);
    std::cout << ")";
 }
 

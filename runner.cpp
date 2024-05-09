@@ -582,7 +582,28 @@ Element_p Mul::evaluate(std::shared_ptr<Context> cx, int d)
 
 Element_p Div::evaluate(std::shared_ptr<Context> cx, int d)
 {
-   return std::make_shared<Number>(0);
+   number_t value = 1;
+   int i = 0;
+   for (Element_p el: elements)
+   {
+      Element_p el2 = el->evaluate(cx, d + 1);
+      Number_p nu = std::dynamic_pointer_cast<Number>(el2);
+      if (nu == nullptr)
+      {
+         std::cout << "run error not a number in - expression\n";
+         throw std::make_unique<RunError>();
+      }
+      if (i == 0)
+      {
+         value *= nu->getNumber();
+      }
+      else
+      {
+         value /= nu->getNumber();
+      }
+      i++;
+   }
+   return std::make_shared<Number>(value);
 }
 
 // Plus
@@ -1019,8 +1040,32 @@ Element_p Builtin::evaluate2(std::shared_ptr<Context> cx, std::shared_ptr<Elemen
          else
          if (bitext == "mod")
          {
-            // mod: 1 parameter
+            // mod: 2 parameter
             npar   = 2;
+         }
+         else
+         if (bitext == "nth")
+         {
+            // nth: 2 parameters
+            npar   = 2;
+         }
+         else
+         if (bitext == "size")
+         {
+            // size: 1 parameter
+            npar   = 1;
+         }
+         else
+         if (bitext == "first")
+         {
+            // first: 1 parameter
+            npar   = 1;
+         }
+         else
+         if (bitext == "rest")
+         {
+            // rest: 1 parameter
+            npar   = 1;
          }
 
          if (ca2->size() == npar || !strict && ca2->size() >= npar)
@@ -1300,6 +1345,103 @@ Element_p Builtin::evaluate2(std::shared_ptr<Context> cx, std::shared_ptr<Elemen
                int n0 = nu0->getNumber();
                int n1 = nu1->getNumber();
                return std::make_shared<Number>(n0 % n1);
+            }
+            else
+            if (bitext == "nth")
+            {
+               CLOG(DEBUG, "runner") << i(d + 1) << "nth executes";
+
+               Element_p el0 = list2->get(0);
+               Element_p el1 = list2->get(1);
+
+               el0->show(d + 2, "runner");
+               el1->show(d + 2, "runner");
+
+               List_p li0 = std::dynamic_pointer_cast<List>(el0);
+               Number_p nu1 = std::dynamic_pointer_cast<Number>(el1);
+               if (li0 == nullptr || nu1 == nullptr)
+               {
+                  std::cout << "nth builtin expects 1 list and 1 number\n";
+                  throw std::make_shared<RunError>();
+               }
+
+               //int l0 = li0->getNumber();
+               int n1 = nu1->getNumber();
+               if (n1 < li0->size())
+               {
+                  return li0->get(n1);
+               }
+               else
+               {
+                  return std::make_shared<Nil>();
+               }
+            }
+            else
+            if (bitext == "size")
+            {
+               CLOG(DEBUG, "runner") << i(d + 1) << "size executes";
+
+               Element_p el0 = list2->get(0);
+
+               el0->show(d + 2, "runner");
+
+               List_p li0 = std::dynamic_pointer_cast<List>(el0);
+               Nil_p ni0 = std::dynamic_pointer_cast<Nil>(el0);
+               if (li0 == nullptr && ni0 == nullptr)
+               {
+                  std::cout << "size builtin expects 1 list or nil\n";
+                  throw std::make_shared<RunError>();
+               }
+
+               if (li0 != nullptr)
+               {
+                  // List
+                  return std::make_shared<Number>(li0->size());
+               }
+               else
+               {
+                  // Nil
+                  return std::make_shared<Number>(0);
+               }
+            }
+            else
+            if (bitext == "first")
+            {
+               CLOG(DEBUG, "runner") << i(d + 1) << "first executes";
+
+               Element_p el0 = list2->get(0);
+
+               el0->show(d + 2, "runner");
+
+               List_p li0 = std::dynamic_pointer_cast<List>(el0);
+               if (li0 == nullptr)
+               {
+                  std::cout << "first builtin expects 1 list\n";
+                  throw std::make_shared<RunError>();
+               }
+
+               return li0->get(0);
+            }
+            else
+            if (bitext == "rest")
+            {
+               CLOG(DEBUG, "runner") << i(d + 1) << "rest executes";
+
+               Element_p el0 = list2->get(0);
+
+               el0->show(d + 2, "runner");
+
+               List_p li0 = std::dynamic_pointer_cast<List>(el0);
+               if (li0 == nullptr)
+               {
+                  std::cout << "size builtin expects 1 list\n";
+                  throw std::make_shared<RunError>();
+               }
+
+               List_p li0b = li0->copy();
+               li0b->pop_front();
+
+               return li0b;
             }
          }
          else

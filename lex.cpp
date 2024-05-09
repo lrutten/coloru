@@ -281,6 +281,30 @@ void Lex::next()
                CLOG(DEBUG, "lex") << "mod";
             }
             else
+            if (token_text == "nth")
+            {
+               tok = tk_builtin;
+               CLOG(DEBUG, "lex") << "nth";
+            }
+            else
+            if (token_text == "size")
+            {
+               tok = tk_builtin;
+               CLOG(DEBUG, "lex") << "nth";
+            }
+            else
+            if (token_text == "first")
+            {
+               tok = tk_builtin;
+               CLOG(DEBUG, "lex") << "nth";
+            }
+            else
+            if (token_text == "rest")
+            {
+               tok = tk_builtin;
+               CLOG(DEBUG, "lex") << "nth";
+            }
+            else
             {
                tok = tk_symbol;
                CLOG(DEBUG, "lex") << "tk_symbol " << sym;
