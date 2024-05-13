@@ -518,6 +518,7 @@ Element_p Print::evaluate(std::shared_ptr<Context> cx, int d)
       std::cout << " ";
    }
    //std::cout << "\n";
+   std::cout << std::flush;
 
    //return result;
    return std::make_shared<Nil>();
